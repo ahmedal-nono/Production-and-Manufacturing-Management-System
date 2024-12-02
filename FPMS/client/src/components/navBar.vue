@@ -78,12 +78,116 @@
             </svg>
             <p>Search</p>
           </div>
-          <img src="../assets/avatar.png" alt="" class="size-12 cursor-pointer" />
+          <img
+            src="../assets/avatar.png"
+            alt=""
+            class="size-12 cursor-pointer"
+            @click="showAvatarPopup = true"
+          />
+          <Popup
+            :visible="showAvatarPopup"
+            @update:visible="showAvatarPopup = $event"
+          >
+            <h3 class="font-bold text-xl mb-4 flex justify-center">Change Profile Image</h3>
+            <div class="flex flex-col items-center space-y-4">
+              <div class="flex flex-col space-y-1 justify-center">
+                <img
+                  v-if="uploadedImage"
+                  :src="uploadedImage"
+                  alt="Profile Image"
+                  class="size-32 rounded-full border"
+                />
+                <img
+                  v-else
+                  src="../assets/avatar.png"
+                  alt="Default Avatar"
+                  class="size-32 ml-2 rounded-full border"
+                />
+                <p class="font-bold">Uplaod New Image</p>
+              </div>
+              <div>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    class="hidden"
+                    @change="handleImageUpload"
+                  />
+                  <button class="bg-blue-600 text-white p-2 rounded-lg">
+                    Upload Image
+                  </button>
+                </label>
+              </div>
+              <button class="w-full bg-blue-600 text-white p-2 rounded-lg ">Save Profile Image</button>
+              <div>
+                
+              </div>
+              <form @submit.prevent="handlePasswordChange" class="w-full  mt-6">
+                <h3 class="font-bold text-lg flex content-start mb-3">Change Password</h3>
+                <div class="flex flex-col space-y-4">
+                  <div class="flex flex-col items-start space-y-2 w-full">
+                    <label
+                      for="currentPassword"
+                      class=" text-sm font-bold text-gray-700"
+                    >
+                      Current Password
+                    </label>
+                    <input
+                      id="currentPassword"
+                      type="password"
+                      v-model="currentPassword"
+                      class="mt-1 p-2 w-full rounded-md border border-gray-300 shadow-sm"
+                      placeholder="Enter current password"
+                    />
+                  </div>
+                  <div class="flex flex-col items-start space-y-2 w-full">
+                    <label
+                      for="newPassword"
+                      class=" text-sm font-bold text-gray-700"
+                    >
+                      New Password
+                    </label>
+                    <input
+                      id="newPassword"
+                      type="password"
+                      v-model="newPassword"
+                      class="mt-1 p-2 block w-full rounded-md border border-gray-300 shadow-sm"
+                      placeholder="Enter new password"
+                    />
+                  </div>
+                  <div class="flex flex-col items-start space-y-2 w-full">
+                    <label
+                      for="confirmPassword"
+                      class=" text-sm font-bold text-gray-700"
+                    >
+                      Confirm Password
+                    </label>
+                    <input
+                      id="confirmPassword"
+                      type="password"
+                      v-model="confirmPassword"
+                      class="mt-1 p-2 block w-full rounded-md border border-gray-300 shadow-sm"
+                      placeholder="Confirm new password"
+                    />
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="flex flex-col items-start mt-4 space-y-2">
+              <h3 class="font-bold">Set Security Question</h3>
+              <p class="text-sm font-bold">Security Question</p>
+              <select name="" id="" class="border rounded-md p-0 text-sm border-gray-400">
+                <option value="">Select a security question</option>
+              </select>
+              <label class="font-bold">Answer</label>
+              <input type="text" name="" id="" placeholder="Enter your answer" class="my-1 p-2 block w-full rounded-md border border-gray-300 shadow-sm">
+            </div>
+            <button class="w-full bg-blue-600 text-white p-2 rounded-lg mt-4">Update Password & Security Question</button>
+          </Popup>
         </div>
       </div>
     </div>
-    <!-- for modules later-->
-     <div class="flex flex-col m-2 p-4 justify-center rounded-2xl bg-gray-200">
+    <div class="flex flex-col m-2 p-4 justify-center rounded-2xl bg-gray-200">
       <p class="text-xl font-bold flex justify-center">System Administration</p>
       <div class="flex flex-row py-4 gap-20">
         <div class="flex flex-col bg-gray-100 rounded-lg p-2 w-3/6">
@@ -115,16 +219,15 @@
       </div>
       <div class="flex justify-end gap-10 py-2">
         <div class="flex flex-col items-center justify-evenly bg-[#bee8ea] border rounded-xl w-fit p-2 cursor-pointer shadow-md shadow-gray-500">
-          <img src="../assets/settings.png" class="size-10" alt="" />
-          <p class="font-bold text-[10px] pt-2">Language & Time</p>
+          <img src="../assets/settings.png" class="size-12" alt="" />
+          <p class="font-bold text-[13px] pt-2">Language & Time</p>
         </div>
-        <div class="flex flex-col items-center bg-[#bee8ea] border rounded-xl w-fit p-2 cursor-pointer shadow-md shadow-gray-500">
-          <img src="../assets/backup.png" class="size-10" alt="" />
-          <p class="font-bold text-[10px] pt-2">Backup & Restore</p>
+        <div class="flex flex-col items-center justify-evenly bg-[#bee8ea] border rounded-xl w-fit p-2 cursor-pointer shadow-md shadow-gray-500">
+          <img src="../assets/backup.png" class="size-12" alt="" />
+          <p class="font-bold text-[13px] pt-2">Backup & Restore</p>
         </div>
       </div>
     </div>
-    <!-- for modules later-->
   </div>
 </template>
 
@@ -133,8 +236,11 @@ import { ref } from 'vue';
 import Popup from '../components/popup.vue';
 
 const showPopup = ref(false);
+const showAvatarPopup = ref(false);
 const isRead = ref(false);
 const isReadSecond = ref(false);
+
+const uploadedImage = ref<string | null>(null);
 
 function markAsRead() {
   isRead.value = true;
@@ -142,6 +248,32 @@ function markAsRead() {
 
 function markAsReadSecond() {
   isReadSecond.value = true;
+}
+
+function handleImageUpload(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      uploadedImage.value = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+const currentPassword = ref('');
+const newPassword = ref('');
+const confirmPassword = ref('');
+
+function handlePasswordChange() {
+  if (newPassword.value !== confirmPassword.value) {
+    alert('New Password and Confirm Password do not match.');
+    return;
+  }
+  alert('Password successfully changed!');
+  currentPassword.value = '';
+  newPassword.value = '';
+  confirmPassword.value = '';
 }
 </script>
 
