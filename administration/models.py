@@ -25,8 +25,9 @@ class CustomUser(AbstractUser):
         self.groups.set([group])
         super().save(*args, **kwargs)
 
-class Meta:
+class Meta: 
       permissions = [
+           #in this class here we can add the permssions we want 
         ("can_activate_user", "Can activate a user"),
         ("can_deactivate_user", "Can deactivate a user"),
         ]
