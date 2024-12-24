@@ -8,3 +8,4 @@ backeges you need to install:
    pip install mysql-connector or mysql-connector-python(if mysql-connector didn't work)
    pip install djangorestframework
    activite the virtual environment to run it right 
+   tesing git add .
