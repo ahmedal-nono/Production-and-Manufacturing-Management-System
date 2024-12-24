@@ -27,7 +27,7 @@ class CustomUser(AbstractUser):
 
 class Meta: 
       permissions = [
-           #in this class here we can add the permssions we want 
+           #in this class here we can add the permssions we want git push origin admnstration
         ("can_activate_user", "Can activate a user"),
         ("can_deactivate_user", "Can deactivate a user"),
         ]
