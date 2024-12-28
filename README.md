@@ -9,4 +9,5 @@ backeges you need to install:
    pip install djangorestframework
    activite the virtual environment to run it right 
    tesing git add .
-   installing pakage pip install django-extensions to be able to lists of the endpoints .
+   installing pakage pip install django-extensions to be able to lists of the endpoints ..... run this to see our routes python manage.py show_urls
+>>after you install the pakage pip install django-extensions 
