@@ -20,14 +20,16 @@ class CustomUser(AbstractUser):
     is_active = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
-        # Assign the user to the appropriate group based on their role
-        group, created = Group.objects.get_or_create(name=self.role)
-        self.groups.set([group])
+        # Save the user object first to ensure it has an ID
         super().save(*args, **kwargs)
 
-class Meta: 
-      permissions = [
-           #in this class here we can add the permssions we want git push origin admnstration
-        ("can_activate_user", "Can activate a user"),
-        ("can_deactivate_user", "Can deactivate a user"),
+        # Assign the user to the appropriate group based on their role
+        if self.role:
+            group, _ = Group.objects.get_or_create(name=self.role)
+            self.groups.add(group)  # Add the group to the user after the user is saved
+
+    class Meta:
+        permissions = [
+            ("can_activate_user", "Can activate a user"),
+            ("can_deactivate_user", "Can deactivate a user"),
         ]
