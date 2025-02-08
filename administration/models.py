@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, Group
 from django.db import models
+from django.utils import timezone
 
 class CustomUser(AbstractUser):
     fullname = models.CharField(max_length=255)
@@ -33,3 +34,12 @@ class CustomUser(AbstractUser):
             ("can_activate_user", "Can activate a user"),
             ("can_deactivate_user", "Can deactivate a user"),
         ]
+
+class Backup(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    file_path = models.CharField(max_length=255)
+    created_at = models.DateTimeField(default=timezone.now)
+    status = models.CharField(max_length=50, default="Pending")  # statues for backups Pending, Completed, Failed
+
+    def __str__(self):
+        return self.name

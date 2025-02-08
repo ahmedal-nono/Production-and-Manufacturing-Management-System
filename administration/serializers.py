@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import Group, Permission
 from .models import CustomUser
+from .models import Backup
 
 class CustomUserSerializer(serializers.ModelSerializer):
     """Serializer for CustomUser model."""
@@ -45,3 +46,8 @@ class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permission
         fields = ['id', 'name', 'codename']
+        
+class BackupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Backup
+        fields = ['id', 'name', 'file_path', 'created_at', 'status']
