@@ -34,6 +34,7 @@ class Maintenance(models.Model):
     ], default='None')
     description = models.TextField()
     staff_notes = models.TextField(blank=True, null=True)
+    assigned_staff = models.JSONField(default=list)
 
     def __str__(self):
         return f"Maintenance for {self.workstation.name} on {self.maintenance_date}"
