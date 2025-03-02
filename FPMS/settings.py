@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken', # this line here help with authentication when using the rest_framework auth token .
     'administration',
     'workcentre', 
+    'django_filters',
     
 
 ]
