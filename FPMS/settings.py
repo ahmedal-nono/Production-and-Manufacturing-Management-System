@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'workcentre', 
     'django_filters',
     
-
 ]
 
 MIDDLEWARE = [
