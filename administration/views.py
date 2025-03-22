@@ -20,7 +20,7 @@ from .serializers import BackupSerializer
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    # permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
     @action(detail=True, methods=['post'])
     def activate(self, request, pk=None):
@@ -55,7 +55,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     @action(detail=True, methods=['post'])
     def assign_user(self, request, pk=None):
@@ -84,7 +84,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 class PermissionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     @action(detail=True, methods=['post'])
     def assign_to_group(self, request, pk=None):
