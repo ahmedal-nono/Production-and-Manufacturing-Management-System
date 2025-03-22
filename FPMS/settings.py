@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'administration',
     'workcentre', 
     'django_filters',
+    'workflow',
     
 ]
 

@@ -24,4 +24,5 @@ urlpatterns = [
      path('api-token-auth/', obtain_auth_token, name='api-token-auth'),
      path('', include('administration.urls')),
      path('api/workcentre/', include('workcentre.urls')),
+     path('api/', include('workflow.urls')),
 ]
