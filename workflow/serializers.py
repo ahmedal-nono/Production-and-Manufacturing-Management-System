@@ -64,8 +64,8 @@ class BOMSerializer(serializers.ModelSerializer):
 
 # Product Serializer (Handles Product creation and updating)
 class ProductSerializer(serializers.ModelSerializer):
-    bom = BOMSerializer()
-    workflow = WorkflowSerializer()
+    bom =serializers.PrimaryKeyRelatedField(queryset=Workflow.objects.all())
+    workflow = serializers.PrimaryKeyRelatedField(queryset=BOM.objects.all())
 
     class Meta:
         model = Product
