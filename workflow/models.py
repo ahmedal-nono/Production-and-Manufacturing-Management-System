@@ -81,3 +81,55 @@ class Component(models.Model):
     
     def __str__(self):
         return self.name
+
+# Workflow Serializer (Handles Workflow creation and stages)
+# models.py
+
+
+class ProductionLine(models.Model):
+    line_name = models.CharField(max_length=255)
+    capacity_limit = models.PositiveIntegerField()
+    oee_target = models.IntegerField()
+    status = models.CharField(max_length=20, choices=[('Active', 'Active'), ('Inactive', 'Inactive')])
+    maintenance_schedule = models.CharField(max_length=50)
+    preferred_shift = models.CharField(max_length=50)
+    work_centers = models.ManyToManyField(WorkCenter)
+
+    def __str__(self):
+        return self.line_name
+
+# models.py
+from django.db import models
+
+from workflow.models import Workflow
+from workcentre.models import WorkCenter
+
+class ProductionOrder(models.Model):
+    ORDER_STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('In Progress', 'In Progress'),
+        ('Completed', 'Completed'),
+        ('Cancelled', 'Cancelled')
+    ]
+    order_name = models.CharField(max_length=255)
+    priority = models.CharField(max_length=20, choices=[('High', 'High'), ('Low', 'Low')])
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    production_line = models.ForeignKey(ProductionLine, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='Pending')
+
+    def __str__(self):
+        return self.order_name
+
+class Rescheduling(models.Model):
+    production_order = models.ForeignKey(ProductionOrder, on_delete=models.CASCADE)
+    new_start_time = models.DateTimeField()
+    new_end_time = models.DateTimeField()
+    reason_for_rescheduling = models.CharField(max_length=255)
+    notes = models.TextField()
+
+    def __str__(self):
+        return f"Rescheduling for {self.production_order.order_name}"
+

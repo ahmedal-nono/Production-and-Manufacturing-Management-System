@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import BOM, Product, Workflow, Stage, InspectionCheckpoint, Component
+from .models import Product, ProductionLine, ProductionOrder, Rescheduling
 from workcentre.models import WorkCenter  
 from .models import Product
 
@@ -96,4 +97,51 @@ class ProductSerializer(serializers.ModelSerializer):
 
         return instance
 
-# Workflow Serializer (Handles Workflow creation and stages)
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'sku', 'category', 'specifications']
+
+# serializers.py
+class ProductionLineSerializer(serializers.ModelSerializer):
+    work_centers = serializers.CharField(write_only=True)  # Accepting work center names
+    
+    class Meta:
+        model = ProductionLine
+        fields = ['id', 'line_name', 'capacity_limit', 'maintenance_schedule', 'preferred_shift', 'status', 'oee_target', 'work_centers']
+    
+    def create(self, validated_data):
+        work_centers_data = validated_data.pop('work_centers', [])
+        production_line = ProductionLine.objects.create(**validated_data)
+        
+        # Process work centers by name
+        for work_center_name in work_centers_data:
+            work_center = WorkCenter.objects.get(name=work_center_name)
+            production_line.work_centers.add(work_center)
+        
+        return production_line
+# serializers.py
+class ProductionOrderSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(write_only=True, required=False)
+
+    class Meta:
+        model = ProductionOrder
+        fields = ['id', 'order_name', 'priority', 'product', 'quantity', 'start_date', 'end_date', 'production_line', 'status']
+
+    def create(self, validated_data):
+        product_name = validated_data.pop('product_name', None)
+        if product_name:
+            product = Product.objects.get(name=product_name)
+            validated_data['product'] = product
+        production_order = ProductionOrder.objects.create(**validated_data)
+        return production_order
+
+
+# serializers.py
+class ReschedulingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rescheduling
+        fields = ['id', 'production_order', 'new_start_time', 'new_end_time', 'reason_for_rescheduling', 'notes']
+
+
+

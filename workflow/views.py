@@ -1,6 +1,12 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
+from .serializers import ProductionLineSerializer
+from .models import ProductionLine
+from .models import ProductionOrder
+from .models import Rescheduling
+from .serializers import ReschedulingSerializer
+from .serializers import ProductionOrderSerializer
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import BOM, Product, Workflow, Stage, InspectionCheckpoint, WorkCenter
@@ -81,4 +87,18 @@ class StageViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ProductionLineViewSet(viewsets.ModelViewSet):
+    queryset = ProductionLine.objects.all()
+    serializer_class = ProductionLineSerializer
 
+
+
+class ProductionOrderViewSet(viewsets.ModelViewSet):
+    queryset = ProductionOrder.objects.all()
+    serializer_class = ProductionOrderSerializer
+
+
+
+class ReschedulingViewSet(viewsets.ModelViewSet):
+    queryset = Rescheduling.objects.all()
+    serializer_class = ReschedulingSerializer
