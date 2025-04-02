@@ -1,3 +1,68 @@
-from django.db import models
+# models.py
 
-# Create your models here.
+from django.db import models
+from workcentre.models import WorkCenter  # WorkCenter is in the workcentre app
+from workflow.models import ProductionLine  # Assuming ProductionLine is in the workflow app
+
+
+# Work Instruction Model
+class WorkInstruction(models.Model):
+    title = models.CharField(max_length=255)  # Title of the work instruction
+    task_steps = models.TextField()  # Steps to complete the task
+    tools_required = models.TextField()  # Tools required for the task
+    materials_required = models.TextField()  # Materials required for the task
+    step_description = models.TextField()  # Descriptions for each step
+    status = models.CharField(
+        max_length=50,
+        choices=[('Not Started', 'Not Started'), ('In Progress', 'In Progress'), ('Completed', 'Completed')],
+    )  # Status of the work instruction
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Work Instruction'
+        verbose_name_plural = 'Work Instructions'
+
+
+# Work Order Model
+class WorkOrder(models.Model):
+    name = models.CharField(max_length=255)  # Name of the work order
+    quantity_required = models.PositiveIntegerField()  # The quantity of items to be produced
+    due_date = models.DateTimeField()  # Due date and time for completing the work order
+    priority = models.CharField(
+        max_length=50, choices=[('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')]
+    )  # Priority of the work order
+    work_instruction = models.ForeignKey(WorkInstruction, on_delete=models.CASCADE)  # Work instruction linked to this work order
+    production_line = models.ForeignKey(
+        ProductionLine, on_delete=models.SET_NULL, null=True, blank=True
+    )  # Linking work order to a production line
+
+    def __str__(self):
+        return f"Work Order {self.name} - {self.priority}"
+
+    class Meta:
+        verbose_name = 'Work Order'
+        verbose_name_plural = 'Work Orders'
+
+
+# Job Card Model (Generated from Work Order)
+class JobCard(models.Model):
+    work_order = models.ForeignKey(
+        WorkOrder, on_delete=models.CASCADE, related_name='job_cards'
+    )  # Linking the job card to a work order
+    task_name = models.CharField(max_length=255)  # Name of the task
+    required_tools = models.TextField()  # Tools required for the task
+    required_materials = models.TextField()  # Materials required for the task
+    status = models.CharField(
+        max_length=50,
+        choices=[('Not Started', 'Not Started'), ('In Progress', 'In Progress'), ('Completed', 'Completed')],
+    )  # Status of the job card
+    assigned_to = models.ForeignKey( WorkCenter, on_delete=models.SET_NULL, null=True, blank=True )  # The work center to which the job card is assigned
+
+    def __str__(self):
+        return f"Job Card for {self.task_name}"
+
+    class Meta:
+        verbose_name = 'Job Card'
+        verbose_name_plural = 'Job Cards'

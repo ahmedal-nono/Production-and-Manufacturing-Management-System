@@ -25,4 +25,5 @@ urlpatterns = [
      path('', include('administration.urls')),
      path('api/workcentre/', include('workcentre.urls')),
      path('api/', include('workflow.urls')),
+     path('api/', include('work_instructions.urls')),
 ]
