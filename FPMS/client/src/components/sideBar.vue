@@ -5,7 +5,7 @@
         v-for="(link, index) in links"
         :to="{ name: link.to }"
         :key="index"
-        class="m-1 my-2 flex cursor-pointer flex-col items-center rounded-lg border bg-white px-1 py-1"
+        class="m-1 my-2 flex h-6/12 cursor-pointer flex-col items-center justify-center rounded-lg border bg-white px-1 py-1"
       >
         <img :src="link.img" alt="" class="size-8" />
         <p class="text-[10px] text-nowrap">{{ link.name }}</p>
@@ -25,7 +25,32 @@ const links = [
   },
   {
     img: systemImg,
-    name: 'Workcenters & Workstations',
+    name: 'Workcenters',
+    to: 'wrkcntr',
+  },
+  {
+    img: systemImg,
+    name: 'Production',
+    to: 'wrkcntr',
+  },
+  {
+    img: systemImg,
+    name: 'BOM',
+    to: 'wrkcntr',
+  },
+  {
+    img: systemImg,
+    name: 'Workorders / Instructions',
+    to: 'wrkcntr',
+  },
+  {
+    img: systemImg,
+    name: 'Quality Management',
+    to: 'wrkcntr',
+  },
+  {
+    img: systemImg,
+    name: 'Reports',
     to: 'wrkcntr',
   },
 ]

@@ -24,8 +24,8 @@ const router = createRouter({
 
 // router.beforeEach((to, from, next) => {
 //   const userStore = useUserStore() // Move inside beforeEach
-//   if (!userStore.isAuthenticated && to.path !== '/') {
-//     return next('/')
+//   if (!userStore.isAuthenticated && to.path !== '/login') {
+//     return next('/login')
 //   }
 //   next()
 // })

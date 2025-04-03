@@ -4,21 +4,21 @@
     <div class="flex flex-row gap-10 py-4">
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
-        @click="showUserMngtPopup = true"
+        @click="showWorkCenterPopup = true"
       >
         <img src="../assets/user_manage.png" class="size-20" alt="" />
-        <p class="pt-2 text-[13px] font-bold">Work Centers</p>
+        <p class="pt-2 text-[13px] font-bold">WorkCenters</p>
       </div>
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
-        @click="showUserMngtPopup = true"
+        @click="showRealTimePerformancePopup = true"
       >
         <img src="../assets/user_manage.png" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Real-Time Performance</p>
       </div>
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
-        @click="showUserMngtPopup = true"
+        @click="showMaintenancePopup = true"
       >
         <img src="../assets/user_manage.png" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Maintenance</p>
@@ -27,282 +27,397 @@
     <div class="flex justify-end gap-10 py-2">
       <div
         class="flex w-fit cursor-pointer flex-col items-center justify-evenly rounded-xl border bg-[#bee8ea] p-2 shadow-md shadow-gray-500"
-        @click="showBackupPopup = true"
+        @click="showMaintenancePopup = true"
       >
         <img src="../assets/backup.png" class="size-12" alt="" />
-        <p class="pt-2 text-[13px] font-bold">Backup & Restore</p>
       </div>
     </div>
   </div>
 
-  <Popup :visible="showActivityLogPopup" @update:visible="showActivityLogPopup = $event">
+  <Popup :visible="showWorkCenterPopup" @update:visible="showWorkCenterPopup = $event">
     <div>
-      <h3 class="mb-4 text-xl font-bold">Filter Activity Log</h3>
-      <h5 class="my-2 text-sm font-bold">Start Date</h5>
-      <input type="date" name="" id="" class="w-full rounded-md border-2 p-1" />
-      <h5 class="my-2 text-sm font-bold">End Date</h5>
-      <input type="date" name="" id="" class="w-full rounded-md border-2 p-1" />
-      <h5 class="my-2 text-sm font-bold">Select User</h5>
-      <select name="" id="" class="mb-2 w-full rounded-md border-2 p-1">
-        <option value="">All Users</option>
-      </select>
+      <h3 class="mb-4 text-center text-2xl font-bold">Workcenters</h3>
+      <div class="grid grid-cols-5 gap-6">
+        <div
+          v-for="(workcenter, index) in workCenters"
+          :key="index"
+          class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
+        >
+          <div @click="showWorkCenterPopup2 = true">
+            <p class="font-bold">{{ workcenter.name || 'No Workcenter' }}</p>
+            <p>{{ workcenter.type || 'N/A' }}</p>
+            <p>{{ workcenter.location || 'N/A' }}</p>
+            <p
+              :class="{
+                'text-green-600': workcenter.status === 'Active',
+                'text-red-600': workcenter.status !== 'Active',
+              }"
+            >
+              {{ workcenter.status || 'Inactive' }}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
-    <h3 class="mb-4 text-xl font-bold">Activity Log</h3>
-    <div class="overflow-x-auto">
-      <table class="min-w-full table-auto">
-        <thead>
-          <tr>
-            <th class="px-4 py-2">User</th>
-            <th class="px-4 py-2">Activity</th>
-            <th class="px-4 py-2">Date</th>
-            <th class="px-4 py-2">Time</th>
-            <th class="px-4 py-2">IP Address</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(activity, index) in userActivities" :key="index">
-            <td class="px-4 py-2">{{ activity.user }}</td>
-            <td class="px-4 py-2">{{ activity.activity }}</td>
-            <td class="px-4 py-2">{{ activity.date }}</td>
-            <td class="px-4 py-2">{{ activity.time }}</td>
-            <td class="px-4 py-2">{{ activity.ip }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="mt-2 flex flex-row justify-center space-x-4">
-      <button class="w-2/12 rounded-lg bg-blue-600 p-1.5 text-white">Prev</button>
-      <p class="mt-2">Page 1 of 5</p>
-      <button class="w-2/12 rounded-lg bg-blue-600 p-1.5 text-white">Next</button>
+
+    <p class="flex justify-end text-6xl font-extrabold">+</p>
+  </Popup>
+
+  <Popup
+    :visible="showRealTimePerformancePopup"
+    @update:visible="showRealTimePerformancePopup = $event"
+  >
+    <div class="flex flex-col">
+      <h2 class="flex justify-center text-3xl font-extrabold">
+        Workcenter and Workstation Monitoring
+      </h2>
+
+      <div class="flex flex-col">
+        <h3 class="flex justify-start py-2 text-lg font-bold">Real-Time Workcenter Performance</h3>
+        <label class="py-1 text-gray-500" for="workcenter">Select Workcenter:</label>
+        <select
+          class="rounded-lg border-2 border-gray-400 p-0.5"
+          id="workcenter"
+          v-model="selectedWorkcenter"
+        >
+          <option>Workcenter 1</option>
+          <option>Workcenter 2</option>
+        </select>
+
+        <div class="flex justify-between py-4">
+          <div class="w-64 rounded-xl bg-gray-100 p-2.5 text-center">
+            <strong>Efficiency</strong>
+            <p class="text-[#0000ff]">85%</p>
+          </div>
+          <div class="w-64 rounded-xl bg-gray-100 p-2.5 text-center">
+            <strong>Downtime</strong>
+            <p class="text-[#0000ff]">1h 15m</p>
+          </div>
+          <div class="w-64 rounded-xl bg-gray-100 p-2.5 text-center">
+            <strong>Task Progress</strong>
+            <p class="text-[#0000ff]">65%</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-2">
+        <h3 class="flex justify-start py-1 text-lg font-bold">
+          Real-Time Workstation Availability
+        </h3>
+        <h3 class="flex justify-start py-1 text-gray-500">Filter by Workcenter or Location:</h3>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Search by Workcenter or Location"
+        />
+
+        <table class="mt-2.5 w-full border-collapse">
+          <thead>
+            <tr>
+              <th class="bg-gray-200">Workstation</th>
+              <th class="bg-gray-200">Status</th>
+              <th class="bg-gray-200">Current Task</th>
+              <th class="bg-gray-200">Upcoming Schedule</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Workstation 1</td>
+              <td class="text-green-500">Active</td>
+              <td>Assembling Unit A</td>
+              <td>10:00 AM - 12:00 PM</td>
+            </tr>
+            <tr>
+              <td>Workstation 2</td>
+              <td class="text-orange-300">Idle</td>
+              <td>-</td>
+              <td>12:30 PM - 2:00 PM</td>
+            </tr>
+            <tr>
+              <td>Workstation 3</td>
+              <td class="text-red-500">Under Maintenance</td>
+              <td>-</td>
+              <td>2:00 PM - 4:00 PM</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </Popup>
-  <Popup :visible="showUserMngtPopup" @update:visible="showUserMngtPopup = $event">
-    <h3 class="mb-4 flex justify-center text-2xl font-bold">User Account Management</h3>
-    <div class="flex justify-end">
+  <Popup :visible="showWorkCenterPopup2" @update:visible="showWorkCenterPopup2 = $event">
+    <div>
+      <h3 class="flex justify-center pb-2 text-2xl font-extrabold">Workcenter Details</h3>
+      <div>
+        <p class="py-2 text-xl font-bold">General Information</p>
+        <div class="flex flex-row gap-0.5">
+          <p>Name:</p>
+          <p>Ass</p>
+        </div>
+        <div class="flex flex-row gap-0.5">
+          <p>Type:</p>
+          <p>Ass</p>
+        </div>
+        <div class="flex flex-row gap-0.5">
+          <p>Capacity:</p>
+          <p>Ass</p>
+        </div>
+        <div class="flex flex-row gap-0.5">
+          <p>Description:</p>
+          <p>Ass</p>
+        </div>
+      </div>
+      <div class="flex flex-col pt-8">
+        <h3 class="text-xl font-bold">Workstations</h3>
+        <table class="mt-2.5 w-full border-collapse">
+          <thead>
+            <tr class="text-white">
+              <th class="bg-blue-600">Workstation</th>
+              <th class="bg-blue-600">Status</th>
+              <th class="bg-blue-600">Capacity</th>
+              <th class="bg-blue-600">Current Task</th>
+              <th class="bg-blue-600">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Workstation 1</td>
+              <td>Active</td>
+              <td>50 Units/Hour</td>
+              <td>Assembling Component A</td>
+              <td>
+                <button
+                  @click="showViewWorkStationPopup = true"
+                  class="m-2 mt-4 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
+                >
+                  View
+                </button>
+                <button
+                  @click="showEditWorkStationPopup = true"
+                  class="m-2 mt-4 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
+                >
+                  Edit
+                </button>
+                <button class="m-2 mt-4 cursor-pointer rounded-lg bg-red-600 p-1.5 text-white">
+                  Delete
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>Workstation 2</td>
+              <td>Inactive</td>
+              <td>30 Units/Hour</td>
+              <td>---</td>
+              <td>
+                <button
+                  @click="showViewWorkStationPopup = true"
+                  class="m-2 mt-4 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
+                >
+                  View
+                </button>
+                <button
+                  @click="showEditWorkStationPopup = true"
+                  class="m-2 mt-4 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
+                >
+                  Edit
+                </button>
+                <button class="m-2 mt-4 cursor-pointer rounded-lg bg-red-600 p-1.5 text-white">
+                  Delete
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>Workstation 3</td>
+              <td>Active</td>
+              <td>20 Units/Hour</td>
+              <td>Inspecting Final Product</td>
+              <td>
+                <button
+                  @click="showViewWorkStationPopup = true"
+                  class="m-2 mt-4 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
+                >
+                  View
+                </button>
+
+                <button
+                  @click="showEditWorkStationPopup = true"
+                  class="m-2 mt-4 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
+                >
+                  Edit
+                </button>
+                <button class="m-2 mt-4 cursor-pointer rounded-lg bg-red-600 p-1.5 text-white">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <button
-        class="w-2/12 rounded-lg bg-blue-600 p-1.5 text-white"
-        @click="showUserCrtPopup = true"
+        class="mt-4 w-4/12 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
+        @click="showWorkCenterPopup3 = true"
       >
-        Create User
+        Add New Workstation
       </button>
     </div>
-    <div>
-      <h3 class="mb-4 text-lg font-bold">Existing Users</h3>
-      <table class="min-w-full table-auto">
-        <thead>
-          <tr>
-            <th class="px-4 py-2">Name</th>
-            <th class="px-4 py-2">Email</th>
-            <th class="px-4 py-2">Department</th>
-            <th class="px-4 py-2">Role</th>
-            <th class="px-4 py-2">Status</th>
-            <th class="px-4 py-2">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(user, index) in users" :key="index">
-            <td class="px-4 py-2">{{ user.name }}</td>
-            <td class="px-4 py-2">{{ user.email }}</td>
-            <td class="px-4 py-2">{{ user.department }}</td>
-            <td class="px-4 py-2">{{ user.role }}</td>
-            <td class="px-4 py-2">{{ user.status }}</td>
-            <td class="flex gap-2 px-4 py-2">
-              <button class="rounded-lg bg-yellow-500 p-2 text-white">Edit</button>
-              <button class="rounded-lg bg-red-600 p-2 text-white">Delete</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
   </Popup>
-  <Popup :visible="showUserCrtPopup" @update:visible="showUserCrtPopup = $event">
-    <h3 class="mb-4 flex justify-center text-2xl font-bold">Create New User</h3>
-    <div>
-      <form @submit.prevent="createUser" class="space-y-4">
-        <div class="flex flex-col">
-          <label for="name" class="text-sm font-bold">Full Name</label>
-          <input
-            type="text"
-            id="name"
-            v-model="newUser.name"
-            placeholder="Enter full name"
-            class="rounded-md border p-2"
-            required
-          />
-        </div>
-        <div class="flex flex-col">
-          <label for="email" class="text-sm font-bold">Email</label>
-          <input
-            type="email"
-            id="email"
-            v-model="newUser.email"
-            placeholder="Enter email"
-            class="rounded-md border p-2"
-            required
-          />
-        </div>
-        <div class="flex flex-col">
-          <label for="department" class="text-sm font-bold">Contact Number</label>
-          <input
-            type="text"
-            id="number"
-            v-model="newUser.department"
-            placeholder="Enter contact number"
-            class="rounded-md border p-2"
-            required
-          />
-        </div>
-        <div class="flex flex-col">
-          <label for="department" class="text-sm font-bold">Department</label>
-          <input
-            type="text"
-            id="department"
-            v-model="newUser.department"
-            placeholder="Enter department"
-            class="rounded-md border p-2"
-            required
-          />
-        </div>
-        <div class="flex flex-col">
-          <label for="role" class="text-sm font-bold">Role</label>
-          <select id="status" v-model="newUser.status" class="rounded-md border p-2" required>
-            <option value="Active">Select a role</option>
-          </select>
-        </div>
-        <div class="flex flex-col">
-          <label for="status" class="text-sm font-bold">Status</label>
-          <select id="status" v-model="newUser.status" class="rounded-md border p-2" required>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-        </div>
-        <div class="flex flex-col">
-          <label for="password" class="text-sm font-bold">Password</label>
-          <input
-            type="password"
-            id="password"
-            v-model="newUser.password"
-            placeholder="Enter password"
-            class="rounded-md border p-2"
-            required
-          />
-        </div>
-        <div class="flex justify-end gap-4">
-          <button type="button" class="rounded-lg bg-gray-500 p-2 text-white" @click="closePopup">
-            Cancel
-          </button>
-          <button type="submit" class="rounded-lg bg-blue-600 p-2 text-white">Create User</button>
-        </div>
-      </form>
-    </div>
-  </Popup>
-  <Popup :visible="showLanguageTimezonePopup" @update:visible="showLanguageTimezonePopup = $event">
-    <h3 class="mb-4 flex justify-center text-2xl font-bold">Language & Time Zone Settings</h3>
-    <div>
-      <form @submit.prevent="saveSettings" class="space-y-4">
-        <div class="flex flex-col">
-          <label for="language" class="text-sm font-bold">Preferred Language</label>
-          <select id="language" v-model="settings.language" class="rounded-md border p-2" required>
-            <option value="English">English</option>
-            <option value="Arabic">Arabic</option>
-          </select>
-        </div>
 
-        <div class="flex flex-col">
-          <label for="timezone" class="text-sm font-bold">Time Zone</label>
-          <select id="timezone" v-model="settings.timezone" class="rounded-md border p-2" required>
-            <option value="UTC">UTC-12:00</option>
-            <option value="GMT">GMT</option>
-          </select>
-        </div>
-        <div class="flex justify-end gap-4">
-          <button type="submit" class="w-full rounded-lg bg-blue-600 p-2 text-white">
-            Save Settings
-          </button>
-        </div>
-      </form>
+  <Popup :visible="showWorkCenterPopup3" @update:visible="showWorkCenterPopup3 = $event">
+    <div>
+      <h3 class="flex justify-center text-2xl font-extrabold">Create New Workstation</h3>
     </div>
-  </Popup>
-  <Popup :visible="showBackupPopup" @update:visible="showBackupPopup = $event">
-    <h3 class="mb-6 text-center text-2xl font-bold">Backup and Restore</h3>
-
-    <!-- Automated Backup Settings -->
-    <div class="mb-6 rounded-lg border bg-gray-100 p-4">
-      <h4 class="mb-4 text-lg font-bold">Automated Backup Settings</h4>
-      <div class="mb-4">
-        <label for="backup-frequency" class="mb-1 block text-sm font-bold">Backup Frequency</label>
-        <select
-          id="backup-frequency"
-          v-model="backupSettings.frequency"
-          class="w-full rounded-md border p-2"
-        >
-          <option value="Daily">Daily</option>
-          <option value="Weekly">Weekly</option>
-          <option value="Monthly">Monthly</option>
+    <div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Workstation Name</label>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Workstation Name"
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Status</label>
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+          <optgroup>
+            <option value="">Active</option>
+            <option value="">Inactive</option>
+          </optgroup>
         </select>
       </div>
-      <div class="mb-4">
-        <label for="backup-time" class="mb-1 block text-sm font-bold">Backup Time</label>
+      <div class="flex flex-col gap-2">
+        <label for="">Capacity (Units/Hour)</label>
         <input
-          type="time"
-          id="backup-time"
-          v-model="backupSettings.time"
-          class="w-full rounded-md border p-2"
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Capacity"
         />
       </div>
-      <button
-        @click="saveBackupSettings"
-        class="w-full rounded-lg bg-blue-600 px-4 py-2 text-white"
-      >
-        Save Backup Settings
+      <div class="flex flex-col gap-2">
+        <label for="">Description</label>
+        <textarea
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          name=""
+          id=""
+          placeholder="Enter Workstation Description"
+        ></textarea>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Assign Machines</label>
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+          <optgroup>
+            <option value="">Select</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Assign Tools</label>
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+          <optgroup>
+            <option value="">Select</option>
+          </optgroup>
+        </select>
+      </div>
+      <button class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white">
+        Create Workstation
       </button>
     </div>
-
-    <!-- Restore Data -->
-    <div class="mb-6 rounded-lg border bg-gray-100 p-4">
-      <h4 class="mb-4 text-lg font-bold">Restore Data</h4>
-      <div class="mb-4">
-        <label for="restore-file" class="mb-1 block text-sm font-bold">Select Backup File</label>
+  </Popup>
+  <Popup :visible="showViewWorkStationPopup" @update:visible="showViewWorkStationPopup = $event">
+    <div>
+      <h3 class="flex justify-center text-2xl font-extrabold">Create New Workstation</h3>
+    </div>
+    <div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Workstation Name</label>
         <input
-          type="file"
-          id="restore-file"
-          @change="handleFileUpload"
-          class="w-full rounded-md border p-2"
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Workstation Name"
+          disabled
         />
       </div>
-      <button @click="restoreData" class="w-full rounded-lg bg-red-600 px-4 py-2 text-white">
-        Restore Data
-      </button>
+      <div class="flex flex-col gap-2">
+        <label for=""> Status</label>
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+          <optgroup>
+            <option value="">Active</option>
+            <option value="">Inactive</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="">Capacity (Units/Hour)</label>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Capacity"
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="">Description</label>
+        <textarea
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          name=""
+          id=""
+          placeholder="Enter Workstation Description"
+        ></textarea>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Assign Machines</label>
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+          <optgroup>
+            <option value="">Select</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Assign Tools</label>
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+          <optgroup>
+            <option value="">Select</option>
+          </optgroup>
+        </select>
+      </div>
     </div>
-
-    <!-- Backup History -->
-    <div class="rounded-lg border bg-gray-100 p-4">
-      <h4 class="mb-4 text-lg font-bold">Backup History</h4>
-      <table class="min-w-full table-auto border-collapse border">
-        <thead>
-          <tr class="bg-gray-200">
-            <th class="border px-4 py-2">Backup Name</th>
-            <th class="border px-4 py-2">Date</th>
-            <th class="border px-4 py-2">Status</th>
-            <th class="border px-4 py-2">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="backup in backupHistory" :key="backup.name">
-            <td class="border px-4 py-2">{{ backup.name }}</td>
-            <td class="border px-4 py-2">{{ backup.date }}</td>
-            <td class="border px-4 py-2">{{ backup.status }}</td>
-            <td class="border px-4 py-2">
-              <button
-                class="w-full rounded-lg bg-green-600 px-3 py-1 text-white"
-                @click="downloadBackup(backup.name)"
-              >
-                Download
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  </Popup>
+  <Popup :visible="showEditWorkStationPopup" @update:visible="showEditWorkStationPopup = $event">
+    <div>
+      <h3 class="flex justify-center text-2xl font-extrabold">Edit Workstation</h3>
+    </div>
+    <div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Workstation Name</label>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Workstation Name"
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Status</label>
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+          <optgroup>
+            <option value="">Active</option>
+            <option value="">Inactive</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="">Capacity (Units/Hour)</label>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Capacity"
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="">Description</label>
+        <textarea
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          name=""
+          id=""
+          placeholder="Enter Workstation Description"
+        ></textarea>
+      </div>
     </div>
   </Popup>
 </template>
@@ -311,144 +426,31 @@
 import { ref } from 'vue'
 import Popup from '@/components/popup.vue'
 
-const showActivityLogPopup = ref(false)
-const showUserMngtPopup = ref(false)
-const showPopup = ref(false)
-const showAvatarPopup = ref(false)
-const showUserCrtPopup = ref(false)
-const isRead = ref(false)
-const isReadSecond = ref(false)
-const uploadedImage = ref<string | null>(null)
+const showMaintenancePopup = ref(false)
+const selectedWorkcenter = ref('Workcenter 1')
 
-const userActivities = ref([
-  {
-    user: 'John Doe',
-    activity: 'Logged In',
-    date: '2024-11-24',
-    time: '10:30 AM',
-    ip: '192.168.1.1',
-  },
-  {
-    user: 'Jane Smith',
-    activity: 'Changed Profile Picture',
-    date: '2024-11-24',
-    time: '09:45 AM',
-    ip: '192.168.1.2',
-  },
-  {
-    user: 'John Doe',
-    activity: 'Updated Settings',
-    date: '2024-11-23',
-    time: '03:10 PM',
-    ip: '192.168.1.3',
-  },
+const showWorkCenterPopup = ref(false)
+const showWorkCenterPopup2 = ref(false)
+const showWorkCenterPopup3 = ref(false)
+const showViewWorkStationPopup = ref(false)
+const showEditWorkStationPopup = ref(false)
+const showRealTimePerformancePopup = ref(false)
+
+const workCenters = ref([
+  { name: 'Workcenter A', type: 'Type 1', location: 'Location 1', status: 'Active' },
+  { name: 'Workcenter B', type: 'Type 2', location: 'Location 2', status: 'Inactive' },
+  { name: 'Workcenter C', type: 'Type 3', location: 'Location 3', status: 'Active' },
+  { name: 'Workcenter D', type: 'Type 4', location: 'Location 4', status: 'Active' },
+  { name: 'Workcenter E', type: 'Type 5', location: 'Location 5', status: 'Inactive' },
+  { name: 'Workcenter F', type: 'Type 6', location: 'Location 6', status: 'Active' },
 ])
-
-function markAsRead() {
-  isRead.value = true
-}
-
-function markAsReadSecond() {
-  isReadSecond.value = true
-}
-
-function handleImageUpload(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = () => {
-      uploadedImage.value = reader.result as string
-    }
-    reader.readAsDataURL(file)
-  }
-}
-const newUser = ref({
-  name: '',
-  email: '',
-  department: '',
-  role: '',
-  status: 'Active',
-  password: '',
-})
-
-const users = ref([
-  {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    department: 'Engineering',
-    role: 'Admin',
-    status: 'Active',
-  },
-])
-
-const createUser = () => {
-  if (
-    newUser.value.name &&
-    newUser.value.email &&
-    newUser.value.department &&
-    newUser.value.role &&
-    newUser.value.password
-  ) {
-    users.value.push({ ...newUser.value })
-
-    newUser.value = {
-      name: '',
-      email: '',
-      department: '',
-      role: '',
-      status: 'Active',
-      password: '',
-    }
-
-    showUserCrtPopup.value = false
-  }
-}
-
-const closePopup = () => {
-  showUserCrtPopup.value = false
-}
-
-const showLanguageTimezonePopup = ref(false)
-
-const settings = ref({
-  language: 'English',
-  timezone: 'UTC',
-})
-
-const saveSettings = () => {
-  console.log('Settings Saved:', settings.value)
-  showLanguageTimezonePopup.value = false
-}
-const showBackupPopup = ref(false)
-
-// Backup settings state
-const backupSettings = ref({
-  frequency: 'Daily',
-  time: '',
-})
-
-// Backup history data
-const backupHistory = ref([
-  { name: 'Backup_2024_11_25.zip', date: '25 Nov 2024', status: 'Completed' },
-  { name: 'Backup_2024_11_24.zip', date: '24 Nov 2024', status: 'Completed' },
-])
-
-const saveBackupSettings = () => {
-  console.log('Backup Settings Saved:', backupSettings.value)
-}
-
-const handleFileUpload = (event: Event) => {
-  const file = (event.target as HTMLInputElement).files?.[0]
-  if (file) {
-    console.log('Selected file for restore:', file.name)
-  }
-}
-
-const restoreData = () => {
-  console.log('Restore data initiated.')
-}
-
-const downloadBackup = (fileName: string) => {
-  console.log('Downloading backup:', fileName)
-}
 </script>
+
+<style scoped>
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+</style>
