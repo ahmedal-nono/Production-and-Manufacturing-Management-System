@@ -1,62 +1,73 @@
 <template>
-  <!-- <div class="flex flex-col m-2 p-4 justify-center rounded-2xl bg-gray-200">
-      <p class="text-xl font-bold flex justify-center">System Administration</p>
-      <div class="flex flex-row py-4 gap-20">
-        <div class="flex flex-col bg-gray-100 rounded-lg p-2 w-3/6">
-          <p class="font-bold">System Performance Monitoring</p>
-          <div class="flex flex-col font-bold text-[13px] pt-2 space-y-1">
-            <p>Server Load: <span>75%</span></p>
-            <p>Response Time: <span>120ms</span></p>
-            <p>Errors: <span>3 errors</span></p>
-            <p>CPU Usage: <span>65%</span></p>
-            <p>Memory Usage: <span>80%</span></p>
-            <p>Disk Space: <span>90 / 120GB</span></p>
-          </div>
-        </div>
-        <div class="flex flex-col bg-gray-100 rounded-lg p-2">
-          <p class="font-bold">User Activity Tracking</p>
-          <div class="flex flex-col font-bold pt-2 space-y-1">
-            <p>Activity Log</p>
-            <button class="bg-green-600 h-fit w-fit p-2 rounded-md font-normal text-white" @click="showActivityLogPopup = true">View Full Activity Log</button>
-            <p>Last Login Information</p>
-            <span>Last Login: 11/24/2024, 10:30 AM</span>
-            <p>Your Last Login</p>
-            <span>Last Login: 11/24/2024, 09:45 AM</span>
-          </div>
+  <div class="m-2 flex flex-col justify-center rounded-2xl bg-gray-200 p-4">
+    <p class="flex justify-center text-xl font-bold">System Administration</p>
+    <div class="flex flex-row gap-20 py-4">
+      <div class="flex w-3/6 flex-col rounded-lg bg-gray-100 p-2">
+        <p class="font-bold">System Performance Monitoring</p>
+        <div class="flex flex-col space-y-1 pt-2 text-[13px] font-bold">
+          <p>Server Load: <span>75%</span></p>
+          <p>Response Time: <span>120ms</span></p>
+          <p>Errors: <span>3 errors</span></p>
+          <p>CPU Usage: <span>65%</span></p>
+          <p>Memory Usage: <span>80%</span></p>
+          <p>Disk Space: <span>90 / 120GB</span></p>
         </div>
       </div>
-      <div class="flex flex-col items-center bg-[#bee8ea] border rounded-xl w-fit p-6 cursor-pointer shadow-md shadow-gray-500" @click="showUserMngtPopup = true">
-        <img src="../assets/user_manage.png" class="size-20" alt="" />
-        <p class="font-bold text-[13px] pt-2">User Management</p>
-      </div>
-      <div class="flex justify-end gap-10 py-2">
-        <div class="flex flex-col items-center justify-evenly bg-[#bee8ea] border rounded-xl w-fit p-2 cursor-pointer shadow-md shadow-gray-500" @click="showLanguageTimezonePopup = true">
-          <img src="../assets/settings.png" class="size-12" alt="" />
-          <p class="font-bold text-[13px] pt-2">Language & Time</p>
+      <div class="flex flex-col rounded-lg bg-gray-100 p-2">
+        <p class="font-bold">User Activity Tracking</p>
+        <div class="flex flex-col space-y-1 pt-2 font-bold">
+          <p>Activity Log</p>
+          <button
+            class="h-fit w-fit rounded-md bg-green-600 p-2 font-normal text-white"
+            @click="showActivityLogPopup = true"
+          >
+            View Full Activity Log
+          </button>
+          <p>Last Login Information</p>
+          <span>Last Login: 11/24/2024, 10:30 AM</span>
+          <p>Your Last Login</p>
+          <span>Last Login: 11/24/2024, 09:45 AM</span>
         </div>
-        <div class="flex flex-col items-center justify-evenly bg-[#bee8ea] border rounded-xl w-fit p-2 cursor-pointer shadow-md shadow-gray-500" @click="showBackupPopup = true">
-          <img src="../assets/backup.png" class="size-12" alt="" />
-          <p class="font-bold text-[13px] pt-2">Backup & Restore</p>
-        </div>
       </div>
-    </div> -->
+    </div>
+    <div
+      class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
+      @click="showUserMngtPopup = true"
+    >
+      <img src="../assets/user_manage.png" class="size-20" alt="" />
+      <p class="pt-2 text-[13px] font-bold">User Management</p>
+    </div>
+    <div class="flex justify-end gap-10 py-2">
+      <div
+        class="flex w-fit cursor-pointer flex-col items-center justify-evenly rounded-xl border bg-[#bee8ea] p-2 shadow-md shadow-gray-500"
+        @click="showLanguageTimezonePopup = true"
+      >
+        <img src="../assets/settings.png" class="size-12" alt="" />
+        <p class="pt-2 text-[13px] font-bold">Language & Time</p>
+      </div>
+      <div
+        class="flex w-fit cursor-pointer flex-col items-center justify-evenly rounded-xl border bg-[#bee8ea] p-2 shadow-md shadow-gray-500"
+        @click="showBackupPopup = true"
+      >
+        <img src="../assets/backup.png" class="size-12" alt="" />
+        <p class="pt-2 text-[13px] font-bold">Backup & Restore</p>
+      </div>
+    </div>
+  </div>
 
-  <Popup
-    :visible="showActivityLogPopup"
-    @update:visible="showActivityLogPopup = $event"
-  >
+  <Popup :visible="showActivityLogPopup" @update:visible="showActivityLogPopup = $event">
     <div>
-      <h3 class="font-bold text-xl mb-4">Filter Activity Log</h3>
-      <h5 class="font-bold text-sm my-2">Start Date</h5>
-      <input type="date" name="" id="" class="border-2 rounded-md p-1 w-full" />
-      <h5 class="font-bold text-sm my-2">End Date</h5>
-      <input type="date" name="" id="" class="border-2 rounded-md p-1 w-full" />
-      <h5 class="font-bold text-sm my-2">Select User</h5>
-      <select name="" id="" class="border-2 rounded-md p-1 w-full mb-2">
+      <h3 class="mb-4 text-xl font-bold">Filter Activity Log</h3>
+      <h5 class="my-2 text-sm font-bold">Start Date</h5>
+      <input type="date" name="" id="" class="w-full rounded-md border-2 p-1" />
+      <h5 class="my-2 text-sm font-bold">End Date</h5>
+      <input type="date" name="" id="" class="w-full rounded-md border-2 p-1" />
+      <h5 class="my-2 text-sm font-bold">Select User</h5>
+      <select name="" id="" class="mb-2 w-full rounded-md border-2 p-1">
         <option value="">All Users</option>
       </select>
     </div>
-    <h3 class="font-bold text-xl mb-4">Activity Log</h3>
+    <h3 class="mb-4 text-xl font-bold">Activity Log</h3>
     <div class="overflow-x-auto">
       <table class="min-w-full table-auto">
         <thead>
@@ -79,33 +90,24 @@
         </tbody>
       </table>
     </div>
-    <div class="flex flex-row space-x-4 mt-2 justify-center">
-      <button class="bg-blue-600 p-1.5 w-2/12 rounded-lg text-white">
-        Prev
-      </button>
+    <div class="mt-2 flex flex-row justify-center space-x-4">
+      <button class="w-2/12 rounded-lg bg-blue-600 p-1.5 text-white">Prev</button>
       <p class="mt-2">Page 1 of 5</p>
-      <button class="bg-blue-600 p-1.5 w-2/12 rounded-lg text-white">
-        Next
-      </button>
+      <button class="w-2/12 rounded-lg bg-blue-600 p-1.5 text-white">Next</button>
     </div>
   </Popup>
-  <Popup
-    :visible="showUserMngtPopup"
-    @update:visible="showUserMngtPopup = $event"
-  >
-    <h3 class="font-bold text-2xl mb-4 justify-center flex">
-      User Account Management
-    </h3>
+  <Popup :visible="showUserMngtPopup" @update:visible="showUserMngtPopup = $event">
+    <h3 class="mb-4 flex justify-center text-2xl font-bold">User Account Management</h3>
     <div class="flex justify-end">
       <button
-        class="bg-blue-600 p-1.5 w-2/12 rounded-lg text-white"
+        class="w-2/12 rounded-lg bg-blue-600 p-1.5 text-white"
         @click="showUserCrtPopup = true"
       >
         Create User
       </button>
     </div>
     <div>
-      <h3 class="font-bold text-lg mb-4">Existing Users</h3>
+      <h3 class="mb-4 text-lg font-bold">Existing Users</h3>
       <table class="min-w-full table-auto">
         <thead>
           <tr>
@@ -124,162 +126,117 @@
             <td class="px-4 py-2">{{ user.department }}</td>
             <td class="px-4 py-2">{{ user.role }}</td>
             <td class="px-4 py-2">{{ user.status }}</td>
-            <td class="px-4 py-2 flex gap-2">
-              <button class="bg-yellow-500 p-2 rounded-lg text-white">
-                Edit
-              </button>
-              <button class="bg-red-600 p-2 rounded-lg text-white">
-                Delete
-              </button>
+            <td class="flex gap-2 px-4 py-2">
+              <button class="rounded-lg bg-yellow-500 p-2 text-white">Edit</button>
+              <button class="rounded-lg bg-red-600 p-2 text-white">Delete</button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
   </Popup>
-  <Popup
-    :visible="showUserCrtPopup"
-    @update:visible="showUserCrtPopup = $event"
-  >
-    <h3 class="font-bold text-2xl mb-4 justify-center flex">Create New User</h3>
+  <Popup :visible="showUserCrtPopup" @update:visible="showUserCrtPopup = $event">
+    <h3 class="mb-4 flex justify-center text-2xl font-bold">Create New User</h3>
     <div>
       <form @submit.prevent="createUser" class="space-y-4">
         <div class="flex flex-col">
-          <label for="name" class="font-bold text-sm">Full Name</label>
+          <label for="name" class="text-sm font-bold">Full Name</label>
           <input
             type="text"
             id="name"
             v-model="newUser.name"
             placeholder="Enter full name"
-            class="p-2 border rounded-md"
+            class="rounded-md border p-2"
             required
           />
         </div>
         <div class="flex flex-col">
-          <label for="email" class="font-bold text-sm">Email</label>
+          <label for="email" class="text-sm font-bold">Email</label>
           <input
             type="email"
             id="email"
             v-model="newUser.email"
             placeholder="Enter email"
-            class="p-2 border rounded-md"
+            class="rounded-md border p-2"
             required
           />
         </div>
         <div class="flex flex-col">
-          <label for="department" class="font-bold text-sm"
-            >Contact Number</label
-          >
+          <label for="department" class="text-sm font-bold">Contact Number</label>
           <input
             type="text"
             id="number"
             v-model="newUser.department"
             placeholder="Enter contact number"
-            class="p-2 border rounded-md"
+            class="rounded-md border p-2"
             required
           />
         </div>
         <div class="flex flex-col">
-          <label for="department" class="font-bold text-sm">Department</label>
+          <label for="department" class="text-sm font-bold">Department</label>
           <input
             type="text"
             id="department"
             v-model="newUser.department"
             placeholder="Enter department"
-            class="p-2 border rounded-md"
+            class="rounded-md border p-2"
             required
           />
         </div>
         <div class="flex flex-col">
-          <label for="role" class="font-bold text-sm">Role</label>
-          <select
-            id="status"
-            v-model="newUser.status"
-            class="p-2 border rounded-md"
-            required
-          >
+          <label for="role" class="text-sm font-bold">Role</label>
+          <select id="status" v-model="newUser.status" class="rounded-md border p-2" required>
             <option value="Active">Select a role</option>
           </select>
         </div>
         <div class="flex flex-col">
-          <label for="status" class="font-bold text-sm">Status</label>
-          <select
-            id="status"
-            v-model="newUser.status"
-            class="p-2 border rounded-md"
-            required
-          >
+          <label for="status" class="text-sm font-bold">Status</label>
+          <select id="status" v-model="newUser.status" class="rounded-md border p-2" required>
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
           </select>
         </div>
         <div class="flex flex-col">
-          <label for="password" class="font-bold text-sm">Password</label>
+          <label for="password" class="text-sm font-bold">Password</label>
           <input
             type="password"
             id="password"
             v-model="newUser.password"
             placeholder="Enter password"
-            class="p-2 border rounded-md"
+            class="rounded-md border p-2"
             required
           />
         </div>
         <div class="flex justify-end gap-4">
-          <button
-            type="button"
-            class="bg-gray-500 text-white p-2 rounded-lg"
-            @click="closePopup"
-          >
+          <button type="button" class="rounded-lg bg-gray-500 p-2 text-white" @click="closePopup">
             Cancel
           </button>
-          <button type="submit" class="bg-blue-600 text-white p-2 rounded-lg">
-            Create User
-          </button>
+          <button type="submit" class="rounded-lg bg-blue-600 p-2 text-white">Create User</button>
         </div>
       </form>
     </div>
   </Popup>
-  <Popup
-    :visible="showLanguageTimezonePopup"
-    @update:visible="showLanguageTimezonePopup = $event"
-  >
-    <h3 class="font-bold text-2xl mb-4 justify-center flex">
-      Language & Time Zone Settings
-    </h3>
+  <Popup :visible="showLanguageTimezonePopup" @update:visible="showLanguageTimezonePopup = $event">
+    <h3 class="mb-4 flex justify-center text-2xl font-bold">Language & Time Zone Settings</h3>
     <div>
       <form @submit.prevent="saveSettings" class="space-y-4">
         <div class="flex flex-col">
-          <label for="language" class="font-bold text-sm"
-            >Preferred Language</label
-          >
-          <select
-            id="language"
-            v-model="settings.language"
-            class="p-2 border rounded-md"
-            required
-          >
+          <label for="language" class="text-sm font-bold">Preferred Language</label>
+          <select id="language" v-model="settings.language" class="rounded-md border p-2" required>
             <option value="English">English</option>
             <option value="Arabic">Arabic</option>
           </select>
         </div>
 
         <div class="flex flex-col">
-          <label for="timezone" class="font-bold text-sm">Time Zone</label>
-          <select
-            id="timezone"
-            v-model="settings.timezone"
-            class="p-2 border rounded-md"
-            required
-          >
+          <label for="timezone" class="text-sm font-bold">Time Zone</label>
+          <select id="timezone" v-model="settings.timezone" class="rounded-md border p-2" required>
             <option value="UTC">UTC-12:00</option>
             <option value="GMT">GMT</option>
           </select>
         </div>
         <div class="flex justify-end gap-4">
-          <button
-            type="submit"
-            class="bg-blue-600 text-white p-2 w-full rounded-lg"
-          >
+          <button type="submit" class="w-full rounded-lg bg-blue-600 p-2 text-white">
             Save Settings
           </button>
         </div>
@@ -287,19 +244,17 @@
     </div>
   </Popup>
   <Popup :visible="showBackupPopup" @update:visible="showBackupPopup = $event">
-    <h3 class="font-bold text-2xl mb-6 text-center">Backup and Restore</h3>
+    <h3 class="mb-6 text-center text-2xl font-bold">Backup and Restore</h3>
 
     <!-- Automated Backup Settings -->
-    <div class="mb-6 p-4 border rounded-lg bg-gray-100">
-      <h4 class="font-bold text-lg mb-4">Automated Backup Settings</h4>
+    <div class="mb-6 rounded-lg border bg-gray-100 p-4">
+      <h4 class="mb-4 text-lg font-bold">Automated Backup Settings</h4>
       <div class="mb-4">
-        <label for="backup-frequency" class="font-bold text-sm block mb-1"
-          >Backup Frequency</label
-        >
+        <label for="backup-frequency" class="mb-1 block text-sm font-bold">Backup Frequency</label>
         <select
           id="backup-frequency"
           v-model="backupSettings.frequency"
-          class="p-2 border rounded-md w-full"
+          class="w-full rounded-md border p-2"
         >
           <option value="Daily">Daily</option>
           <option value="Weekly">Weekly</option>
@@ -307,66 +262,59 @@
         </select>
       </div>
       <div class="mb-4">
-        <label for="backup-time" class="font-bold text-sm block mb-1"
-          >Backup Time</label
-        >
+        <label for="backup-time" class="mb-1 block text-sm font-bold">Backup Time</label>
         <input
           type="time"
           id="backup-time"
           v-model="backupSettings.time"
-          class="p-2 border rounded-md w-full"
+          class="w-full rounded-md border p-2"
         />
       </div>
       <button
         @click="saveBackupSettings"
-        class="bg-blue-600 text-white px-4 py-2 rounded-lg w-full"
+        class="w-full rounded-lg bg-blue-600 px-4 py-2 text-white"
       >
         Save Backup Settings
       </button>
     </div>
 
     <!-- Restore Data -->
-    <div class="mb-6 p-4 border rounded-lg bg-gray-100">
-      <h4 class="font-bold text-lg mb-4">Restore Data</h4>
+    <div class="mb-6 rounded-lg border bg-gray-100 p-4">
+      <h4 class="mb-4 text-lg font-bold">Restore Data</h4>
       <div class="mb-4">
-        <label for="restore-file" class="font-bold text-sm block mb-1"
-          >Select Backup File</label
-        >
+        <label for="restore-file" class="mb-1 block text-sm font-bold">Select Backup File</label>
         <input
           type="file"
           id="restore-file"
           @change="handleFileUpload"
-          class="p-2 border rounded-md w-full"
+          class="w-full rounded-md border p-2"
         />
       </div>
-      <button
-        @click="restoreData"
-        class="bg-red-600 text-white px-4 py-2 rounded-lg w-full"
-      >
+      <button @click="restoreData" class="w-full rounded-lg bg-red-600 px-4 py-2 text-white">
         Restore Data
       </button>
     </div>
 
     <!-- Backup History -->
-    <div class="p-4 border rounded-lg bg-gray-100">
-      <h4 class="font-bold text-lg mb-4">Backup History</h4>
+    <div class="rounded-lg border bg-gray-100 p-4">
+      <h4 class="mb-4 text-lg font-bold">Backup History</h4>
       <table class="min-w-full table-auto border-collapse border">
         <thead>
           <tr class="bg-gray-200">
-            <th class="px-4 py-2 border">Backup Name</th>
-            <th class="px-4 py-2 border">Date</th>
-            <th class="px-4 py-2 border">Status</th>
-            <th class="px-4 py-2 border">Action</th>
+            <th class="border px-4 py-2">Backup Name</th>
+            <th class="border px-4 py-2">Date</th>
+            <th class="border px-4 py-2">Status</th>
+            <th class="border px-4 py-2">Action</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="backup in backupHistory" :key="backup.name">
-            <td class="px-4 py-2 border">{{ backup.name }}</td>
-            <td class="px-4 py-2 border">{{ backup.date }}</td>
-            <td class="px-4 py-2 border">{{ backup.status }}</td>
-            <td class="px-4 py-2 border">
+            <td class="border px-4 py-2">{{ backup.name }}</td>
+            <td class="border px-4 py-2">{{ backup.date }}</td>
+            <td class="border px-4 py-2">{{ backup.status }}</td>
+            <td class="border px-4 py-2">
               <button
-                class="bg-green-600 w-full text-white px-3 py-1 rounded-lg"
+                class="w-full rounded-lg bg-green-600 px-3 py-1 text-white"
                 @click="downloadBackup(backup.name)"
               >
                 Download
@@ -380,41 +328,147 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import Popup from "../components/popup.vue";
+import { ref } from 'vue'
+import Popup from '@/components/popup.vue'
 
-const showActivityLogPopup = ref(false);
-const showUserMngtPopup = ref(false);
+const showActivityLogPopup = ref(false)
+const showUserMngtPopup = ref(false)
+const showPopup = ref(false)
+const showAvatarPopup = ref(false)
+const showUserCrtPopup = ref(false)
+const isRead = ref(false)
+const isReadSecond = ref(false)
+const uploadedImage = ref<string | null>(null)
 
-const newUser = ref({
-  name: "",
-  email: "",
-  department: "",
-  role: "",
-  status: "Active",
-  password: "",
-});
 const userActivities = ref([
   {
-    user: "John Doe",
-    activity: "Logged In",
-    date: "2024-11-24",
-    time: "10:30 AM",
-    ip: "192.168.1.1",
+    user: 'John Doe',
+    activity: 'Logged In',
+    date: '2024-11-24',
+    time: '10:30 AM',
+    ip: '192.168.1.1',
   },
   {
-    user: "Jane Smith",
-    activity: "Changed Profile Picture",
-    date: "2024-11-24",
-    time: "09:45 AM",
-    ip: "192.168.1.2",
+    user: 'Jane Smith',
+    activity: 'Changed Profile Picture',
+    date: '2024-11-24',
+    time: '09:45 AM',
+    ip: '192.168.1.2',
   },
   {
-    user: "John Doe",
-    activity: "Updated Settings",
-    date: "2024-11-23",
-    time: "03:10 PM",
-    ip: "192.168.1.3",
+    user: 'John Doe',
+    activity: 'Updated Settings',
+    date: '2024-11-23',
+    time: '03:10 PM',
+    ip: '192.168.1.3',
   },
-]);
+])
+
+function markAsRead() {
+  isRead.value = true
+}
+
+function markAsReadSecond() {
+  isReadSecond.value = true
+}
+
+function handleImageUpload(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = () => {
+      uploadedImage.value = reader.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+}
+const newUser = ref({
+  name: '',
+  email: '',
+  department: '',
+  role: '',
+  status: 'Active',
+  password: '',
+})
+
+const users = ref([
+  {
+    name: 'John Doe',
+    email: 'john.doe@example.com',
+    department: 'Engineering',
+    role: 'Admin',
+    status: 'Active',
+  },
+])
+
+const createUser = () => {
+  if (
+    newUser.value.name &&
+    newUser.value.email &&
+    newUser.value.department &&
+    newUser.value.role &&
+    newUser.value.password
+  ) {
+    users.value.push({ ...newUser.value })
+
+    newUser.value = {
+      name: '',
+      email: '',
+      department: '',
+      role: '',
+      status: 'Active',
+      password: '',
+    }
+
+    showUserCrtPopup.value = false
+  }
+}
+
+const closePopup = () => {
+  showUserCrtPopup.value = false
+}
+
+const showLanguageTimezonePopup = ref(false)
+
+const settings = ref({
+  language: 'English',
+  timezone: 'UTC',
+})
+
+const saveSettings = () => {
+  console.log('Settings Saved:', settings.value)
+  showLanguageTimezonePopup.value = false
+}
+const showBackupPopup = ref(false)
+
+// Backup settings state
+const backupSettings = ref({
+  frequency: 'Daily',
+  time: '',
+})
+
+// Backup history data
+const backupHistory = ref([
+  { name: 'Backup_2024_11_25.zip', date: '25 Nov 2024', status: 'Completed' },
+  { name: 'Backup_2024_11_24.zip', date: '24 Nov 2024', status: 'Completed' },
+])
+
+const saveBackupSettings = () => {
+  console.log('Backup Settings Saved:', backupSettings.value)
+}
+
+const handleFileUpload = (event: Event) => {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (file) {
+    console.log('Selected file for restore:', file.name)
+  }
+}
+
+const restoreData = () => {
+  console.log('Restore data initiated.')
+}
+
+const downloadBackup = (fileName: string) => {
+  console.log('Downloading backup:', fileName)
+}
 </script>

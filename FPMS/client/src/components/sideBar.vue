@@ -1,59 +1,32 @@
 <template>
-    <div
-      class="p-1 w-fit">
-      <div class="bg-[#5477AD] rounded-xl p-1 flex flex-col">
-        <div class="flex flex-col cursor-pointer border m-1 bg-white rounded-lg items-center">
-          <img src="../assets/system_admin.png" alt="" class="size-8" />
-          <p class="text-[12px] text-nowrap">System Admin</p>
-        </div>
-        <div class="my-2 flex flex-col cursor-pointer border m-1 bg-white rounded-lg px-1 py-1 items-center">
-          <img src="../assets/mz.png" alt="" class="size-8" />
-          <p class="text-[12px] text-nowrap">aaaaaaaaaaaa</p>
-        </div>
-        <div class="my-2 flex flex-col cursor-pointer border m-1 bg-white rounded-lg px-1 py-1 items-center">
-          <img src="../assets/mz.png" alt="" class="size-8" />
-          <p class="text-[12px] text-nowrap">a</p>
-        </div>
-        <div class="my-2 flex flex-col cursor-pointer border m-1 bg-white rounded-lg px-1 py-1 items-center">
-          <img src="../assets/mz.png" alt="" class="size-8" />
-          <p class="text-[12px] text-nowrap">a</p>
-        </div>
-        <div class="my-2 flex flex-col cursor-pointer border m-1 bg-white rounded-lg px-1 py-1 items-center">
-          <img src="../assets/mz.png" alt="" class="size-8" />
-          <p class="text-[12px] text-nowrap">a</p>
-        </div>
-        <div class="my-2 flex flex-col cursor-pointer border m-1 bg-white rounded-lg px-1 py-1 items-center">
-          <img src="../assets/mz.png" alt="" class="size-8" />
-          <p class="text-[12px] text-nowrap">a</p>
-        </div>
-        <div class="my-2 flex flex-col cursor-pointer border m-1 bg-white rounded-lg px-1 py-1 items-center">
-          <img src="../assets/mz.png" alt="" class="size-8" />
-          <p class="text-[12px] text-nowrap">a</p>
-        </div>
-        <div class="my-2 flex flex-col cursor-pointer border m-1 bg-white rounded-lg px-1 py-1 items-center">
-          <img src="../assets/mz.png" alt="" class="size-8" />
-          <p class="text-[12px] text-nowrap">a</p>
-        </div>
-        <div class="my-2 flex flex-col cursor-pointer border m-1 bg-white rounded-lg px-1 py-1 items-center">
-          <img src="../assets/mz.png" alt="" class="size-8" />
-          <p class="text-[12px] text-nowrap">a</p>
-        </div>
-        <div class="my-2 flex flex-col cursor-pointer border m-1 bg-white rounded-lg px-1 py-1 items-center">
-          <img src="../assets/mz.png" alt="" class="size-8" />
-          <p class="text-[12px] text-nowrap">a</p>
-        </div>
-        <div class="my-2 flex flex-col cursor-pointer border m-1 bg-white rounded-lg px-1 py-1 items-center">
-          <img src="../assets/mz.png" alt="" class="size-8" />
-          <p class="text-[12px] text-nowrap">a</p>
-        </div>
-        <div class="my-2 flex flex-col cursor-pointer border m-1 bg-white rounded-lg px-1 py-1 items-center">
-          <img src="../assets/mz.png" alt="" class="size-8" />
-          <p class="text-[12px] text-nowrap">a</p>
-        </div>
-      </div>
+  <div class="w-fit p-1">
+    <div class="flex h-[99dvh] flex-col overflow-y-auto rounded-xl bg-[#5477AD] p-1">
+      <RouterLink
+        v-for="(link, index) in links"
+        :to="{ name: link.to }"
+        :key="index"
+        class="m-1 my-2 flex cursor-pointer flex-col items-center rounded-lg border bg-white px-1 py-1"
+      >
+        <img :src="link.img" alt="" class="size-8" />
+        <p class="text-[10px] text-nowrap">{{ link.name }}</p>
+      </RouterLink>
     </div>
-  </template>
-  
-  <script setup lang="ts">
+  </div>
+</template>
 
-  </script>
+<script setup lang="ts">
+import systemImg from '@/assets/system_admin.png'
+
+const links = [
+  {
+    img: systemImg,
+    name: 'System Admin',
+    to: 'home',
+  },
+  {
+    img: systemImg,
+    name: 'Workcenters & Workstations',
+    to: 'wrkcntr',
+  },
+]
+</script>
