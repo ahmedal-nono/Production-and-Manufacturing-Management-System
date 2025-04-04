@@ -6,30 +6,30 @@
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         @click="showWorkCenterPopup = true"
       >
-        <img src="../assets/user_manage.png" class="size-20" alt="" />
+        <img src="@/assets/wokrcenter.png" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">WorkCenters</p>
       </div>
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         @click="showRealTimePerformancePopup = true"
       >
-        <img src="../assets/user_manage.png" class="size-20" alt="" />
+        <img src="@/assets/performance.png" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Real-Time Performance</p>
       </div>
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         @click="showMaintenancePopup = true"
       >
-        <img src="../assets/user_manage.png" class="size-20" alt="" />
+        <img src="@/assets/maintenance.png" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Maintenance</p>
       </div>
     </div>
     <div class="flex justify-end gap-10 py-2">
       <div
         class="flex w-fit cursor-pointer flex-col items-center justify-evenly rounded-xl border bg-[#bee8ea] p-2 shadow-md shadow-gray-500"
-        @click="showMaintenancePopup = true"
+        @click="showCreateWorkCenterPopup = true"
       >
-        <img src="../assets/backup.png" class="size-12" alt="" />
+        <img src="@/assets/add.png" class="size-12" alt="" />
       </div>
     </div>
   </div>
@@ -63,87 +63,6 @@
     <p class="flex justify-end text-6xl font-extrabold">+</p>
   </Popup>
 
-  <Popup
-    :visible="showRealTimePerformancePopup"
-    @update:visible="showRealTimePerformancePopup = $event"
-  >
-    <div class="flex flex-col">
-      <h2 class="flex justify-center text-3xl font-extrabold">
-        Workcenter and Workstation Monitoring
-      </h2>
-
-      <div class="flex flex-col">
-        <h3 class="flex justify-start py-2 text-lg font-bold">Real-Time Workcenter Performance</h3>
-        <label class="py-1 text-gray-500" for="workcenter">Select Workcenter:</label>
-        <select
-          class="rounded-lg border-2 border-gray-400 p-0.5"
-          id="workcenter"
-          v-model="selectedWorkcenter"
-        >
-          <option>Workcenter 1</option>
-          <option>Workcenter 2</option>
-        </select>
-
-        <div class="flex justify-between py-4">
-          <div class="w-64 rounded-xl bg-gray-100 p-2.5 text-center">
-            <strong>Efficiency</strong>
-            <p class="text-[#0000ff]">85%</p>
-          </div>
-          <div class="w-64 rounded-xl bg-gray-100 p-2.5 text-center">
-            <strong>Downtime</strong>
-            <p class="text-[#0000ff]">1h 15m</p>
-          </div>
-          <div class="w-64 rounded-xl bg-gray-100 p-2.5 text-center">
-            <strong>Task Progress</strong>
-            <p class="text-[#0000ff]">65%</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-2">
-        <h3 class="flex justify-start py-1 text-lg font-bold">
-          Real-Time Workstation Availability
-        </h3>
-        <h3 class="flex justify-start py-1 text-gray-500">Filter by Workcenter or Location:</h3>
-        <input
-          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
-          type="text"
-          placeholder="Search by Workcenter or Location"
-        />
-
-        <table class="mt-2.5 w-full border-collapse">
-          <thead>
-            <tr>
-              <th class="bg-gray-200">Workstation</th>
-              <th class="bg-gray-200">Status</th>
-              <th class="bg-gray-200">Current Task</th>
-              <th class="bg-gray-200">Upcoming Schedule</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Workstation 1</td>
-              <td class="text-green-500">Active</td>
-              <td>Assembling Unit A</td>
-              <td>10:00 AM - 12:00 PM</td>
-            </tr>
-            <tr>
-              <td>Workstation 2</td>
-              <td class="text-orange-300">Idle</td>
-              <td>-</td>
-              <td>12:30 PM - 2:00 PM</td>
-            </tr>
-            <tr>
-              <td>Workstation 3</td>
-              <td class="text-red-500">Under Maintenance</td>
-              <td>-</td>
-              <td>2:00 PM - 4:00 PM</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </Popup>
   <Popup :visible="showWorkCenterPopup2" @update:visible="showWorkCenterPopup2 = $event">
     <div>
       <h3 class="flex justify-center pb-2 text-2xl font-extrabold">Workcenter Details</h3>
@@ -179,11 +98,11 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>Workstation 1</td>
-              <td>Active</td>
-              <td>50 Units/Hour</td>
-              <td>Assembling Component A</td>
+            <tr v-for="(station, index) in workstations" :key="index">
+              <td>{{ station.name }}</td>
+              <td>{{ station.status }}</td>
+              <td>{{ station.output }}</td>
+              <td>{{ station.task }}</td>
               <td>
                 <button
                   @click="showViewWorkStationPopup = true"
@@ -191,53 +110,6 @@
                 >
                   View
                 </button>
-                <button
-                  @click="showEditWorkStationPopup = true"
-                  class="m-2 mt-4 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
-                >
-                  Edit
-                </button>
-                <button class="m-2 mt-4 cursor-pointer rounded-lg bg-red-600 p-1.5 text-white">
-                  Delete
-                </button>
-              </td>
-            </tr>
-            <tr>
-              <td>Workstation 2</td>
-              <td>Inactive</td>
-              <td>30 Units/Hour</td>
-              <td>---</td>
-              <td>
-                <button
-                  @click="showViewWorkStationPopup = true"
-                  class="m-2 mt-4 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
-                >
-                  View
-                </button>
-                <button
-                  @click="showEditWorkStationPopup = true"
-                  class="m-2 mt-4 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
-                >
-                  Edit
-                </button>
-                <button class="m-2 mt-4 cursor-pointer rounded-lg bg-red-600 p-1.5 text-white">
-                  Delete
-                </button>
-              </td>
-            </tr>
-            <tr>
-              <td>Workstation 3</td>
-              <td>Active</td>
-              <td>20 Units/Hour</td>
-              <td>Inspecting Final Product</td>
-              <td>
-                <button
-                  @click="showViewWorkStationPopup = true"
-                  class="m-2 mt-4 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
-                >
-                  View
-                </button>
-
                 <button
                   @click="showEditWorkStationPopup = true"
                   class="m-2 mt-4 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
@@ -323,7 +195,7 @@
   </Popup>
   <Popup :visible="showViewWorkStationPopup" @update:visible="showViewWorkStationPopup = $event">
     <div>
-      <h3 class="flex justify-center text-2xl font-extrabold">Create New Workstation</h3>
+      <h3 class="flex justify-center text-2xl font-extrabold">Workstation Details</h3>
     </div>
     <div>
       <div class="flex flex-col gap-2">
@@ -385,12 +257,29 @@
     </div>
     <div>
       <div class="flex flex-col gap-2">
+        <label for=""> Workstation Id</label>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Workstation Name"
+        />
+      </div>
+      <div class="flex flex-col gap-2">
         <label for=""> Workstation Name</label>
         <input
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
           placeholder="Enter Workstation Name"
         />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Associated Workcenter</label>
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+          <optgroup>
+            <option value="">Active</option>
+            <option value="">Inactive</option>
+          </optgroup>
+        </select>
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Status</label>
@@ -402,7 +291,7 @@
         </select>
       </div>
       <div class="flex flex-col gap-2">
-        <label for="">Capacity (Units/Hour)</label>
+        <label for="">Workstation Capacity</label>
         <input
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
@@ -410,7 +299,7 @@
         />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="">Description</label>
+        <label for="">Workstation Description</label>
         <textarea
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           name=""
@@ -418,7 +307,262 @@
           placeholder="Enter Workstation Description"
         ></textarea>
       </div>
+      <div class="flex flex-col gap-2">
+        <h4>Machines</h4>
+        <table class="mt-2.5 w-full border-collapse">
+          <thead>
+            <tr class="text-white">
+              <th class="bg-blue-600">Machine Id</th>
+              <th class="bg-blue-600">Machine Name</th>
+              <th class="bg-blue-600">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(station, index) in workstations" :key="index">
+              <td>{{ station.name }}</td>
+              <td>{{ station.status }}</td>
+              <td>
+                <button
+                  @click="showEditWorkStationPopup = true"
+                  class="m-2 mt-4 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
+                >
+                  Edit
+                </button>
+                <button class="m-2 mt-4 cursor-pointer rounded-lg bg-red-600 p-1.5 text-white">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white">
+          Add a Machine
+        </button>
+      </div>
     </div>
+    <div class="flex flex-col gap-2">
+      <h4>Tools</h4>
+      <table class="mt-2.5 w-full border-collapse">
+        <thead>
+          <tr class="text-white">
+            <th class="bg-blue-600">Tool Id</th>
+            <th class="bg-blue-600">Tool Name</th>
+            <th class="bg-blue-600">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(station, index) in workstations" :key="index">
+            <td>{{ station.name }}</td>
+            <td>{{ station.status }}</td>
+            <td>
+              <button
+                @click="showEditWorkStationPopup = true"
+                class="m-2 mt-4 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
+              >
+                Edit
+              </button>
+              <button class="m-2 mt-4 cursor-pointer rounded-lg bg-red-600 p-1.5 text-white">
+                Delete
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white">
+        Add a Tool
+      </button>
+      <button class="mt-4 w-full cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+        Save Changes
+      </button>
+    </div>
+  </Popup>
+
+  <Popup
+    :visible="showRealTimePerformancePopup"
+    @update:visible="showRealTimePerformancePopup = $event"
+  >
+    <div class="flex flex-col">
+      <h2 class="flex justify-center text-3xl font-extrabold">
+        Workcenter and Workstation Monitoring
+      </h2>
+
+      <div class="flex flex-col">
+        <h3 class="flex justify-start py-2 text-lg font-bold">Real-Time Workcenter Performance</h3>
+        <label class="py-1 text-gray-500" for="workcenter">Select Workcenter:</label>
+        <select
+          class="rounded-lg border-2 border-gray-400 p-0.5"
+          id="workcenter"
+          v-model="selectedWorkcenter"
+        >
+          <option>Workcenter 1</option>
+          <option>Workcenter 2</option>
+        </select>
+
+        <div class="flex justify-between py-4">
+          <div class="w-64 rounded-xl bg-gray-100 p-2.5 text-center">
+            <strong>Efficiency</strong>
+            <p class="text-[#0000ff]">85%</p>
+          </div>
+          <div class="w-64 rounded-xl bg-gray-100 p-2.5 text-center">
+            <strong>Downtime</strong>
+            <p class="text-[#0000ff]">1h 15m</p>
+          </div>
+          <div class="w-64 rounded-xl bg-gray-100 p-2.5 text-center">
+            <strong>Task Progress</strong>
+            <p class="text-[#0000ff]">65%</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-2">
+        <h3 class="flex justify-start py-1 text-lg font-bold">
+          Real-Time Workstation Availability
+        </h3>
+        <h3 class="flex justify-start py-1 text-gray-500">Filter by Workcenter or Location:</h3>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Search by Workcenter or Location"
+        />
+
+        <table class="mt-2.5 w-full border-collapse">
+          <thead>
+            <tr>
+              <th class="bg-gray-200">Workstation</th>
+              <th class="bg-gray-200">Status</th>
+              <th class="bg-gray-200">Current Task</th>
+              <th class="bg-gray-200">Upcoming Schedule</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(station, index) in workstationss" :key="index">
+              <td>{{ station.name }}</td>
+              <td :class="getStatusClass(station.status)">{{ station.status }}</td>
+              <td>{{ station.task }}</td>
+              <td>{{ station.time }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </Popup>
+
+  <Popup :visible="showMaintenancePopup" @update:visible="showMaintenancePopup = $event">
+    <div class="flex flex-col gap-2">
+      <p class="flex justify-center text-2xl font-extrabold">Schedule Workstation Maintenance</p>
+      <label for=""> Select Workcenter</label>
+      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+        <optgroup>
+          <option value="">Active</option>
+          <option value="">Inactive</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for=""> Select Workstation</label>
+      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+        <optgroup>
+          <option value="">Active</option>
+          <option value="">Inactive</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="">Maintenance Date</label>
+      <input
+        class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+        type="date"
+        name=""
+        id=""
+      />
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="">Maintenance Time</label>
+      <input
+        class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+        type="time"
+        name=""
+        id=""
+      />
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="">Recurrence</label>
+      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+        <optgroup>
+          <option value="">None</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="">Maintenance Description</label>
+      <textarea
+        class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+        name=""
+        id=""
+        placeholder="Provide details about the maintenance task"
+      ></textarea>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="">Assign Maintenance Staff</label>
+      <input
+        class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+        type="text"
+        placeholder="Enter staff names or roles"
+      />
+    </div>
+    <button class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white">
+      Schedule Maintenance
+    </button>
+  </Popup>
+
+  <Popup :visible="showCreateWorkCenterPopup" @update:visible="showCreateWorkCenterPopup = $event">
+    <div class="flex flex-col gap-2">
+      <p class="flex justify-center text-2xl font-extrabold">Create New Workcenter</p>
+      <label for=""> Workcenter Name</label>
+      <input
+        class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+        type="text"
+        placeholder="Enter Workcenter Name"
+      />
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for=""> Workcenter Code</label>
+      <input
+        class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+        type="text"
+        placeholder="Enter Workcenter Code"
+      />
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="">Location</label>
+      <textarea
+        class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+        name=""
+        id=""
+        placeholder="Enter Workcenter Location"
+      ></textarea>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for=""> Status</label>
+      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+        <optgroup>
+          <option value="">Active</option>
+          <option value="">Inactive</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="">Remarks</label>
+      <textarea
+        class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+        name=""
+        id=""
+        placeholder="Enter Additional Details (Optional)"
+      ></textarea>
+    </div>
+    <button class="mt-4 w-full cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+      Create Workcenter
+    </button>
   </Popup>
 </template>
 
@@ -426,7 +570,6 @@
 import { ref } from 'vue'
 import Popup from '@/components/popup.vue'
 
-const showMaintenancePopup = ref(false)
 const selectedWorkcenter = ref('Workcenter 1')
 
 const showWorkCenterPopup = ref(false)
@@ -435,6 +578,8 @@ const showWorkCenterPopup3 = ref(false)
 const showViewWorkStationPopup = ref(false)
 const showEditWorkStationPopup = ref(false)
 const showRealTimePerformancePopup = ref(false)
+const showMaintenancePopup = ref(false)
+const showCreateWorkCenterPopup = ref(false)
 
 const workCenters = ref([
   { name: 'Workcenter A', type: 'Type 1', location: 'Location 1', status: 'Active' },
@@ -444,6 +589,77 @@ const workCenters = ref([
   { name: 'Workcenter E', type: 'Type 5', location: 'Location 5', status: 'Inactive' },
   { name: 'Workcenter F', type: 'Type 6', location: 'Location 6', status: 'Active' },
 ])
+
+const workstations = ref([
+  {
+    id: 1,
+    name: 'Workstation 1',
+    status: 'Active',
+    output: '50 Units/Hour',
+    task: 'Assembling Component A',
+  },
+  {
+    id: 2,
+    name: 'Workstation 2',
+    status: 'Idle',
+    output: '-',
+    task: 'No Task Assigned',
+  },
+  {
+    id: 3,
+    name: 'Workstation 3',
+    status: 'Under Maintenance',
+    output: '-',
+    task: 'Repair in Progress',
+  },
+])
+
+interface Workstation {
+  name: string
+  status: 'Active' | 'Idle' | 'Under Maintenance'
+  task: string
+  time: string
+}
+
+const workstationss: Workstation[] = [
+  {
+    name: 'Workstation 1',
+    status: 'Active',
+    task: 'Assembling Unit A',
+    time: '10:00 AM - 12:00 PM',
+  },
+  {
+    name: 'Workstation 2',
+    status: 'Idle',
+    task: '-',
+    time: '12:30 PM - 2:00 PM',
+  },
+  {
+    name: 'Workstation 3',
+    status: 'Under Maintenance',
+    task: '-',
+    time: '2:00 PM - 4:00 PM',
+  },
+  {
+    name: 'Workstation 3',
+    status: 'Under Maintenance',
+    task: '-',
+    time: '2:00 PM - 4:00 PM',
+  },
+]
+
+function getStatusClass(status: string): string {
+  switch (status) {
+    case 'Active':
+      return 'text-green-500'
+    case 'Idle':
+      return 'text-orange-300'
+    case 'Under Maintenance':
+      return 'text-red-500'
+    default:
+      return 'text-gray-500'
+  }
+}
 </script>
 
 <style scoped>

@@ -1,6 +1,6 @@
 <template>
-  <div class="w-fit p-1">
-    <div class="flex h-[99dvh] flex-col overflow-y-auto rounded-xl bg-[#5477AD] p-1">
+  <div class="w-fit">
+    <div class="flex h-[100dvh] flex-col overflow-y-auto bg-[#8497aa] p-1">
       <RouterLink
         v-for="(link, index) in links"
         :to="{ name: link.to }"
@@ -16,6 +16,12 @@
 
 <script setup lang="ts">
 import systemImg from '@/assets/system_admin.png'
+import wrkcntr from '@/assets/wokrcenters.png'
+import production from '@/assets/production.png'
+import bom from '@/assets/bom.png'
+import workorder from '@/assets/workorder.png'
+import quality from '@/assets/quality.png'
+import reports from '@/assets/reports.png'
 
 const links = [
   {
@@ -24,34 +30,34 @@ const links = [
     to: 'home',
   },
   {
-    img: systemImg,
+    img: wrkcntr,
     name: 'Workcenters',
-    to: 'wrkcntr',
+    to: 'workcenters',
   },
   {
-    img: systemImg,
+    img: production,
     name: 'Production',
-    to: 'wrkcntr',
+    to: 'production',
   },
   {
-    img: systemImg,
+    img: bom,
     name: 'BOM',
-    to: 'wrkcntr',
+    to: 'bom',
   },
   {
-    img: systemImg,
+    img: workorder,
     name: 'Workorders / Instructions',
-    to: 'wrkcntr',
+    to: 'workorders',
   },
   {
-    img: systemImg,
+    img: quality,
     name: 'Quality Management',
-    to: 'wrkcntr',
+    to: 'quality',
   },
   {
-    img: systemImg,
+    img: reports,
     name: 'Reports',
-    to: 'wrkcntr',
+    to: 'reports',
   },
 ]
 </script>

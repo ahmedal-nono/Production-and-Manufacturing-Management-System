@@ -15,9 +15,34 @@ const router = createRouter({
       component: () => import('@/pages/Login.vue'),
     },
     {
-      path: '/wrkcntr',
-      name: 'wrkcntr',
+      path: '/workcenters',
+      name: 'workcenters',
       component: () => import('@/pages/user/WorkcentersWorkstationsManagement.vue'),
+    },
+    {
+      path: '/production',
+      name: 'production',
+      component: () => import('@/pages/user/Production.vue'),
+    },
+    {
+      path: '/bom',
+      name: 'bom',
+      component: () => import('@/pages/user/Bom.vue'),
+    },
+    {
+      path: '/workorders',
+      name: 'workorders',
+      component: () => import('@/pages/user/Workorders.vue'),
+    },
+    {
+      path: '/quality',
+      name: 'quality',
+      component: () => import('@/pages/user/QualityManagement.vue'),
+    },
+    {
+      path: '/reports',
+      name: 'reports',
+      component: () => import('@/pages/user/Reports.vue'),
     },
   ],
 })
