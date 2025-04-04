@@ -40,11 +40,6 @@ const links = [
     to: 'production',
   },
   {
-    img: bom,
-    name: 'BOM',
-    to: 'bom',
-  },
-  {
     img: workorder,
     name: 'Workorders / Instructions',
     to: 'workorders',

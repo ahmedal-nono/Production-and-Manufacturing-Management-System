@@ -25,11 +25,6 @@ const router = createRouter({
       component: () => import('@/pages/user/Production.vue'),
     },
     {
-      path: '/bom',
-      name: 'bom',
-      component: () => import('@/pages/user/Bom.vue'),
-    },
-    {
       path: '/workorders',
       name: 'workorders',
       component: () => import('@/pages/user/Workorders.vue'),
