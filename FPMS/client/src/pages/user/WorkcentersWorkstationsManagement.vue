@@ -323,7 +323,7 @@
               <td>{{ station.status }}</td>
               <td>
                 <button
-                  @click="showEditWorkStationPopup = true"
+                  @click="showEditMachinePopup = true"
                   class="m-2 mt-4 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
                 >
                   Edit
@@ -335,7 +335,10 @@
             </tr>
           </tbody>
         </table>
-        <button class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white">
+        <button
+          @click="showAddMachinePopup = true"
+          class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
+        >
           Add a Machine
         </button>
       </div>
@@ -356,7 +359,7 @@
             <td>{{ station.status }}</td>
             <td>
               <button
-                @click="showEditWorkStationPopup = true"
+                @click="showEditToolPopup = true"
                 class="m-2 mt-4 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
               >
                 Edit
@@ -368,7 +371,10 @@
           </tr>
         </tbody>
       </table>
-      <button class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white">
+      <button
+        @click="showAddToolPopup = true"
+        class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
+      >
         Add a Tool
       </button>
       <button class="mt-4 w-full cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
@@ -389,11 +395,7 @@
       <div class="flex flex-col">
         <h3 class="flex justify-start py-2 text-lg font-bold">Real-Time Workcenter Performance</h3>
         <label class="py-1 text-gray-500" for="workcenter">Select Workcenter:</label>
-        <select
-          class="rounded-lg border-2 border-gray-400 p-0.5"
-          id="workcenter"
-          v-model="selectedWorkcenter"
-        >
+        <select class="rounded-lg border-2 border-gray-400 p-0.5" id="workcenter">
           <option>Workcenter 1</option>
           <option>Workcenter 2</option>
         </select>
@@ -564,13 +566,159 @@
       Create Workcenter
     </button>
   </Popup>
+  <Popup :visible="showEditMachinePopup" @update:visible="showEditMachinePopup = $event">
+    <div>
+      <h3 class="flex justify-center text-2xl font-extrabold">Edit Machine</h3>
+    </div>
+    <div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Machine Id</label>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Machine Id"
+          disabled
+        />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="">Machine Name</label>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Machine Name"
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="">Description</label>
+        <textarea
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          name=""
+          id=""
+          placeholder="Enter Machine Description"
+        ></textarea>
+      </div>
+    </div>
+    <button class="mt-4 w-full cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+      Save Changes
+    </button>
+  </Popup>
+  <Popup :visible="showAddMachinePopup" @update:visible="showAddMachinePopup = $event">
+    <div>
+      <h3 class="flex justify-center text-2xl font-extrabold">Add a New Machine</h3>
+    </div>
+    <div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Machine Id</label>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Machine Id"
+          disabled
+        />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="">Machine Name</label>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Machine Name"
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="">Description</label>
+        <textarea
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          name=""
+          id=""
+          placeholder="Enter Machine Description"
+        ></textarea>
+      </div>
+    </div>
+    <button class="mt-4 w-full cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+      Save Changes
+    </button>
+  </Popup>
+  <Popup :visible="showEditToolPopup" @update:visible="showEditToolPopup = $event">
+    <div>
+      <h3 class="flex justify-center text-2xl font-extrabold">Edit Tool</h3>
+    </div>
+    <div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Tool Id</label>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Tool Id"
+          disabled
+        />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="">Tool Name</label>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Tool Name"
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="">Description</label>
+        <textarea
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          name=""
+          id=""
+          placeholder="Enter Tool Description"
+        ></textarea>
+      </div>
+    </div>
+    <button class="mt-4 w-full cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+      Save Changes
+    </button>
+  </Popup>
+  <Popup :visible="showAddToolPopup" @update:visible="showAddToolPopup = $event">
+    <div>
+      <h3 class="flex justify-center text-2xl font-extrabold">Add a New Tool</h3>
+    </div>
+    <div>
+      <div class="flex flex-col gap-2">
+        <label for=""> Tool Id</label>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Tool Id"
+          disabled
+        />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="">Tool Name</label>
+        <input
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          type="text"
+          placeholder="Enter Tool Name"
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="">Description</label>
+        <textarea
+          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+          name=""
+          id=""
+          placeholder="Enter Tool Description"
+        ></textarea>
+      </div>
+    </div>
+    <button class="mt-4 w-full cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+      Save Changes
+    </button>
+  </Popup>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import Popup from '@/components/popup.vue'
-
-const selectedWorkcenter = ref('Workcenter 1')
 
 const showWorkCenterPopup = ref(false)
 const showWorkCenterPopup2 = ref(false)
@@ -580,6 +728,10 @@ const showEditWorkStationPopup = ref(false)
 const showRealTimePerformancePopup = ref(false)
 const showMaintenancePopup = ref(false)
 const showCreateWorkCenterPopup = ref(false)
+const showEditMachinePopup = ref(false)
+const showAddMachinePopup = ref(false)
+const showEditToolPopup = ref(false)
+const showAddToolPopup = ref(false)
 
 const workCenters = ref([
   { name: 'Workcenter A', type: 'Type 1', location: 'Location 1', status: 'Active' },
