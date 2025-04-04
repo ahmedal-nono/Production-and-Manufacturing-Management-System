@@ -34,103 +34,107 @@
   </div>
 
   <Popup :visible="showWorkCenterPopup" @update:visible="showWorkCenterPopup = $event">
-    <div>
-      <h3 class="mb-4 text-center text-2xl font-bold">Workcenters</h3>
-      <div class="grid grid-cols-5 gap-6">
+    <div class="m-2 flex h-max flex-col justify-center rounded-2xl bg-gray-200 p-4">
+      <p class="flex justify-center text-xl font-bold">Production Management</p>
+      <div class="flex flex-row gap-10 py-4">
         <div
-          v-for="(workcenter, index) in workCenters"
-          :key="index"
           class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
+          @click="showWorkCenterPopup2 = true"
         >
-          <div @click="showWorkCenterPopup2 = true">
-            <p class="font-bold">{{ workcenter.name || 'No Workcenter' }}</p>
-            <p>{{ workcenter.type || 'N/A' }}</p>
-            <p>{{ workcenter.location || 'N/A' }}</p>
-            <p
-              :class="{
-                'text-green-600': workcenter.status === 'Active',
-                'text-red-600': workcenter.status !== 'Active',
-              }"
-            >
-              {{ workcenter.status || 'Inactive' }}
-            </p>
-          </div>
+          <img src="@/assets/production_schedule.png" class="size-20" alt="" />
+          <p class="pt-2 text-[13px] font-bold">Production Schedule</p>
+        </div>
+        <div
+          class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
+          @click="showRealTimePerformancePopup = true"
+        >
+          <img src="@/assets/production_orders.png" class="size-20" alt="" />
+          <p class="pt-2 text-[13px] font-bold">Production Orders</p>
+        </div>
+        <div
+          class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
+          @click="showMaintenancePopup = true"
+        >
+          <img src="@/assets/products.png" class="size-20" alt="" />
+          <p class="pt-2 text-[13px] font-bold">Products</p>
         </div>
       </div>
     </div>
-
-    <p class="flex justify-end text-6xl font-extrabold">+</p>
   </Popup>
 
   <Popup :visible="showWorkCenterPopup2" @update:visible="showWorkCenterPopup2 = $event">
-    <div>
-      <h3 class="flex justify-center pb-2 text-2xl font-extrabold">Workcenter Details</h3>
-      <div>
-        <p class="py-2 text-xl font-bold">General Information</p>
-        <div class="flex flex-row gap-0.5">
-          <p>Name:</p>
-          <p>Ass</p>
-        </div>
-        <div class="flex flex-row gap-0.5">
-          <p>Type:</p>
-          <p>Ass</p>
-        </div>
-        <div class="flex flex-row gap-0.5">
-          <p>Capacity:</p>
-          <p>Ass</p>
-        </div>
-        <div class="flex flex-row gap-0.5">
-          <p>Description:</p>
-          <p>Ass</p>
-        </div>
-      </div>
-      <div class="flex flex-col pt-8">
-        <h3 class="text-xl font-bold">Workstations</h3>
-        <table class="mt-2.5 w-full border-collapse">
-          <thead>
-            <tr class="text-white">
-              <th class="bg-blue-600">Workstation</th>
-              <th class="bg-blue-600">Status</th>
-              <th class="bg-blue-600">Capacity</th>
-              <th class="bg-blue-600">Current Task</th>
-              <th class="bg-blue-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(station, index) in workstations" :key="index">
-              <td>{{ station.name }}</td>
-              <td>{{ station.status }}</td>
-              <td>{{ station.output }}</td>
-              <td>{{ station.task }}</td>
-              <td>
-                <button
-                  @click="showViewWorkStationPopup = true"
-                  class="m-2 mt-4 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
-                >
-                  View
-                </button>
-                <button
-                  @click="showEditWorkStationPopup = true"
-                  class="m-2 mt-4 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
-                >
-                  Edit
-                </button>
-                <button class="m-2 mt-4 cursor-pointer rounded-lg bg-red-600 p-1.5 text-white">
-                  Delete
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button
-        class="mt-4 w-4/12 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
-        @click="showWorkCenterPopup3 = true"
-      >
-        Add New Workstation
-      </button>
+    <div class="p-4 bg-white rounded-lg shadow-md">
+    <h2 class="text-xl font-semibold mb-4">Production Orders</h2>
+
+    <!-- Filters -->
+    <div class="flex gap-2 mb-4">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search orders..."
+        class="border p-2 rounded w-full"
+      />
+      <select v-model="selectedStatus" class="border p-2 rounded">
+        <option>All Statuses</option>
+        <option>On Track</option>
+        <option>Delayed</option>
+      </select>
+      <select v-model="selectedLine" class="border p-2 rounded">
+        <option>All Lines</option>
+        <option>Line 1</option>
+        <option>Line 2</option>
+      </select>
     </div>
-  </Popup>
+
+    <!-- Table -->
+    <table class="w-full border-collapse border">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="border p-2">Order ID</th>
+          <th class="border p-2">Product</th>
+          <th class="border p-2">Quantity</th>
+          <th class="border p-2">Status</th>
+          <th class="border p-2">Start Date</th>
+          <th class="border p-2">End Date</th>
+          <th class="border p-2">Production Line</th>
+          <th class="border p-2">Priority</th>
+          <th class="border p-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="order in filteredOrders" :key="order.id" class="text-center">
+          <td class="border p-2">{{ order.id }}</td>
+          <td class="border p-2">{{ order.product }}</td>
+          <td class="border p-2">{{ order.quantity }}</td>
+          <td class="border p-2">
+            <span class="px-2 py-1 rounded" :class="getStatusClass2(order.status)">
+              {{ order.status }}
+            </span>
+          </td>
+          <td class="border p-2">
+            <input type="date" v-model="order.startDate" class="border p-1 rounded w-full" />
+          </td>
+          <td class="border p-2">
+            <input type="date" v-model="order.endDate" class="border p-1 rounded w-full" />
+          </td>
+          <td class="border p-2">{{ order.productionLine }}</td>
+          <td class="border p-2">
+            <span :class="getPriorityClass(order.priority)">
+              ● {{ order.priority }}
+            </span>
+          </td>
+          <td class="border p-2">
+            <button
+              @click="openReschedule(order)"
+              class="bg-blue-600 text-white px-3 py-1 rounded"
+            >
+              Reschedule
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>  </Popup>
 
   <Popup :visible="showWorkCenterPopup3" @update:visible="showWorkCenterPopup3 = $event">
     <div>
@@ -566,7 +570,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import Popup from '@/components/popup.vue'
 
 const selectedWorkcenter = ref('Workcenter 1')
@@ -659,6 +663,69 @@ function getStatusClass(status: string): string {
       return 'text-gray-500'
   }
 }
+
+
+interface Order {
+  id: string;
+  product: string;
+  quantity: number;
+  status: "On Track" | "Delayed";
+  startDate: string;
+  endDate: string;
+  productionLine: string;
+  priority: "High" | "Low";
+}
+
+const orders = ref<Order[]>([
+  {
+    id: "#1234",
+    product: "Product A",
+    quantity: 500,
+    status: "On Track",
+    startDate: "2024-03-15",
+    endDate: "2024-03-20",
+    productionLine: "Line 1",
+    priority: "High",
+  },
+  {
+    id: "#1235",
+    product: "Product B",
+    quantity: 1000,
+    status: "Delayed",
+    startDate: "2024-03-18",
+    endDate: "2024-03-22",
+    productionLine: "Line 2",
+    priority: "Low",
+  },
+]);
+
+const searchQuery = ref("");
+const selectedStatus = ref("All Statuses");
+const selectedLine = ref("All Lines");
+
+const filteredOrders = computed(() => {
+  return orders.value.filter((order) => {
+    return (
+      (selectedStatus.value === "All Statuses" || order.status === selectedStatus.value) &&
+      (selectedLine.value === "All Lines" || order.productionLine === selectedLine.value) &&
+      order.product.toLowerCase().includes(searchQuery.value.toLowerCase())
+    );
+  });
+});
+
+const getStatusClass2 = (status: string) => {
+  return status === "On Track" ? "bg-green-200 text-green-700" : "bg-red-200 text-red-700";
+};
+
+const getPriorityClass = (priority: string) => {
+  return priority === "High" ? "text-red-600" : "text-blue-600";
+};
+
+const emit = defineEmits(["openReschedulePopup"]);
+
+const openReschedule = (order: Order) => {
+  emit("openReschedulePopup", order);
+};
 </script>
 
 <style scoped>
