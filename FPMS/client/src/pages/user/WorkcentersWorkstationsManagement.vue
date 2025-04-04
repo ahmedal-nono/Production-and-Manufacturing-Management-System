@@ -126,14 +126,14 @@
       </div>
       <button
         class="mt-4 w-4/12 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
-        @click="showWorkCenterPopup3 = true"
+        @click="showAddWorkstationPopup = true"
       >
         Add New Workstation
       </button>
     </div>
   </Popup>
 
-  <Popup :visible="showWorkCenterPopup3" @update:visible="showWorkCenterPopup3 = $event">
+  <Popup :visible="showAddWorkstationPopup" @update:visible="showAddWorkstationPopup = $event">
     <div>
       <h3 class="flex justify-center text-2xl font-extrabold">Create New Workstation</h3>
     </div>
@@ -722,7 +722,7 @@ import Popup from '@/components/popup.vue'
 
 const showWorkCenterPopup = ref(false)
 const showWorkCenterPopup2 = ref(false)
-const showWorkCenterPopup3 = ref(false)
+const showAddWorkstationPopup = ref(false)
 const showViewWorkStationPopup = ref(false)
 const showEditWorkStationPopup = ref(false)
 const showRealTimePerformancePopup = ref(false)
