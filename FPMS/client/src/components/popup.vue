@@ -60,9 +60,9 @@ function handleOverlayClick() {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  width: 90%;
+  width: 100%;
   max-width: 1000vh;
-  max-height: 100vh;
+  max-height: 120vh;
   overflow-y: auto;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
   position: relative;
