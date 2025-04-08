@@ -40,7 +40,7 @@
 
             <button
               type="submit"
-              class="hover:bg-primary-700 focus:ring-primary-300 hover:bg-primary-700 focus:ring-primary-800 w-full rounded-xl bg-[#F0F0F0] px-5 py-2.5 text-center text-sm font-medium text-black focus:ring-4 focus:outline-none"
+              class="focus:ring-primary-300 hover:bg-primary-700 focus:ring-primary-800 w-full cursor-pointer rounded-xl bg-[#F0F0F0] px-5 py-2.5 text-center text-sm font-medium text-black hover:bg-gray-200 focus:ring-4 focus:outline-none"
             >
               Sign in
             </button>
