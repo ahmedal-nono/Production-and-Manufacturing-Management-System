@@ -138,7 +138,7 @@
 
     <Popup :visible="showEditProductsPopup" @update:visible="showEditProductsPopup = $event">
       <div class="flex flex-col justify-start">
-        <h1 class="mb-6 text-4xl font-extrabold">Create Product</h1>
+        <h1 class="mb-6 text-4xl font-extrabold">Edit Product</h1>
         <p class="mb-2 text-xl font-semibold">Product Definition</p>
       </div>
 

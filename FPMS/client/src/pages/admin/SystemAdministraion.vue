@@ -18,7 +18,7 @@
         <div class="flex flex-col space-y-1 pt-2 font-bold">
           <p>Activity Log</p>
           <button
-            class="h-fit w-fit rounded-md bg-green-600 p-2 font-normal text-white"
+            class="h-fit w-fit cursor-pointer rounded-md bg-green-600 p-2 font-normal text-white"
             @click="showActivityLogPopup = true"
           >
             View Full Activity Log
@@ -100,7 +100,7 @@
     <h3 class="mb-4 flex justify-center text-2xl font-bold">User Account Management</h3>
     <div class="flex justify-end">
       <button
-        class="w-2/12 rounded-lg bg-blue-600 p-1.5 text-white"
+        class="w-2/12 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
         @click="showUserCrtPopup = true"
       >
         Create User
@@ -127,8 +127,15 @@
             <td class="px-4 py-2">{{ user.role }}</td>
             <td class="px-4 py-2">{{ user.status }}</td>
             <td class="flex gap-2 px-4 py-2">
-              <button class="rounded-lg bg-yellow-500 p-2 text-white">Edit</button>
-              <button class="rounded-lg bg-red-600 p-2 text-white">Delete</button>
+              <button
+                @click="showEditUserPopup = true"
+                class="cursor-pointer rounded-lg bg-yellow-500 p-2 text-white"
+              >
+                Edit
+              </button>
+              <button class="cursor-pointer rounded-lg bg-red-600 p-2 text-white">
+                Deactivate
+              </button>
             </td>
           </tr>
         </tbody>
@@ -208,14 +215,91 @@
           />
         </div>
         <div class="flex justify-end gap-4">
-          <button type="button" class="rounded-lg bg-gray-500 p-2 text-white" @click="closePopup">
-            Cancel
-          </button>
           <button type="submit" class="rounded-lg bg-blue-600 p-2 text-white">Create User</button>
         </div>
       </form>
     </div>
   </Popup>
+
+  <Popup :visible="showEditUserPopup" @update:visible="showEditUserPopup = $event">
+    <h3 class="mb-4 flex justify-center text-2xl font-bold">Create New User</h3>
+    <div>
+      <form @submit.prevent="createUser" class="space-y-4">
+        <div class="flex flex-col">
+          <label for="name" class="text-sm font-bold">Full Name</label>
+          <input
+            type="text"
+            id="name"
+            v-model="newUser.name"
+            placeholder="Enter full name"
+            class="rounded-md border p-2"
+            required
+          />
+        </div>
+        <div class="flex flex-col">
+          <label for="email" class="text-sm font-bold">Email</label>
+          <input
+            type="email"
+            id="email"
+            v-model="newUser.email"
+            placeholder="Enter email"
+            class="rounded-md border p-2"
+            required
+          />
+        </div>
+        <div class="flex flex-col">
+          <label for="department" class="text-sm font-bold">Contact Number</label>
+          <input
+            type="text"
+            id="number"
+            v-model="newUser.department"
+            placeholder="Enter contact number"
+            class="rounded-md border p-2"
+            required
+          />
+        </div>
+        <div class="flex flex-col">
+          <label for="department" class="text-sm font-bold">Department</label>
+          <input
+            type="text"
+            id="department"
+            v-model="newUser.department"
+            placeholder="Enter department"
+            class="rounded-md border p-2"
+            required
+          />
+        </div>
+        <div class="flex flex-col">
+          <label for="role" class="text-sm font-bold">Role</label>
+          <select id="status" v-model="newUser.status" class="rounded-md border p-2" required>
+            <option value="Active">Select a role</option>
+          </select>
+        </div>
+        <div class="flex flex-col">
+          <label for="status" class="text-sm font-bold">Status</label>
+          <select id="status" v-model="newUser.status" class="rounded-md border p-2" required>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+        <div class="flex flex-col">
+          <label for="password" class="text-sm font-bold">Password</label>
+          <input
+            type="password"
+            id="password"
+            v-model="newUser.password"
+            placeholder="Enter password"
+            class="rounded-md border p-2"
+            required
+          />
+        </div>
+        <div class="flex justify-end gap-4">
+          <button type="submit" class="rounded-lg bg-blue-600 p-2 text-white">Create User</button>
+        </div>
+      </form>
+    </div>
+  </Popup>
+
   <Popup :visible="showLanguageTimezonePopup" @update:visible="showLanguageTimezonePopup = $event">
     <h3 class="mb-4 flex justify-center text-2xl font-bold">Language & Time Zone Settings</h3>
     <div>
@@ -339,6 +423,7 @@ const showUserCrtPopup = ref(false)
 const isRead = ref(false)
 const isReadSecond = ref(false)
 const uploadedImage = ref<string | null>(null)
+const showEditUserPopup = ref(false)
 
 const userActivities = ref([
   {
