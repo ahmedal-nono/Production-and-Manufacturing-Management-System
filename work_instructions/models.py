@@ -2,7 +2,8 @@
 
 from django.db import models
 from workcentre.models import WorkCenter  # WorkCenter is in the workcentre app
-from workflow.models import ProductionLine  # Assuming ProductionLine is in the workflow app
+# Assuming ProductionLine is in the workflow app
+from workflow.models import ProductionLine
 
 
 # Work Instruction Model
@@ -14,7 +15,8 @@ class WorkInstruction(models.Model):
     step_description = models.TextField()  # Descriptions for each step
     status = models.CharField(
         max_length=50,
-        choices=[('Not Started', 'Not Started'), ('In Progress', 'In Progress'), ('Completed', 'Completed')],
+        choices=[('Not Started', 'Not Started'), ('In Progress',
+                                                  'In Progress'), ('Completed', 'Completed')],
     )  # Status of the work instruction
 
     def __str__(self):
@@ -28,12 +30,16 @@ class WorkInstruction(models.Model):
 # Work Order Model
 class WorkOrder(models.Model):
     name = models.CharField(max_length=255)  # Name of the work order
-    quantity_required = models.PositiveIntegerField()  # The quantity of items to be produced
-    due_date = models.DateTimeField()  # Due date and time for completing the work order
+    # The quantity of items to be produced
+    quantity_required = models.PositiveIntegerField()
+    # Due date and time for completing the work order
+    due_date = models.DateTimeField()
     priority = models.CharField(
         max_length=50, choices=[('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')]
     )  # Priority of the work order
-    work_instruction = models.ForeignKey(WorkInstruction, on_delete=models.CASCADE)  # Work instruction linked to this work order
+    # Work instruction linked to this work order
+    work_instruction = models.ForeignKey(
+        WorkInstruction, on_delete=models.CASCADE)
     production_line = models.ForeignKey(
         ProductionLine, on_delete=models.SET_NULL, null=True, blank=True
     )  # Linking work order to a production line
@@ -56,9 +62,12 @@ class JobCard(models.Model):
     required_materials = models.TextField()  # Materials required for the task
     status = models.CharField(
         max_length=50,
-        choices=[('Not Started', 'Not Started'), ('In Progress', 'In Progress'), ('Completed', 'Completed')],
+        choices=[('Not Started', 'Not Started'), ('In Progress',
+                                                  'In Progress'), ('Completed', 'Completed')],
     )  # Status of the job card
-    assigned_to = models.ForeignKey( WorkCenter, on_delete=models.SET_NULL, null=True, blank=True )  # The work center to which the job card is assigned
+    # The work center to which the job card is assigned
+    assigned_to = models.ForeignKey(
+        WorkCenter, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"Job Card for {self.task_name}"
@@ -66,3 +75,4 @@ class JobCard(models.Model):
     class Meta:
         verbose_name = 'Job Card'
         verbose_name_plural = 'Job Cards'
+        

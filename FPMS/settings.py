@@ -12,7 +12,6 @@ if not os.path.exists(BACKUP_ROOT):
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-5q$w7@k3fr8oex8qa=r0uwdzjw7vndyi61$252p50-4x18ito$'
 
@@ -33,14 +32,19 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_extensions',
     'rest_framework',
-    'rest_framework.authtoken', # this line here help with authentication when using the rest_framework auth token .
+    # this line here help with authentication when using the rest_framework auth token .
+    'rest_framework.authtoken',
     'administration',
-    'workcentre', 
+    'workcentre',
     'django_filters',
     'workflow',
     'work_instructions',
-    
+    'quality_control',
+
 ]
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -130,11 +134,11 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'administration.CustomUser'
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-}
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'rest_framework.authentication.TokenAuthentication',
+#     ],
+#     'DEFAULT_PERMISSION_CLASSES': [
+#         'rest_framework.permissions.IsAuthenticated',
+#     ],
+# }
