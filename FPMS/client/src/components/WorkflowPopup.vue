@@ -24,17 +24,17 @@
                 <td class="p-2">
                   <button
                     @click="showViewWorkflowPopup = true"
-                    class="mr-2 rounded bg-blue-600 px-3 py-1 text-white hover:bg-green-600"
+                    class="mr-2 rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-500"
                   >
                     View
                   </button>
                   <button
                     @click="showEditWorkflowPopup = true"
-                    class="mr-2 rounded bg-green-600 px-3 py-1 text-white hover:bg-green-600"
+                    class="mr-2 rounded bg-green-600 px-3 py-1 text-white hover:bg-green-500"
                   >
                     Edit
                   </button>
-                  <button class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700">
+                  <button class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500">
                     Delete
                   </button>
                 </td>
@@ -45,14 +45,127 @@
       </div>
       <button
         @click="showCreateWorkflowPopup = true"
-        class="mr-2 rounded bg-blue-600 px-3 py-1 text-white hover:bg-green-600"
+        class="mr-2 rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-500"
       >
         Create New Workflow
       </button>
     </Popup>
 
     <Popup :visible="showViewWorkflowPopup" @update:visible="showViewWorkflowPopup = $event">
-      <div></div>
+      <div class="flex flex-col justify-start">
+        <h1 class="mb-6 text-4xl font-extrabold">Edit Workflow</h1>
+        <p class="mb-2 text-xl font-semibold">Workflow Details</p>
+      </div>
+
+      <div class="flex flex-row gap-4">
+        <div class="flex w-full flex-col">
+          <p class="font-medium">Workflow Name</p>
+          <input type="text" class="rounded border p-2" placeholder="Enter Workflow Name" />
+        </div>
+      </div>
+      <div class="flex flex-row gap-4">
+        <div class="flex w-full flex-col">
+          <p class="font-medium">Description</p>
+          <textarea
+            type="text"
+            class="rounded border p-2"
+            placeholder="Enter Workflow Description"
+          />
+        </div>
+      </div>
+      <div class="flex flex-row gap-4">
+        <div class="flex w-full flex-col">
+          <p class="font-medium">Product/Process Selection</p>
+          <select v-model="selectedCategory" class="rounded border p-2">
+            <option value="">Select Product</option>
+            <option>Category 1</option>
+            <option>Category 2</option>
+          </select>
+        </div>
+      </div>
+
+      <h1 class="mb-2 text-xl font-semibold">Define Stages</h1>
+
+      <div class="overflow-x-auto">
+        <table class="w-full border text-left">
+          <thead>
+            <tr class="bg-blue-500 text-white">
+              <th class="p-2">Stage Name</th>
+              <th class="p-2">Description</th>
+              <th class="p-2">Assigned Workcenter</th>
+              <th class="p-2">Duration (min)</th>
+              <th class="p-2">Workorders</th>
+              <th class="p-2">Inspection checkpoint</th>
+              <th class="p-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="product in filteredProducts"
+              :key="product.sku"
+              class="border-t hover:bg-gray-100"
+            >
+              <td class="p-2">
+                <input
+                  class="rounded-xl border border-black p-1"
+                  type="text"
+                  placeholder="Stage Name"
+                />
+              </td>
+              <td class="p-2">
+                <input
+                  class="rounded-xl border border-black p-1"
+                  type="text"
+                  placeholder="Description"
+                />
+              </td>
+              <td class="p-2">
+                <select v-model="selectedCategory" class="rounded border p-2">
+                  <option value="">Select Workcenter</option>
+                  <option>Category 1</option>
+                  <option>Category 2</option>
+                </select>
+              </td>
+              <td class="p-2">
+                <input
+                  class="rounded-xl border border-black p-1"
+                  type="text"
+                  placeholder="Duration"
+                />
+              </td>
+              <td class="p-2">
+                <select v-model="selectedCategory" class="rounded border p-2">
+                  <option value="">Select Workorder</option>
+                  <option>Category 1</option>
+                  <option>Category 2</option>
+                </select>
+              </td>
+              <td class="p-2">
+                <button
+                  @click="showCreateQualityInspectionCheckpointPopup = true"
+                  class="w-9/12 rounded-md bg-gray-300 p-0.5"
+                >
+                  Create
+                </button>
+              </td>
+              <td class="p-2">
+                <button class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500">
+                  Remove
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+          Add Stage
+        </button>
+      </div>
+
+      <div class="flex justify-end">
+        <button class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+          Save
+        </button>
+      </div>
     </Popup>
     <Popup :visible="showEditWorkflowPopup" @update:visible="showEditWorkflowPopup = $event">
       <div class="flex flex-col justify-start">
@@ -152,7 +265,7 @@
                 </button>
               </td>
               <td class="p-2">
-                <button class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700">
+                <button class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500">
                   Remove
                 </button>
               </td>
@@ -268,7 +381,7 @@
                 </button>
               </td>
               <td class="p-2">
-                <button class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700">
+                <button class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500">
                   Remove
                 </button>
               </td>
