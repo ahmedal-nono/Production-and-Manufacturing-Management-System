@@ -20,9 +20,9 @@ from django.contrib import admin
 from django.urls import path,include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-     path('api-token-auth/', obtain_auth_token, name='api-token-auth'),
-     path('', include('administration.urls')),
+    # path('admin/', admin.site.urls),
+    #  path('api-token-auth/', obtain_auth_token, name='api-token-auth'),
+     path('api/', include('administration.urls')),
      path('api/workcentre/', include('workcentre.urls')),
      path('api/', include('workflow.urls')),
      path('api/', include('work_instructions.urls')),
