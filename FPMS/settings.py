@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django_filters',
     'workflow',
     'work_instructions',
-    
+    'quality_control',
+    'corsheaders',
 ]
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -55,7 +56,24 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'administration.middleware.ActivityLogMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Should be at the top
+    'django.middleware.common.CommonMiddleware',  # After CorsMiddleware
 ]
+
+# 3. Configure allowed origins (choose one option below)
+# Option A: Allow all origins (for development only)
+CORS_ALLOW_ALL_ORIGINS = True
+
+# Option B: Allow only specific origins (recommended)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Your Vue.js/React frontend
+    "http://127.0.0.1:5173",  # Alternative localhost
+    "http://127.0.0.1:*",  # Alternative localhost
+    # Add production domains later (e.g., "https://yourdomain.com")
+]
+
+# 4. (Optional) Allow cookies/auth headers
+CORS_ALLOW_CREDENTIALS = True  # Only needed if frontend sends credentials
 
 ROOT_URLCONF = 'FPMS.urls'
 
@@ -136,10 +154,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'administration.User'
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [],  # Empty list = no authentication
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
+        'rest_framework.permissions.AllowAny',
+    ]
 }

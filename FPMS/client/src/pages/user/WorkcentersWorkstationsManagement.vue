@@ -1,5 +1,6 @@
 <template>
   <div class="m-2 flex flex-col justify-center rounded-2xl bg-gray-200 p-4">
+   
     <p class="flex justify-center text-xl font-bold">Workcenters & Workstations Management</p>
     <div class="flex flex-row gap-10 py-4">
       <div
@@ -37,7 +38,7 @@
         >
           <div @click="showWorkCenterPopup2 = true">
             <p class="font-bold">{{ workcenter.name || 'No Workcenter' }}</p>
-            <p>{{ workcenter.type || 'N/A' }}</p>
+            <p>{{ workcenter.remarks || 'N/A' }}</p>
             <p>{{ workcenter.location || 'N/A' }}</p>
             <p
               :class="{
@@ -147,10 +148,10 @@
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Status</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"  v-model="newWorkstation.status" @change="(e) => newWorkstation.status = e.target.value">
           <optgroup>
-            <option value="">Active</option>
-            <option value="">Inactive</option>
+            <option value="1">Active</option>
+            <option value="2">Inactive</option>
           </optgroup>
         </select>
       </div>
@@ -173,17 +174,17 @@
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Assign Machines</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
           <optgroup>
-            <option value="">Select</option>
+            <option>Select</option>
           </optgroup>
         </select>
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Assign Tools</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
           <optgroup>
-            <option value="">Select</option>
+            <option>Select</option>
           </optgroup>
         </select>
       </div>
@@ -208,10 +209,10 @@
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Status</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
           <optgroup>
-            <option value="">Active</option>
-            <option value="">Inactive</option>
+            <option>Active</option>
+            <option>Inactive</option>
           </optgroup>
         </select>
       </div>
@@ -234,17 +235,17 @@
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Assign Machines</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
           <optgroup>
-            <option value="">Select</option>
+            <option>Select</option>
           </optgroup>
         </select>
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Assign Tools</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
           <optgroup>
-            <option value="">Select</option>
+            <option>Select</option>
           </optgroup>
         </select>
       </div>
@@ -273,18 +274,18 @@
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Associated Workcenter</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
           <optgroup>
-            <option value="">Active</option>
-            <option value="">Inactive</option>
+            <option value="active1">Active</option>
+            <option value="inactive1">Inactive</option>
           </optgroup>
         </select>
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Status</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
           <optgroup>
-            <option value="">Active</option>
+            <option>Active</option>
             <option value="">Inactive</option>
           </optgroup>
         </select>
@@ -394,9 +395,10 @@
       <div class="flex flex-col">
         <h3 class="flex justify-start py-2 text-lg font-bold">Real-Time Workcenter Performance</h3>
         <label class="py-1 text-gray-500" for="workcenter">Select Workcenter:</label>
-        <select class="rounded-lg border-2 border-gray-400 p-0.5" id="workcenter">
-          <option>Workcenter 1</option>
-          <option>Workcenter 2</option>
+        <select v-model="currentWorkCentersNames" @change="(e) => currentWorkCentersNames = e.target.value" class="rounded-lg border-2 border-gray-400 p-0.5">
+          <option v-for="(n, index) in workCentersNames" :value="n" :key="index">
+            {{ n.name || n }} <!-- Handle both objects and strings -->
+          </option>
         </select>
 
         <div class="flex justify-between py-4">
@@ -431,16 +433,16 @@
             <tr>
               <th class="bg-gray-200">Workstation</th>
               <th class="bg-gray-200">Status</th>
-              <th class="bg-gray-200">Current Task</th>
-              <th class="bg-gray-200">Upcoming Schedule</th>
+              <th class="bg-gray-200">Capacity</th>
+              <th class="bg-gray-200">Status</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(station, index) in workstationss" :key="index">
+            <tr v-for="(station, index) in workstations" :key="index">
               <td>{{ station.name }}</td>
               <td :class="getStatusClass(station.status)">{{ station.status }}</td>
-              <td>{{ station.task }}</td>
-              <td>{{ station.time }}</td>
+              <td>{{ station.capacity }}</td>
+              <td>{{ station.status }}</td>
             </tr>
           </tbody>
         </table>
@@ -449,22 +451,23 @@
   </Popup>
 
   <Popup :visible="showMaintenancePopup" @update:visible="showMaintenancePopup = $event">
+    newWorkstation: {{ newWorkstation }}
     <div class="flex flex-col gap-2">
       <p class="flex justify-center text-2xl font-extrabold">Schedule Workstation Maintenance</p>
       <label for=""> Select Workcenter</label>
-      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
         <optgroup>
-          <option value="">Active</option>
-          <option value="">Inactive</option>
+          <option>Active</option>
+          <option>Inactive</option>
         </optgroup>
       </select>
     </div>
     <div class="flex flex-col gap-2">
       <label for=""> Select Workstation</label>
-      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
         <optgroup>
-          <option value="">Active</option>
-          <option value="">Inactive</option>
+          <option>Active</option>
+          <option>Inactive</option>
         </optgroup>
       </select>
     </div>
@@ -488,9 +491,9 @@
     </div>
     <div class="flex flex-col gap-2">
       <label for="">Recurrence</label>
-      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
         <optgroup>
-          <option value="">None</option>
+          <option>None</option>
         </optgroup>
       </select>
     </div>
@@ -545,10 +548,10 @@
     </div>
     <div class="flex flex-col gap-2">
       <label for=""> Status</label>
-      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" name="" id="">
+      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
         <optgroup>
-          <option value="">Active</option>
-          <option value="">Inactive</option>
+          <option>Active</option>
+          <option>Inactive</option>
         </optgroup>
       </select>
     </div>
@@ -702,8 +705,8 @@
       <div class="flex flex-col gap-2">
         <label for="">Description</label>
         <textarea
-          class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
-          name=""
+        name=""
+        class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           id=""
           placeholder="Enter Tool Description"
         ></textarea>
@@ -716,8 +719,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import Popup from '@/components/popup.vue'
+import { baseApiUrl } from '@/api.ts'
+import { useAxios } from '@vueuse/integrations/useAxios'
 
 const showWorkCenterPopup = ref(false)
 const showWorkCenterPopup2 = ref(false)
@@ -732,72 +737,34 @@ const showAddMachinePopup = ref(false)
 const showEditToolPopup = ref(false)
 const showAddToolPopup = ref(false)
 
-const workCenters = ref([
-  { name: 'Workcenter A', type: 'Type 1', location: 'Location 1', status: 'Active' },
-  { name: 'Workcenter B', type: 'Type 2', location: 'Location 2', status: 'Inactive' },
-  { name: 'Workcenter C', type: 'Type 3', location: 'Location 3', status: 'Active' },
-  { name: 'Workcenter D', type: 'Type 4', location: 'Location 4', status: 'Active' },
-  { name: 'Workcenter E', type: 'Type 5', location: 'Location 5', status: 'Inactive' },
-  { name: 'Workcenter F', type: 'Type 6', location: 'Location 6', status: 'Active' },
-])
-
-const workstations = ref([
-  {
-    id: 1,
-    name: 'Workstation 1',
-    status: 'Active',
-    output: '50 Units/Hour',
-    task: 'Assembling Component A',
-  },
-  {
-    id: 2,
-    name: 'Workstation 2',
-    status: 'Idle',
-    output: '-',
-    task: 'No Task Assigned',
-  },
-  {
-    id: 3,
-    name: 'Workstation 3',
-    status: 'Under Maintenance',
-    output: '-',
-    task: 'Repair in Progress',
-  },
-])
-
 interface Workstation {
   name: string
   status: 'Active' | 'Idle' | 'Under Maintenance'
   task: string
   time: string
 }
+const currentWorkCentersNames = defineModel("currentWorkCentersNames", '')
+const { data: workCenters } = useAxios(`${baseApiUrl}/workcentre/workcenters`, { method: 'GET' })
+const { data: allWorkstations } = useAxios(`${baseApiUrl}/workcentre/workstations`, { method: 'GET' })
+const workCentersNames = computed(() => {
+  if (!workCenters.value) return []
+  return workCenters.value.map(w => w.name)
+})
+const s = computed(()=>workCenters.value.find(w=>w.name === currentWorkCentersNames.value))
+const workstations = computed(() => {
+  if (!allWorkstations.value || !workCenters.value || !s.value) return [];
+  return allWorkstations.value.filter(ws => ws.work_center === s.value.id);
+})
 
-const workstationss: Workstation[] = [
-  {
-    name: 'Workstation 1',
-    status: 'Active',
-    task: 'Assembling Unit A',
-    time: '10:00 AM - 12:00 PM',
-  },
-  {
-    name: 'Workstation 2',
-    status: 'Idle',
-    task: '-',
-    time: '12:30 PM - 2:00 PM',
-  },
-  {
-    name: 'Workstation 3',
-    status: 'Under Maintenance',
-    task: '-',
-    time: '2:00 PM - 4:00 PM',
-  },
-  {
-    name: 'Workstation 3',
-    status: 'Under Maintenance',
-    task: '-',
-    time: '2:00 PM - 4:00 PM',
-  },
-]
+const newWorkstation = reactive({
+  name: '',
+  status: 'Active',
+  capacity: '',
+  description: '',
+  workcenter_id: "",
+  machines: [],
+  tools: []
+})
 
 function getStatusClass(status: string): string {
   switch (status) {

@@ -1,4 +1,7 @@
 from rest_framework import viewsets
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import AllowAny
+# from administration import permissions
 from .models import WorkCenter, Workstation, Maintenance
 from django_filters.rest_framework import DjangoFilterBackend
 from .serializers import WorkCenterSerializer, WorkstationSerializer, MaintenanceSerializer
@@ -6,6 +9,9 @@ from .serializers import WorkCenterSerializer, WorkstationSerializer, Maintenanc
 class WorkCenterViewSet(viewsets.ModelViewSet):
     queryset = WorkCenter.objects.all()
     serializer_class = WorkCenterSerializer
+    permission_classes = [AllowAny]
+    
+    
 
 class WorkstationViewSet(viewsets.ModelViewSet):
     queryset = Workstation.objects.all()
