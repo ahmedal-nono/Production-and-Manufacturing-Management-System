@@ -13,7 +13,7 @@ x§
               v-model="searchQuery"
               type="text"
               placeholder="Search BOMs..."
-              class="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10"
             />
             <svg
               class="absolute top-2.5 left-3 h-5 w-5 text-gray-400"
@@ -31,20 +31,14 @@ x§
           </div>
 
           <div class="flex items-center gap-3">
-            <select
-              v-model="statusFilter"
-              class="rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            >
+            <select v-model="statusFilter" class="rounded-lg border border-gray-300 px-3 py-2">
               <option value="all">All Statuses</option>
               <option value="Approved">Approved</option>
               <option value="Draft">Draft</option>
               <option value="Pending">Pending</option>
             </select>
 
-            <select
-              v-model="timeFilter"
-              class="rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            >
+            <select v-model="timeFilter" class="rounded-lg border border-gray-300 px-3 py-2">
               <option value="all">All Time</option>
               <option value="30">Last 30 Days</option>
               <option value="60">Last 60 Days</option>
@@ -53,7 +47,7 @@ x§
 
             <button
               @click="showAddBOMsPopup = true"
-              class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
               + New BOM
             </button>
@@ -102,7 +96,7 @@ x§
                     Edit
                   </button>
                   <button
-                    @click="viewBOM(bom.id)"
+                    @click="showViewBOMsPopup = true"
                     class="mt-4 cursor-pointer rounded-lg bg-gray-200 p-1.5"
                   >
                     View
@@ -130,7 +124,7 @@ x§
                   v-model="form.bomName"
                   type="text"
                   placeholder="Enter BOM name"
-                  class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  class="w-full rounded-md border border-gray-300 px-3 py-2"
                   required
                 />
               </div>
@@ -139,7 +133,7 @@ x§
                 <label class="mb-1 block text-sm font-medium text-gray-700">Product Code</label>
                 <select
                   v-model="form.productCode"
-                  class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  class="w-full rounded-md border border-gray-300 px-3 py-2"
                   required
                 >
                   <option value="" disabled selected>Select Product</option>
@@ -153,7 +147,7 @@ x§
                 <label class="mb-1 block text-sm font-medium text-gray-700">Initial Status</label>
                 <select
                   v-model="form.status"
-                  class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  class="w-full rounded-md border border-gray-300 px-3 py-2"
                 >
                   <option value="Draft">Draft</option>
                   <option value="Pending Review">Pending Review</option>
@@ -183,7 +177,7 @@ x§
                       v-model="component.name"
                       type="text"
                       placeholder="Component name"
-                      class="w-full rounded border border-gray-300 px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      class="w-full rounded border border-gray-300 px-2 py-1"
                     />
                   </td>
                   <td class="p-2">
@@ -191,7 +185,7 @@ x§
                       v-model="component.partNumber"
                       type="text"
                       placeholder="Part number"
-                      class="w-full rounded border border-gray-300 px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      class="w-full rounded border border-gray-300 px-2 py-1"
                     />
                   </td>
                   <td class="p-2">
@@ -200,7 +194,7 @@ x§
                         v-model="component.quantity"
                         type="number"
                         min="0"
-                        class="w-full rounded border border-gray-300 px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                        class="w-full rounded border border-gray-300 px-2 py-1"
                       />
                       <button
                         type="button"
@@ -214,7 +208,7 @@ x§
                   <td class="p-2">
                     <select
                       v-model="component.unit"
-                      class="w-full rounded border border-gray-300 px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      class="w-full rounded border border-gray-300 px-2 py-1"
                     >
                       <option value="pc">pc</option>
                       <option value="kg">kg</option>
@@ -228,7 +222,7 @@ x§
                       type="number"
                       min="0"
                       step="0.01"
-                      class="w-full rounded border border-gray-300 px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      class="w-full rounded border border-gray-300 px-2 py-1"
                     />
                   </td>
                   <td class="p-2">
@@ -261,9 +255,342 @@ x§
           <div class="flex justify-end space-x-3">
             <button
               type="submit"
-              class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
               Create BOM
+            </button>
+          </div>
+        </form>
+      </div>
+    </Popup>
+
+    <Popup :visible="showEditBOMsPopup" @update:visible="showEditBOMsPopup = $event">
+      <div>
+        <div class="flex flex-col">
+          <h1 class="text-2xl font-bold text-blue-500">{{ boms[0].name }}</h1>
+          <div class="flex justify-between">
+            <p class="mt-2 mb-6 w-fit rounded-2xl border bg-blue-100 p-2 text-sm text-blue-500">
+              Current Version v2.1
+            </p>
+            <p class="flex justify-end">Approved</p>
+          </div>
+        </div>
+
+        <form @submit.prevent="handleUpdate" class="space-y-6">
+          <!-- BOM Information -->
+          <div>
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700">BOM Name</label>
+                <input
+                  v-model="form.bomName"
+                  type="text"
+                  class="w-full rounded-md border border-gray-300 px-3 py-2"
+                  required
+                />
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Product Code</label>
+                <input
+                  v-model="form.productCode"
+                  type="text"
+                  class="w-full rounded-md border border-gray-300 px-3 py-2"
+                  required
+                />
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Base Quantity</label>
+                <input
+                  v-model="form.baseQuantity"
+                  type="number"
+                  min="1"
+                  class="w-full rounded-md border border-gray-300 px-3 py-2"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Components Table -->
+          <div>
+            <h2 class="mb-4 text-xl font-semibold">Component Structure</h2>
+            <table class="w-full border text-sm">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="p-2 text-left">Level</th>
+                  <th class="p-2 text-left">Component</th>
+                  <th class="p-2 text-left">Part Number</th>
+                  <th class="p-2 text-left">Quantity</th>
+                  <th class="p-2 text-left">Unit</th>
+                  <th class="p-2 text-left">Unit Cost</th>
+                  <th class="p-2 text-left">Total Cost</th>
+                  <th class="p-2 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(component, index) in components" :key="index" class="border-t">
+                  <td class="p-2">
+                    {{ component.level }}
+                  </td>
+                  <td class="p-2">
+                    {{ component.name }}
+                  </td>
+                  <td class="p-2">
+                    {{ component.part }}
+                  </td>
+                  <td class="p-2">
+                    {{ component.quantity }}
+                  </td>
+                  <td class="p-2">
+                    {{ component.unit }}
+                  </td>
+                  <td class="p-2">${{ component.unitCost.toFixed(2) }}</td>
+                  <td class="p-2">${{ (component.quantity * component.unitCost).toFixed(2) }}</td>
+                  <td class="p-2">
+                    <button
+                      type="button"
+                      @click="editComponent(index)"
+                      class="cursor-pointer rounded bg-blue-600 px-4 py-2 text-sm text-white"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Total -->
+          <div class="border-t pt-4 text-right">
+            <p class="text-lg font-semibold">Total Estimated Cost: ${{ totalCost.toFixed(2) }}</p>
+          </div>
+
+          <!-- Version Management -->
+          <div class="rounded-md bg-yellow-100 p-4">
+            <h4 class="font-bold">Version Management</h4>
+            <div class="mt-2 space-y-2">
+              <label class="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  value="update"
+                  v-model="form.versionOption"
+                  class="text-blue-600"
+                  name="version"
+                />
+                <span>Update current version (v2.1)</span>
+              </label>
+              <label class="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  value="new"
+                  v-model="form.versionOption"
+                  class="text-blue-600"
+                  name="version"
+                />
+                <span>Create new version (v2.2)</span>
+              </label>
+            </div>
+          </div>
+          <h1 class="mb-4 text-2xl font-bold">Add New Component</h1>
+          <div class="mt-4 grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <label class="mr-2 font-semibold">Component/Material</label>
+              <input type="text" class="mt-2 w-full rounded border border-gray-300 px-2 py-1" />
+            </div>
+            <div>
+              <label class="mr-2 font-semibold">Quantity</label>
+              <input type="number" class="mt-2 w-full rounded border border-gray-300 px-2 py-1" />
+            </div>
+            <div>
+              <label class="mr-2 font-semibold">Unit of Measure</label>
+              <select class="mt-2 w-full rounded border border-gray-300 px-2 py-1">
+                <option>pc</option>
+                <option>kg</option>
+              </select>
+            </div>
+            <button class="rounded bg-blue-600 px-4 py-2 text-white">Add to BOM</button>
+            <button class="rounded bg-gray-300 px-4 py-2">Cancel</button>
+          </div>
+          <!-- Action Buttons -->
+          <div class="flex justify-end gap-4 pt-4">
+            <button
+              type="button"
+              @click="saveDraft"
+              class="rounded bg-gray-300 px-4 py-2 hover:bg-gray-400"
+            >
+              Save Draft
+            </button>
+            <button
+              type="submit"
+              class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </Popup>
+    <Popup :visible="showViewBOMsPopup" @update:visible="showViewBOMsPopup = $event">
+      <div>
+        <div class="flex flex-col">
+          <h1 class="text-2xl font-bold text-blue-500">{{ boms[0].name }}</h1>
+          <div class="flex justify-between">
+            <p class="mt-2 mb-6 w-fit rounded-2xl border bg-blue-100 p-2 text-sm text-blue-500">
+              Current Version v2.1
+            </p>
+            <p class="flex justify-end">Approved</p>
+          </div>
+        </div>
+
+        <form @submit.prevent="handleUpdate" class="space-y-6">
+          <!-- BOM Information -->
+          <div>
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700">BOM Name</label>
+                <input
+                  v-model="form.bomName"
+                  type="text"
+                  class="w-full rounded-md border border-gray-300 px-3 py-2"
+                  required
+                />
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Product Code</label>
+                <input
+                  v-model="form.productCode"
+                  type="text"
+                  class="w-full rounded-md border border-gray-300 px-3 py-2"
+                  required
+                />
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Base Quantity</label>
+                <input
+                  v-model="form.baseQuantity"
+                  type="number"
+                  min="1"
+                  class="w-full rounded-md border border-gray-300 px-3 py-2"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Components Table -->
+          <div>
+            <h2 class="mb-4 text-xl font-semibold">Component Structure</h2>
+            <table class="w-full border text-sm">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="p-2 text-left">Level</th>
+                  <th class="p-2 text-left">Component</th>
+                  <th class="p-2 text-left">Part Number</th>
+                  <th class="p-2 text-left">Quantity</th>
+                  <th class="p-2 text-left">Unit</th>
+                  <th class="p-2 text-left">Unit Cost</th>
+                  <th class="p-2 text-left">Total Cost</th>
+                  <th class="p-2 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(component, index) in components" :key="index" class="border-t">
+                  <td class="p-2">
+                    {{ component.level }}
+                  </td>
+                  <td class="p-2">
+                    {{ component.name }}
+                  </td>
+                  <td class="p-2">
+                    {{ component.part }}
+                  </td>
+                  <td class="p-2">
+                    {{ component.quantity }}
+                  </td>
+                  <td class="p-2">
+                    {{ component.unit }}
+                  </td>
+                  <td class="p-2">${{ component.unitCost.toFixed(2) }}</td>
+                  <td class="p-2">${{ (component.quantity * component.unitCost).toFixed(2) }}</td>
+                  <td class="p-2">
+                    <button
+                      type="button"
+                      @click="editComponent(index)"
+                      class="cursor-pointer rounded bg-blue-600 px-4 py-2 text-sm text-white"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Total -->
+          <div class="border-t pt-4 text-right">
+            <p class="text-lg font-semibold">Total Estimated Cost: ${{ totalCost.toFixed(2) }}</p>
+          </div>
+
+          <!-- Version Management -->
+          <div class="rounded-md bg-yellow-100 p-4">
+            <h4 class="font-bold">Version Management</h4>
+            <div class="mt-2 space-y-2">
+              <label class="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  value="update"
+                  v-model="form.versionOption"
+                  class="text-blue-600"
+                  name="version"
+                />
+                <span>Update current version (v2.1)</span>
+              </label>
+              <label class="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  value="new"
+                  v-model="form.versionOption"
+                  class="text-blue-600"
+                  name="version"
+                />
+                <span>Create new version (v2.2)</span>
+              </label>
+            </div>
+          </div>
+          <h1 class="mb-4 text-2xl font-bold">Add New Component</h1>
+          <div class="mt-4 grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <label class="mr-2 font-semibold">Component/Material</label>
+              <input type="text" class="mt-2 w-full rounded border border-gray-300 px-2 py-1" />
+            </div>
+            <div>
+              <label class="mr-2 font-semibold">Quantity</label>
+              <input type="number" class="mt-2 w-full rounded border border-gray-300 px-2 py-1" />
+            </div>
+            <div>
+              <label class="mr-2 font-semibold">Unit of Measure</label>
+              <select class="mt-2 w-full rounded border border-gray-300 px-2 py-1">
+                <option>pc</option>
+                <option>kg</option>
+              </select>
+            </div>
+            <button class="rounded bg-blue-600 px-4 py-2 text-white">Add to BOM</button>
+            <button class="rounded bg-gray-300 px-4 py-2">Cancel</button>
+          </div>
+          <!-- Action Buttons -->
+          <div class="flex justify-end gap-4 pt-4">
+            <button
+              type="button"
+              @click="saveDraft"
+              class="rounded bg-gray-300 px-4 py-2 hover:bg-gray-400"
+            >
+              Save Draft
+            </button>
+            <button
+              type="submit"
+              class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            >
+              Save Changes
             </button>
           </div>
         </form>
@@ -278,6 +605,7 @@ import Popup from '@/components/popup.vue'
 
 const showEditBOMsPopup = ref(false)
 const showAddBOMsPopup = ref(false)
+const showViewBOMsPopup = ref(false)
 
 const props = defineProps<{
   showBOMsPopup: boolean
@@ -311,6 +639,7 @@ interface ProductionLineForm {
   capacityLimit: string
   shiftPattern: string
   workcenters: Workcenter[]
+  versionOption?: string // Add versionOption property
 }
 
 interface ProductionLineForm {
@@ -319,6 +648,7 @@ interface ProductionLineForm {
   capacity: number
   oeeTarget: number
   assignedWorkflows: string[]
+  versionOption?: string // Add versionOption property
 }
 
 const form = ref<
@@ -346,6 +676,7 @@ const form = ref<
   bomName: '', // Add default value for bomName
   productCode: '', // Add default value for productCode
   components: [], // Initialize components as an empty array
+  versionOption: 'update', // Add default value for versionOption
 })
 
 interface BOM {
@@ -414,11 +745,6 @@ function viewBOM(id: string) {
   // Implement view functionality
 }
 
-function openCreateBOM() {
-  console.log('Open create BOM dialog')
-  // Implement create BOM functionality
-}
-
 const bomForm = ref({
   bomName: '',
   productCode: '',
@@ -469,7 +795,77 @@ const handleSubmit = () => {
   // You would typically call an API here to create the BOM
 }
 
-const emit = defineEmits(['close', 'submit', 'update:showBOMsPopup'])
+const emit = defineEmits(['close', 'submit', 'update:showBOMsPopup', 'update:showEditBOMsPopup'])
+
+const components = ref([
+  {
+    level: '1',
+    name: 'Main Motor Assembly',
+    part: 'MOT-100',
+    quantity: 1,
+    unit: 'pc',
+    unitCost: 150,
+    totalCost: 150,
+  },
+  {
+    level: '1.1',
+    name: 'Gearbox Assembly',
+    part: 'GBR-200',
+    quantity: 1,
+    unit: 'pc',
+    unitCost: 75,
+    totalCost: 75,
+  },
+  {
+    level: '1.1.1',
+    name: 'Steel Gear',
+    part: 'GR-001',
+    quantity: 4,
+    unit: 'pc',
+    unitCost: 10,
+    totalCost: 40,
+  },
+])
+
+const selectedComponent = ref<null | number>(null)
+const material = ref('')
+const quantity = ref(1)
+const unit = ref('pc')
+
+function editComponent(index: number) {
+  selectedComponent.value = index
+  const comp = components.value[index]
+  material.value = comp.name
+  quantity.value = comp.quantity
+  unit.value = comp.unit
+}
+
+function addOrUpdateComponent() {
+  if (selectedComponent.value !== null) {
+    // Update existing
+    const idx = selectedComponent.value
+    const existing = components.value[idx]
+    existing.name = material.value
+    existing.quantity = quantity.value
+    existing.unit = unit.value
+    existing.totalCost = existing.unitCost * quantity.value
+    selectedComponent.value = null
+  } else {
+    // Add new (you can extend this)
+    components.value.push({
+      level: '1.X',
+      name: material.value,
+      part: 'NEW-XXX',
+      quantity: quantity.value,
+      unit: unit.value,
+      unitCost: 0,
+      totalCost: 0,
+    })
+  }
+  material.value = ''
+  quantity.value = 1
+  unit.value = 'pc'
+}
 </script>
 
 <style scoped>

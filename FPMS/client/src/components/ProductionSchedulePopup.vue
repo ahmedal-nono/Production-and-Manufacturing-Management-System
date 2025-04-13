@@ -222,11 +222,13 @@ const filteredOrders = computed(() => {
 })
 
 const getStatusClass = (status: string) => {
-  return status === 'On Track' ? 'bg-green-200 text-green-700' : 'bg-red-200 text-red-700'
+  return status === 'On Track' && 'on track'
+    ? 'bg-green-200 text-green-700'
+    : 'bg-red-200 text-red-700'
 }
 
 const getPriorityClass = (priority: string) => {
-  return priority === 'High' ? 'text-red-600' : 'text-blue-600'
+  return priority === 'High' || 'high' ? 'text-red-600' : 'text-blue-600'
 }
 
 const props = defineProps<{

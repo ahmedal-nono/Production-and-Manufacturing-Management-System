@@ -1,6 +1,7 @@
 
 from pathlib import Path
 import os
+from datetime import timedelta
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BACKUP_ROOT = os.path.join(BASE_DIR, 'backups')
@@ -39,8 +40,7 @@ INSTALLED_APPS = [
     'django_filters',
     'workflow',
     'work_instructions',
-    'quality_control',
-
+    
 ]
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -54,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'administration.middleware.ActivityLogMiddleware',
 ]
 
 ROOT_URLCONF = 'FPMS.urls'
@@ -132,13 +133,13 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-AUTH_USER_MODEL = 'administration.CustomUser'
+AUTH_USER_MODEL = 'administration.User'
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': [
-#         'rest_framework.authentication.TokenAuthentication',
-#     ],
-#     'DEFAULT_PERMISSION_CLASSES': [
-#         'rest_framework.permissions.IsAuthenticated',
-#     ],
-# }
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}

@@ -24,14 +24,6 @@
         <p class="pt-2 text-[13px] font-bold">Maintenance</p>
       </div>
     </div>
-    <div class="flex justify-end gap-10 py-2">
-      <div
-        class="flex w-fit cursor-pointer flex-col items-center justify-evenly rounded-xl border bg-[#bee8ea] p-2 shadow-md shadow-gray-500"
-        @click="showCreateWorkCenterPopup = true"
-      >
-        <img src="@/assets/add.png" class="size-12" alt="" />
-      </div>
-    </div>
   </div>
 
   <Popup :visible="showWorkCenterPopup" @update:visible="showWorkCenterPopup = $event">
@@ -60,7 +52,14 @@
       </div>
     </div>
 
-    <p class="flex justify-end text-6xl font-extrabold">+</p>
+    <div class="flex justify-end gap-10 py-2">
+      <div
+        class="flex w-fit cursor-pointer flex-col items-center justify-evenly rounded-xl border bg-[#bee8ea] p-2 shadow-md shadow-gray-500"
+        @click="showCreateWorkCenterPopup = true"
+      >
+        <img src="@/assets/add.png" class="size-12" alt="" />
+      </div>
+    </div>
   </Popup>
 
   <Popup :visible="showWorkCenterPopup2" @update:visible="showWorkCenterPopup2 = $event">

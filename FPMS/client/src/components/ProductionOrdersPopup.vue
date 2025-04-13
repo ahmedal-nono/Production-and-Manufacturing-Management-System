@@ -43,10 +43,16 @@
                   </span>
                 </td>
                 <td class="space-x-2 px-4 py-2">
-                  <button class="cursor-pointer rounded bg-gray-200 px-3 py-1 hover:bg-gray-300">
+                  <button
+                    @click="showEditProductionOrdersPopup = true"
+                    class="cursor-pointer rounded bg-gray-200 px-3 py-1 hover:bg-gray-300"
+                  >
                     Edit
                   </button>
-                  <button class="cursor-pointer rounded bg-gray-200 px-3 py-1 hover:bg-gray-300">
+                  <button
+                    @click="showViewProductionOrdersPopup = true"
+                    class="cursor-pointer rounded bg-gray-200 px-3 py-1 hover:bg-gray-300"
+                  >
                     View
                   </button>
                 </td>
@@ -129,6 +135,150 @@
         </div>
       </div>
     </Popup>
+    <Popup
+      :visible="showEditProductionOrdersPopup"
+      @update:visible="showEditProductionOrdersPopup = $event"
+    >
+      <div>
+        <h1 class="mb-6 text-2xl font-semibold">Edit Production Order</h1>
+
+        <!-- Order Details -->
+
+        <div class="ml-4 flex flex-row gap-4">
+          <div class="flex w-full flex-col">
+            <h2 class="mb-4 text-lg font-medium">Order Details</h2>
+            <input
+              v-model="orderName"
+              type="text"
+              placeholder="Order Name"
+              class="rounded border p-2"
+            />
+          </div>
+          <div class="flex w-full flex-col">
+            <h2 class="mb-4 text-lg font-medium">Priority</h2>
+            <select v-model="priority" class="rounded border p-2">
+              <option>Normal</option>
+              <option>High</option>
+              <option>Low</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2"></div>
+        <section class="mb-6 rounded p-4">
+          <h2 class="mb-4 text-lg font-semibold">Product Selection</h2>
+          <input
+            v-model="searchProduct"
+            type="text"
+            placeholder="Search products..."
+            class="mb-4 w-full rounded border p-2"
+          />
+          <div class="flex flex-col items-center gap-4 md:flex-row">
+            <select v-model="selectedVariant" class="flex-1 rounded border p-2">
+              <option>Blue - Medium</option>
+              <option>Red - Large</option>
+              <option>Green - Small</option>
+            </select>
+            <div class="flex items-center gap-2">
+              <button @click="decreaseQty" class="rounded border px-3 py-1">-</button>
+              <input v-model="quantity" type="number" class="w-16 rounded border p-1 text-center" />
+              <button @click="increaseQty" class="rounded border px-3 py-1">+</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="mb-6 rounded p-4">
+          <h2 class="mb-4 text-lg font-semibold">Production Parameters</h2>
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <input v-model="startDate" type="date" class="rounded border p-2" />
+            <input v-model="deadline" type="date" class="rounded border p-2" />
+            <select v-model="productionLine" class="rounded border p-2">
+              <option>Line 1</option>
+              <option>Line 2</option>
+              <option>Line 3</option>
+            </select>
+          </div>
+        </section>
+
+        <div class="flex justify-end gap-4">
+          <button @click="submitOrder" class="rounded bg-blue-600 px-4 py-2 text-white">
+            Create Production Order
+          </button>
+        </div>
+      </div>
+    </Popup>
+    <Popup
+      :visible="showViewProductionOrdersPopup"
+      @update:visible="showViewProductionOrdersPopup = $event"
+    >
+      <div>
+        <h1 class="mb-6 text-2xl font-semibold">Production Order</h1>
+
+        <!-- Order Details -->
+
+        <div class="ml-4 flex flex-row gap-4">
+          <div class="flex w-full flex-col">
+            <h2 class="mb-4 text-lg font-medium">Order Details</h2>
+            <input
+              v-model="orderName"
+              type="text"
+              placeholder="Order Name"
+              class="rounded border p-2"
+            />
+          </div>
+          <div class="flex w-full flex-col">
+            <h2 class="mb-4 text-lg font-medium">Priority</h2>
+            <select v-model="priority" class="rounded border p-2">
+              <option>Normal</option>
+              <option>High</option>
+              <option>Low</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2"></div>
+        <section class="mb-6 rounded p-4">
+          <h2 class="mb-4 text-lg font-semibold">Product Selection</h2>
+          <input
+            v-model="searchProduct"
+            type="text"
+            placeholder="Search products..."
+            class="mb-4 w-full rounded border p-2"
+          />
+          <div class="flex flex-col items-center gap-4 md:flex-row">
+            <select v-model="selectedVariant" class="flex-1 rounded border p-2">
+              <option>Blue - Medium</option>
+              <option>Red - Large</option>
+              <option>Green - Small</option>
+            </select>
+            <div class="flex items-center gap-2">
+              <button @click="decreaseQty" class="rounded border px-3 py-1">-</button>
+              <input v-model="quantity" type="number" class="w-16 rounded border p-1 text-center" />
+              <button @click="increaseQty" class="rounded border px-3 py-1">+</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="mb-6 rounded p-4">
+          <h2 class="mb-4 text-lg font-semibold">Production Parameters</h2>
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <input v-model="startDate" type="date" class="rounded border p-2" />
+            <input v-model="deadline" type="date" class="rounded border p-2" />
+            <select v-model="productionLine" class="rounded border p-2">
+              <option>Line 1</option>
+              <option>Line 2</option>
+              <option>Line 3</option>
+            </select>
+          </div>
+        </section>
+
+        <div class="flex justify-end gap-4">
+          <button @click="submitOrder" class="rounded bg-blue-600 px-4 py-2 text-white">
+            Create Production Order
+          </button>
+        </div>
+      </div>
+    </Popup>
   </div>
 </template>
 <script setup lang="ts">
@@ -136,6 +286,8 @@ import { ref } from 'vue'
 import Popup from '@/components/popup.vue'
 
 const showCreateProductionOrdersPopup = ref(false)
+const showEditProductionOrdersPopup = ref(false)
+const showViewProductionOrdersPopup = ref(false)
 
 const props = defineProps<{
   showProductionOrdersPopup: boolean

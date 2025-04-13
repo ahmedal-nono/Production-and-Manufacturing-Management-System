@@ -38,13 +38,6 @@
       <p class="pt-2 text-[13px] font-bold">User Management</p>
     </div>
     <div class="flex justify-end gap-10 py-2">
-      <!-- <div
-        class="flex w-fit cursor-pointer flex-col items-center justify-evenly rounded-xl border bg-[#bee8ea] p-2 shadow-md shadow-gray-500"
-        @click="showLanguageTimezonePopup = true"
-      >
-        <img src="@/assets/settings.png" class="size-12" alt="" />
-        <p class="pt-2 text-[13px] font-bold">Language & Time</p>
-      </div> -->
       <div
         class="flex w-fit cursor-pointer flex-col items-center justify-evenly rounded-xl border bg-[#bee8ea] p-2 shadow-md shadow-gray-500"
         @click="showBackupPopup = true"
@@ -300,33 +293,6 @@
     </div>
   </Popup>
 
-  <Popup :visible="showLanguageTimezonePopup" @update:visible="showLanguageTimezonePopup = $event">
-    <h3 class="mb-4 flex justify-center text-2xl font-bold">Language & Time Zone Settings</h3>
-    <div>
-      <form @submit.prevent="saveSettings" class="space-y-4">
-        <div class="flex flex-col">
-          <label for="language" class="text-sm font-bold">Preferred Language</label>
-          <select id="language" v-model="settings.language" class="rounded-md border p-2" required>
-            <option value="English">English</option>
-            <option value="Arabic">Arabic</option>
-          </select>
-        </div>
-
-        <div class="flex flex-col">
-          <label for="timezone" class="text-sm font-bold">Time Zone</label>
-          <select id="timezone" v-model="settings.timezone" class="rounded-md border p-2" required>
-            <option value="UTC">UTC-12:00</option>
-            <option value="GMT">GMT</option>
-          </select>
-        </div>
-        <div class="flex justify-end gap-4">
-          <button type="submit" class="w-full rounded-lg bg-blue-600 p-2 text-white">
-            Save Settings
-          </button>
-        </div>
-      </form>
-    </div>
-  </Popup>
   <Popup :visible="showBackupPopup" @update:visible="showBackupPopup = $event">
     <h3 class="mb-6 text-center text-2xl font-bold">Backup and Restore</h3>
 
@@ -417,12 +383,7 @@ import Popup from '@/components/popup.vue'
 
 const showActivityLogPopup = ref(false)
 const showUserMngtPopup = ref(false)
-const showPopup = ref(false)
-const showAvatarPopup = ref(false)
 const showUserCrtPopup = ref(false)
-const isRead = ref(false)
-const isReadSecond = ref(false)
-const uploadedImage = ref<string | null>(null)
 const showEditUserPopup = ref(false)
 
 const userActivities = ref([
@@ -449,24 +410,6 @@ const userActivities = ref([
   },
 ])
 
-function markAsRead() {
-  isRead.value = true
-}
-
-function markAsReadSecond() {
-  isReadSecond.value = true
-}
-
-function handleImageUpload(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = () => {
-      uploadedImage.value = reader.result as string
-    }
-    reader.readAsDataURL(file)
-  }
-}
 const newUser = ref({
   name: '',
   email: '',
@@ -509,21 +452,6 @@ const createUser = () => {
   }
 }
 
-const closePopup = () => {
-  showUserCrtPopup.value = false
-}
-
-const showLanguageTimezonePopup = ref(false)
-
-const settings = ref({
-  language: 'English',
-  timezone: 'UTC',
-})
-
-const saveSettings = () => {
-  console.log('Settings Saved:', settings.value)
-  showLanguageTimezonePopup.value = false
-}
 const showBackupPopup = ref(false)
 
 // Backup settings state
