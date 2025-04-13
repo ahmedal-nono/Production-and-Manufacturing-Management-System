@@ -1,6 +1,7 @@
 # Ignore virtual environment
 #my respect ahmed 
 venv/
-__pycache__/
-*.pyc
+#added this to avoid future conflects
+# __pycache__/
+# *.pyc
 
