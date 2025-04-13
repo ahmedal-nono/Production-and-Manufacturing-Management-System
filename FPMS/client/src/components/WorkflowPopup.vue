@@ -53,7 +53,7 @@
 
     <Popup :visible="showViewWorkflowPopup" @update:visible="showViewWorkflowPopup = $event">
       <div class="flex flex-col justify-start">
-        <h1 class="mb-6 text-4xl font-extrabold">Edit Workflow</h1>
+        <h1 class="mb-6 text-4xl font-extrabold">View Workflow</h1>
         <p class="mb-2 text-xl font-semibold">Workflow Details</p>
       </div>
 
@@ -156,9 +156,6 @@
             </tr>
           </tbody>
         </table>
-        <button class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
-          Add Stage
-        </button>
       </div>
 
       <div class="flex justify-end">
@@ -173,26 +170,34 @@
         <p class="mb-2 text-xl font-semibold">Workflow Details</p>
       </div>
 
-      <div class="flex flex-row gap-4">
+      <!-- Workflow name and description -->
+      <div class="mb-4 flex flex-row gap-4">
         <div class="flex w-full flex-col">
           <p class="font-medium">Workflow Name</p>
-          <input type="text" class="rounded border p-2" placeholder="Enter Workflow Name" />
+          <input
+            v-model="workflowName"
+            type="text"
+            class="rounded border p-2"
+            placeholder="Enter Workflow Name"
+          />
         </div>
       </div>
-      <div class="flex flex-row gap-4">
+
+      <div class="mb-4 flex flex-row gap-4">
         <div class="flex w-full flex-col">
           <p class="font-medium">Description</p>
           <textarea
-            type="text"
+            v-model="description"
             class="rounded border p-2"
             placeholder="Enter Workflow Description"
           />
         </div>
       </div>
-      <div class="flex flex-row gap-4">
+
+      <div class="mb-6 flex flex-row gap-4">
         <div class="flex w-full flex-col">
           <p class="font-medium">Product/Process Selection</p>
-          <select v-model="selectedCategory" class="rounded border p-2">
+          <select v-model="selectedProduct" class="rounded border p-2">
             <option value="">Select Product</option>
             <option>Category 1</option>
             <option>Category 2</option>
@@ -200,8 +205,8 @@
         </div>
       </div>
 
+      <!-- Stages -->
       <h1 class="mb-2 text-xl font-semibold">Define Stages</h1>
-
       <div class="overflow-x-auto">
         <table class="w-full border text-left">
           <thead>
@@ -216,27 +221,25 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="product in filteredProducts"
-              :key="product.sku"
-              class="border-t hover:bg-gray-100"
-            >
+            <tr v-for="(stage, index) in stages" :key="index" class="border-t hover:bg-gray-100">
               <td class="p-2">
                 <input
-                  class="rounded-xl border border-black p-1"
+                  v-model="stage.name"
+                  class="rounded-xl border p-1"
                   type="text"
                   placeholder="Stage Name"
                 />
               </td>
               <td class="p-2">
                 <input
-                  class="rounded-xl border border-black p-1"
+                  v-model="stage.description"
+                  class="rounded-xl border p-1"
                   type="text"
                   placeholder="Description"
                 />
               </td>
               <td class="p-2">
-                <select v-model="selectedCategory" class="rounded border p-2">
+                <select v-model="stage.workcenter" class="rounded border p-2">
                   <option value="">Select Workcenter</option>
                   <option>Category 1</option>
                   <option>Category 2</option>
@@ -244,13 +247,14 @@
               </td>
               <td class="p-2">
                 <input
-                  class="rounded-xl border border-black p-1"
-                  type="text"
+                  v-model="stage.duration"
+                  class="rounded-xl border p-1"
+                  type="number"
                   placeholder="Duration"
                 />
               </td>
               <td class="p-2">
-                <select v-model="selectedCategory" class="rounded border p-2">
+                <select v-model="stage.workorder" class="rounded border p-2">
                   <option value="">Select Workorder</option>
                   <option>Category 1</option>
                   <option>Category 2</option>
@@ -265,20 +269,31 @@
                 </button>
               </td>
               <td class="p-2">
-                <button class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500">
+                <button
+                  @click="removeStage(index)"
+                  class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
+                >
                   Remove
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
-        <button class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+
+        <button
+          @click="addStage"
+          class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
+        >
           Add Stage
         </button>
       </div>
 
+      <!-- Save -->
       <div class="flex justify-end">
-        <button class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+        <button
+          @click="saveWorkflow"
+          class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
+        >
           Save
         </button>
       </div>
@@ -289,26 +304,34 @@
         <p class="mb-2 text-xl font-semibold">Workflow Details</p>
       </div>
 
-      <div class="flex flex-row gap-4">
+      <!-- Workflow name and description -->
+      <div class="mb-4 flex flex-row gap-4">
         <div class="flex w-full flex-col">
           <p class="font-medium">Workflow Name</p>
-          <input type="text" class="rounded border p-2" placeholder="Enter Workflow Name" />
+          <input
+            v-model="workflowName"
+            type="text"
+            class="rounded border p-2"
+            placeholder="Enter Workflow Name"
+          />
         </div>
       </div>
-      <div class="flex flex-row gap-4">
+
+      <div class="mb-4 flex flex-row gap-4">
         <div class="flex w-full flex-col">
           <p class="font-medium">Description</p>
           <textarea
-            type="text"
+            v-model="description"
             class="rounded border p-2"
             placeholder="Enter Workflow Description"
           />
         </div>
       </div>
-      <div class="flex flex-row gap-4">
+
+      <div class="mb-6 flex flex-row gap-4">
         <div class="flex w-full flex-col">
           <p class="font-medium">Product/Process Selection</p>
-          <select v-model="selectedCategory" class="rounded border p-2">
+          <select v-model="selectedProduct" class="rounded border p-2">
             <option value="">Select Product</option>
             <option>Category 1</option>
             <option>Category 2</option>
@@ -316,8 +339,8 @@
         </div>
       </div>
 
+      <!-- Stages -->
       <h1 class="mb-2 text-xl font-semibold">Define Stages</h1>
-
       <div class="overflow-x-auto">
         <table class="w-full border text-left">
           <thead>
@@ -332,27 +355,25 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="product in filteredProducts"
-              :key="product.sku"
-              class="border-t hover:bg-gray-100"
-            >
+            <tr v-for="(stage, index) in stages" :key="index" class="border-t hover:bg-gray-100">
               <td class="p-2">
                 <input
-                  class="rounded-xl border border-black p-1"
+                  v-model="stage.name"
+                  class="rounded-xl border p-1"
                   type="text"
                   placeholder="Stage Name"
                 />
               </td>
               <td class="p-2">
                 <input
-                  class="rounded-xl border border-black p-1"
+                  v-model="stage.description"
+                  class="rounded-xl border p-1"
                   type="text"
                   placeholder="Description"
                 />
               </td>
               <td class="p-2">
-                <select v-model="selectedCategory" class="rounded border p-2">
+                <select v-model="stage.workcenter" class="rounded border p-2">
                   <option value="">Select Workcenter</option>
                   <option>Category 1</option>
                   <option>Category 2</option>
@@ -360,13 +381,14 @@
               </td>
               <td class="p-2">
                 <input
-                  class="rounded-xl border border-black p-1"
-                  type="text"
+                  v-model="stage.duration"
+                  class="rounded-xl border p-1"
+                  type="number"
                   placeholder="Duration"
                 />
               </td>
               <td class="p-2">
-                <select v-model="selectedCategory" class="rounded border p-2">
+                <select v-model="stage.workorder" class="rounded border p-2">
                   <option value="">Select Workorder</option>
                   <option>Category 1</option>
                   <option>Category 2</option>
@@ -381,20 +403,31 @@
                 </button>
               </td>
               <td class="p-2">
-                <button class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500">
+                <button
+                  @click="removeStage(index)"
+                  class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
+                >
                   Remove
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
-        <button class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+
+        <button
+          @click="addStage"
+          class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
+        >
           Add Stage
         </button>
       </div>
 
+      <!-- Save -->
       <div class="flex justify-end">
-        <button class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+        <button
+          @click="saveWorkflow"
+          class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
+        >
           Save
         </button>
       </div>
@@ -448,9 +481,9 @@
 import { ref, computed } from 'vue'
 import Popup from '@/components/popup.vue'
 
+const showCreateWorkflowPopup = defineModel<boolean>('visible')
 const showEditWorkflowPopup = ref(false)
 const showViewWorkflowPopup = ref(false)
-const showCreateWorkflowPopup = ref(false)
 const showCreateQualityInspectionCheckpointPopup = ref(false)
 const searchQuery = ref('')
 const selectedCategory = ref('')
@@ -497,6 +530,41 @@ const filteredProducts = computed(() => {
     return matchesSearch && matchesCategory && matchesVariant
   })
 })
+
+const workflowName = ref('')
+const description = ref('')
+const selectedProduct = ref('')
+
+interface Stage {
+  name: string
+  description: string
+  workcenter: string
+  duration: number | null
+  workorder: string
+}
+
+const stages = ref<Stage[]>([
+  { name: '', description: '', workcenter: '', duration: null, workorder: '' },
+])
+
+function addStage() {
+  stages.value.push({ name: '', description: '', workcenter: '', duration: null, workorder: '' })
+}
+
+function removeStage(index: number) {
+  stages.value.splice(index, 1)
+}
+
+function saveWorkflow() {
+  const data = {
+    workflowName: workflowName.value,
+    description: description.value,
+    product: selectedProduct.value,
+    stages: stages.value,
+  }
+  console.log('Saving workflow:', data)
+  // emit or save to API
+}
 </script>
 
 <style scoped>

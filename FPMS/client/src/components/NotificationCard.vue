@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex flex-col space-y-4 rounded-lg border-l-8 p-4 "
+    class="flex flex-col space-y-4 rounded-lg border-l-8 p-4"
     :class="isRead ? 'border-gray-500 bg-gray-100' : 'border-blue-500 bg-blue-50'"
   >
     <div class="flex justify-between">

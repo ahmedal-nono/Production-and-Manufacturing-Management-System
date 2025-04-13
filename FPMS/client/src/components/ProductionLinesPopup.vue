@@ -400,7 +400,7 @@ const productionLineForm = ref<ProductionLineForm>({
 })
 
 const addWorkcenter = () => {
-  productionLineForm.value.workcenters.push({ name: '' })
+  form.value.workcenters.push({ name: '' })
 }
 
 const selectedShiftPattern = ref('')

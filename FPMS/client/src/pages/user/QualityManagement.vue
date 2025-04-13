@@ -1,13 +1,39 @@
 <template>
-    <div>
-
+  <div class="m-2 flex h-max flex-col justify-center rounded-2xl bg-gray-200 p-4">
+    <p class="flex justify-center text-xl font-bold">Quality Management</p>
+    <div class="flex flex-row gap-10 py-4">
+      <div
+        class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
+        @click="showQualityInspectionPopup = true"
+      >
+        <img src="@/assets/quality_inspection.png" class="size-20" alt="" />
+        <p class="pt-2 text-[13px] font-bold">Quality Inspection</p>
+      </div>
+      <div
+        class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
+        @click="showReworkPopup = true"
+      >
+        <img src="@/assets/rework.png" class="size-20" alt="" />
+        <p class="pt-2 text-[13px] font-bold">Rework</p>
+      </div>
     </div>
+  </div>
+  <QualityInspectionPopup
+    @update:showQualityInspectionPopup="(v) => (showQualityInspectionPopup = v)"
+    :showQualityInspectionPopup
+  >
+  </QualityInspectionPopup>
+  <ReworkPopup @update:showReworkPopup="(v) => (showReworkPopup = v)" :showReworkPopup>
+  </ReworkPopup>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import QualityInspectionPopup from '@/components/QualityInspectionPopup.vue'
+import ReworkPopup from '@/components/ReworkPopup.vue'
 
+const showQualityInspectionPopup = ref(false)
+const showReworkPopup = ref(false)
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

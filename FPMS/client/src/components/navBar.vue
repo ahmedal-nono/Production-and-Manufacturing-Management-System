@@ -6,11 +6,11 @@
           src="../assets/noti.png"
           class="size-11 cursor-pointer"
           alt="Notification"
-          @click="showPopup = true"
+          @click="showNotificationPopup = true"
         />
         <Popup
-          :visible="showPopup"
-          @update:visible="showPopup = $event"
+          :visible="showNotificationPopup"
+          @update:visible="showNotificationPopup = $event"
           title="Notification Received"
         >
           <template v-for="noti of notifications">
@@ -161,30 +161,9 @@ const notifications = [
   },
 ]
 
-const showPopup = ref(false)
+const showNotificationPopup = ref(false)
 const showAvatarPopup = ref(false)
-const showUserCrtPopup = ref(false)
-const isRead = ref(false)
-const isReadSecond = ref(false)
 const uploadedImage = ref<string | null>(null)
-
-const users = ref([
-  {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    department: 'Engineering',
-    role: 'Admin',
-    status: 'Active',
-  },
-])
-
-function markAsRead() {
-  isRead.value = true
-}
-
-function markAsReadSecond() {
-  isReadSecond.value = true
-}
 
 function handleImageUpload(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
@@ -195,85 +174,6 @@ function handleImageUpload(event: Event) {
     }
     reader.readAsDataURL(file)
   }
-}
-const newUser = ref({
-  name: '',
-  email: '',
-  department: '',
-  role: '',
-  status: 'Active',
-  password: '',
-})
-
-const createUser = () => {
-  if (
-    newUser.value.name &&
-    newUser.value.email &&
-    newUser.value.department &&
-    newUser.value.role &&
-    newUser.value.password
-  ) {
-    users.value.push({ ...newUser.value })
-
-    newUser.value = {
-      name: '',
-      email: '',
-      department: '',
-      role: '',
-      status: 'Active',
-      password: '',
-    }
-
-    showUserCrtPopup.value = false
-  }
-}
-
-const closePopup = () => {
-  showUserCrtPopup.value = false
-}
-
-const showLanguageTimezonePopup = ref(false)
-
-const settings = ref({
-  language: 'English',
-  timezone: 'UTC',
-})
-
-const saveSettings = () => {
-  console.log('Settings Saved:', settings.value)
-  showLanguageTimezonePopup.value = false
-}
-const showBackupPopup = ref(false)
-
-// Backup settings state
-const backupSettings = ref({
-  frequency: 'Daily',
-  time: '',
-})
-
-// Backup history data
-const backupHistory = ref([
-  { name: 'Backup_2024_11_25.zip', date: '25 Nov 2024', status: 'Completed' },
-  { name: 'Backup_2024_11_24.zip', date: '24 Nov 2024', status: 'Completed' },
-])
-
-const saveBackupSettings = () => {
-  console.log('Backup Settings Saved:', backupSettings.value)
-}
-
-const handleFileUpload = (event: Event) => {
-  const file = (event.target as HTMLInputElement).files?.[0]
-  if (file) {
-    console.log('Selected file for restore:', file.name)
-  }
-}
-
-const restoreData = () => {
-  console.log('Restore data initiated.')
-}
-
-const downloadBackup = (fileName: string) => {
-  console.log('Downloading backup:', fileName)
 }
 </script>
 
