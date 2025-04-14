@@ -180,9 +180,6 @@
 
       <!-- Buttons -->
       <div class="flex justify-end gap-4">
-        <button class="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700">
-          Save Draft
-        </button>
         <button class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
           Save & Publish
         </button>
@@ -200,7 +197,10 @@
         <h1 class="text-2xl font-bold">Car Door Welding Process</h1>
         <div class="space-x-2">
           <button class="rounded bg-blue-500 px-3 py-1 text-white hover:bg-blue-600">PDF</button>
-          <button @click="showEditWorkinstructionPopup = true" class="rounded bg-blue-100 px-3 py-1 text-blue-700 hover:bg-blue-200">
+          <button
+            @click="showEditWorkinstructionPopup = true"
+            class="rounded bg-blue-100 px-3 py-1 text-blue-700 hover:bg-blue-200"
+          >
             Edit
           </button>
         </div>
@@ -356,9 +356,6 @@
 
       <!-- Buttons -->
       <div class="flex justify-end gap-4">
-        <button class="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700">
-          Save Draft
-        </button>
         <button class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
           Save & Publish
         </button>

@@ -414,13 +414,6 @@ x§
           <!-- Action Buttons -->
           <div class="flex justify-end gap-4 pt-4">
             <button
-              type="button"
-              @click="saveDraft"
-              class="rounded bg-gray-300 px-4 py-2 hover:bg-gray-400"
-            >
-              Save Draft
-            </button>
-            <button
               type="submit"
               class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
@@ -579,13 +572,6 @@ x§
           </div>
           <!-- Action Buttons -->
           <div class="flex justify-end gap-4 pt-4">
-            <button
-              type="button"
-              @click="saveDraft"
-              class="rounded bg-gray-300 px-4 py-2 hover:bg-gray-400"
-            >
-              Save Draft
-            </button>
             <button
               type="submit"
               class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
