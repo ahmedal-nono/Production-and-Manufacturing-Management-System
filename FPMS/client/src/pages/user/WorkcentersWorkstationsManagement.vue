@@ -36,7 +36,10 @@
           :key="index"
           class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         >
-          <div @click="showWorkCenterPopup2 = true">
+          <div @click="()=>{
+            showWorkCenterId = workcenter.id
+            showWorkCenterPopup2 = true
+            }">
             <p class="font-bold">{{ workcenter.name || 'No Workcenter' }}</p>
             <p>{{ workcenter.remarks || 'N/A' }}</p>
             <p>{{ workcenter.location || 'N/A' }}</p>
@@ -70,19 +73,19 @@
         <p class="py-2 text-xl font-bold">General Information</p>
         <div class="flex flex-row gap-0.5">
           <p>Name:</p>
-          <p>Ass</p>
+          <p > {{ showWorkCenterObject.name }}</p>
         </div>
         <div class="flex flex-row gap-0.5">
           <p>Type:</p>
-          <p>Ass</p>
+          <p> {{ showWorkCenterObject.location }}</p>
         </div>
         <div class="flex flex-row gap-0.5">
           <p>Capacity:</p>
-          <p>Ass</p>
+          <p> {{ showWorkCenterObject.status }}</p>
         </div>
         <div class="flex flex-row gap-0.5">
           <p>Description:</p>
-          <p>Ass</p>
+          <p>{{ showWorkCenterObject.remarks }}</p>
         </div>
       </div>
       <div class="flex flex-col pt-8">
@@ -93,30 +96,36 @@
               <th class="bg-blue-600">Workstation</th>
               <th class="bg-blue-600">Status</th>
               <th class="bg-blue-600">Capacity</th>
-              <th class="bg-blue-600">Current Task</th>
+              <th class="bg-blue-600">Description</th>
               <th class="bg-blue-600">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(station, index) in workstations" :key="index">
+            <tr v-for="(station, index) in allWorkstations" :key="index">
               <td>{{ station.name }}</td>
               <td>{{ station.status }}</td>
-              <td>{{ station.output }}</td>
-              <td>{{ station.task }}</td>
+              <td>{{ station.capacity }}</td>
+              <td>{{ station.description }}</td>
               <td>
                 <button
-                  @click="showViewWorkStationPopup = true"
+                  @click="()=>{
+                    showWorkStationId = station.id
+                    showViewWorkStationPopup = true
+                  }"
                   class="m-2 mt-4 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
                 >
                   View
                 </button>
                 <button
-                  @click="showEditWorkStationPopup = true"
+                  @click="()=>{
+            showWorkStationId = station.id
+            showEditWorkStationPopup = true
+                  }"
                   class="m-2 mt-4 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
                 >
                   Edit
                 </button>
-                <button class="m-2 mt-4 cursor-pointer rounded-lg bg-red-600 p-1.5 text-white">
+                <button @click="()=>deleteWorkStation(station.id)" class="m-2 mt-4 cursor-pointer rounded-lg bg-red-600 p-1.5 text-white">
                   Delete
                 </button>
               </td>
@@ -144,6 +153,7 @@
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
           placeholder="Enter Workstation Name"
+          v-model="newWorkstation.name" @change="(e) => newWorkstation.name = e.target.value"
         />
       </div>
       <div class="flex flex-col gap-2">
@@ -161,6 +171,8 @@
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
           placeholder="Enter Capacity"
+          v-model="newWorkstation.capacity" @change="(e) => newWorkstation.capacity = e.target.value"
+
         />
       </div>
       <div class="flex flex-col gap-2">
@@ -170,11 +182,16 @@
           name=""
           id=""
           placeholder="Enter Workstation Description"
+          v-model="newWorkstation.description" @change="(e) => newWorkstation.description = e.target.value"
+
         ></textarea>
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Assign Machines</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+        v-model="newWorkstation.machines" @change="(e) => newWorkstation.machines = e.target.value"
+
+        >
           <optgroup>
             <option>Select</option>
           </optgroup>
@@ -182,17 +199,20 @@
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Assign Tools</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
+        v-model="newWorkstation.tools" @change="(e) => newWorkstation.tools = (e.target as HTMLSelectElement).value"
+        >
           <optgroup>
             <option>Select</option>
           </optgroup>
         </select>
       </div>
-      <button class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white">
+      <button @click=submitworkst class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white">
         Create Workstation
       </button>
     </div>
   </Popup>
+  
   <Popup :visible="showViewWorkStationPopup" @update:visible="showViewWorkStationPopup = $event">
     <div>
       <h3 class="flex justify-center text-2xl font-extrabold">Workstation Details</h3>
@@ -203,8 +223,9 @@
         <input
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
-          placeholder="Enter Workstation Name"
+          placeholder="Enter Capacity"
           disabled
+          :value= 'showWorkStationObject.name'
         />
       </div>
       <div class="flex flex-col gap-2">
@@ -222,6 +243,8 @@
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
           placeholder="Enter Capacity"
+          disabled
+          :value= 'showWorkStationObject.capacity'
         />
       </div>
       <div class="flex flex-col gap-2">
@@ -231,21 +254,24 @@
           name=""
           id=""
           placeholder="Enter Workstation Description"
+          disabled
+          :value= 'showWorkStationObject.description'
+
         ></textarea>
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Assign Machines</label>
         <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
-          <optgroup>
-            <option>Select</option>
+          <optgroup v-for="(machine,index) in allWorkstations">
+            <option>{{machine.machine}}</option>
           </optgroup>
         </select>
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Assign Tools</label>
         <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
-          <optgroup>
-            <option>Select</option>
+          <optgroup v-for="(tool,index) in allWorkstations">
+            <option>{{tool.tool}}</option>
           </optgroup>
         </select>
       </div>
@@ -261,7 +287,8 @@
         <input
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
-          placeholder="Enter Workstation Name"
+          placeholder="Enter Workstation Id"
+          v-model="showWorkStationObject.name" @change="(e) => showWorkStationObject.name = e.target.value"
         />
       </div>
       <div class="flex flex-col gap-2">
@@ -270,14 +297,15 @@
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
           placeholder="Enter Workstation Name"
+          v-model="showWorkStationObject.name" @change="(e) => showWorkStationObject.name = e.target.value"
+
         />
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Associated Workcenter</label>
         <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
-          <optgroup>
-            <option value="active1">Active</option>
-            <option value="inactive1">Inactive</option>
+          <optgroup v-for="(workcenter,index) in workCenters">
+            <option value="">{{workcenter.name}}</option>
           </optgroup>
         </select>
       </div>
@@ -296,6 +324,9 @@
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
           placeholder="Enter Capacity"
+          v-model="showWorkStationObject.capacity" @change="(e) => showWorkStationObject.capacity = e.target.value"
+
+
         />
       </div>
       <div class="flex flex-col gap-2">
@@ -305,6 +336,7 @@
           name=""
           id=""
           placeholder="Enter Workstation Description"
+          v-model="showWorkStationObject.description" @change="(e) => showWorkStationObject.description = e.target.value"
         ></textarea>
       </div>
       <div class="flex flex-col gap-2">
@@ -318,7 +350,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(station, index) in workstations" :key="index">
+            <tr v-for="(station, index) in allWorkstations" :key="index">
               <td>{{ station.name }}</td>
               <td>{{ station.status }}</td>
               <td>
@@ -377,7 +409,7 @@
       >
         Add a Tool
       </button>
-      <button class="mt-4 w-full cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+      <button @click="()=> updateWorkStation(showWorkStationObject.id)" class="mt-4 w-full cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
         Save Changes
       </button>
     </div>
@@ -527,6 +559,8 @@
         class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
         type="text"
         placeholder="Enter Workcenter Name"
+        v-model="newWorkCenter.name" @change="(e) => newWorkCenter.name = e.target.value"
+
       />
     </div>
     <div class="flex flex-col gap-2">
@@ -535,6 +569,8 @@
         class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
         type="text"
         placeholder="Enter Workcenter Code"
+        v-model="newWorkCenter.code" @change="(e) => newWorkCenter.code = e.target.value"
+
       />
     </div>
     <div class="flex flex-col gap-2">
@@ -544,11 +580,13 @@
         name=""
         id=""
         placeholder="Enter Workcenter Location"
+        v-model="newWorkCenter.location" @change="(e) => newWorkCenter.location = e.target.value"
+
       ></textarea>
     </div>
     <div class="flex flex-col gap-2">
       <label for=""> Status</label>
-      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
+      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" v-model="newWorkCenter.status" @change="(e) => newWorkCenter.status = e.target.value">
         <optgroup>
           <option>Active</option>
           <option>Inactive</option>
@@ -562,9 +600,11 @@
         name=""
         id=""
         placeholder="Enter Additional Details (Optional)"
+        v-model="newWorkCenter.remarks" @change="(e) => newWorkCenter.remarks = e.target.value"
+
       ></textarea>
     </div>
-    <button class="mt-4 w-full cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
+    <button @click="CreateWorkCenter" class="mt-4 w-full cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
       Create Workcenter
     </button>
   </Popup>
@@ -724,6 +764,13 @@ import Popup from '@/components/popup.vue'
 import { baseApiUrl } from '@/api.ts'
 import { useAxios } from '@vueuse/integrations/useAxios'
 
+const showWorkCenterId = ref(0)
+const showWorkCenterObject = computed(()=>workCenters.value.find((w: any)=>w.id=== showWorkCenterId.value))
+
+const showWorkStationId = ref(0)
+const showWorkStationObject = computed(()=>allWorkstations.value.find((w: any)=>w.id === showWorkStationId.value))
+
+
 const showWorkCenterPopup = ref(false)
 const showWorkCenterPopup2 = ref(false)
 const showAddWorkstationPopup = ref(false)
@@ -743,9 +790,9 @@ interface Workstation {
   task: string
   time: string
 }
-const currentWorkCentersNames = defineModel("currentWorkCentersNames", '')
-const { data: workCenters } = useAxios(`${baseApiUrl}/workcentre/workcenters`, { method: 'GET' })
-const { data: allWorkstations } = useAxios(`${baseApiUrl}/workcentre/workstations`, { method: 'GET' })
+const currentWorkCentersNames = defineModel("currentWorkCentersNames", {default: ''})
+const { data: workCenters } = useAxios(`${baseApiUrl}/workcentre/workcenters/`, { method: 'GET' })
+const { data: allWorkstations } = useAxios(`${baseApiUrl}/workcentre/workstations/`, { method: 'GET' })
 const workCentersNames = computed(() => {
   if (!workCenters.value) return []
   return workCenters.value.map(w => w.name)
@@ -758,12 +805,19 @@ const workstations = computed(() => {
 
 const newWorkstation = reactive({
   name: '',
-  status: 'Active',
+  status: '',
   capacity: '',
   description: '',
-  workcenter_id: "",
-  machines: [],
-  tools: []
+  work_center:'',
+  machines: '',
+  tools: ''
+})
+const newWorkCenter = reactive({
+  name: '',
+  code: '',
+  location: '',
+  status: '',
+  remarks: ''
 })
 
 function getStatusClass(status: string): string {
@@ -777,6 +831,27 @@ function getStatusClass(status: string): string {
     default:
       return 'text-gray-500'
   }
+}
+
+function submitworkst(){
+  
+  const { data } = useAxios(`${baseApiUrl}/workcentre/workstations/`, { method: 'POST', data: newWorkstation })
+  //location.reload()
+}
+
+function deleteWorkStation(id: number){
+  useAxios(`${baseApiUrl}/workcentre/workstations/${id}/`, { method: 'DELETE', })
+  }
+
+  function updateWorkStation(id: number){
+    useAxios(`${baseApiUrl}/workcentre/workstations/${id}/`, { method: 'PUT', data: {...showWorkStationObject.value}})
+
+  }
+function CreateWorkCenter(){
+  console.log(newWorkCenter);
+  
+  const { data } = useAxios(`${baseApiUrl}/workcentre/workcenters/`, { method: 'POST', data: newWorkCenter })
+  //location.reload()
 }
 </script>
 

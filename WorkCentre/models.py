@@ -17,10 +17,9 @@ class Workstation(models.Model):
     status = models.CharField(max_length=50, default='Active')
     capacity = models.IntegerField()
     description = models.TextField(blank=True, null=True)
-    work_center = models.ForeignKey(
-        WorkCenter, on_delete=models.CASCADE, related_name='workstations')
-    machines = models.JSONField(default=list)  # List of machine names
-    tools = models.JSONField(default=list)  # List of tool names
+    work_center =models.TextField(blank=True, null=True)
+    machines = models.JSONField( max_length=255 , blank=True, null=True)  # List of machine names
+    tools = models.JSONField(max_length=255 )   # List of tool names
 
     def __str__(self):
         return self.name
