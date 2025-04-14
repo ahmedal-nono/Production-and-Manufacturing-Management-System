@@ -24,6 +24,13 @@
         <img src="@/assets/maintenance.png" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Maintenance</p>
       </div>
+      <div
+        class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
+        @click="showMaintenancesPopup = true"
+      >
+        <img src="@/assets/maintenance.png" class="size-20" alt="" />
+        <p class="pt-2 text-[13px] font-bold">Maintenance Table</p>
+      </div>
     </div>
   </div>
 
@@ -453,11 +460,11 @@
         <h3 class="flex justify-start py-1 text-lg font-bold">
           Real-Time Workstation Availability
         </h3>
-        <h3 class="flex justify-start py-1 text-gray-500">Filter by Workcenter or Location:</h3>
+        <h3 class="flex justify-start py-1 text-gray-500">Filter by WorkStation or Location:</h3>
         <input
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
-          placeholder="Search by Workcenter or Location"
+          placeholder="Search by WorkStation or Location"
         />
 
         <table class="mt-2.5 w-full border-collapse">
@@ -466,15 +473,15 @@
               <th class="bg-gray-200">Workstation</th>
               <th class="bg-gray-200">Status</th>
               <th class="bg-gray-200">Capacity</th>
-              <th class="bg-gray-200">Status</th>
+              <th class="bg-gray-200">Description</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(station, index) in workstations" :key="index">
+            <tr v-for="(station, index) in allWorkstations" >
               <td>{{ station.name }}</td>
               <td :class="getStatusClass(station.status)">{{ station.status }}</td>
               <td>{{ station.capacity }}</td>
-              <td>{{ station.status }}</td>
+              <td>{{ station.description }}</td>
             </tr>
           </tbody>
         </table>
@@ -483,23 +490,21 @@
   </Popup>
 
   <Popup :visible="showMaintenancePopup" @update:visible="showMaintenancePopup = $event">
-    newWorkstation: {{ newWorkstation }}
-    <div class="flex flex-col gap-2">
-      <p class="flex justify-center text-2xl font-extrabold">Schedule Workstation Maintenance</p>
+    <!-- <div class="flex flex-col gap-2">
+       <p class="flex justify-center text-2xl font-extrabold">Schedule Workstation Maintenance</p>
       <label for=""> Select Workcenter</label>
-      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
-        <optgroup>
-          <option>Active</option>
-          <option>Inactive</option>
+      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" >
+        <optgroup v-for ="(workcenter,index) in workCenters">
+          <option>{{workcenter.name}}</option>
+
         </optgroup>
       </select>
-    </div>
+    </div> --> 
     <div class="flex flex-col gap-2">
       <label for=""> Select Workstation</label>
-      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
-        <optgroup>
-          <option>Active</option>
-          <option>Inactive</option>
+      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"  v-model="newSchedule.workstation" @change="(e) => newSchedule.workstation = e.target.value">
+        <optgroup v-for="(workstation,index) in allWorkstations">
+          <option>{{workstation.id}}</option>
         </optgroup>
       </select>
     </div>
@@ -510,6 +515,7 @@
         type="date"
         name=""
         id=""
+        v-model="newSchedule.maintenance_date" @change="(e) => newSchedule.maintenance_date = e.target.value"
       />
     </div>
     <div class="flex flex-col gap-2">
@@ -519,11 +525,12 @@
         type="time"
         name=""
         id=""
+         v-model="newSchedule.maintenance_time" @change="(e) => newSchedule.maintenance_time = e.target.value"
       />
     </div>
     <div class="flex flex-col gap-2">
       <label for="">Recurrence</label>
-      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
+      <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"  v-model="newSchedule.recurrence" @change="(e) => newSchedule.recurrence = e.target.value">
         <optgroup>
           <option>None</option>
         </optgroup>
@@ -536,6 +543,7 @@
         name=""
         id=""
         placeholder="Provide details about the maintenance task"
+         v-model="newSchedule.description" @change="(e) => newSchedule.description = e.target.value"
       ></textarea>
     </div>
     <div class="flex flex-col gap-2">
@@ -544,9 +552,10 @@
         class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
         type="text"
         placeholder="Enter staff names or roles"
+         v-model="newSchedule.staff_notes" @change="(e) => newSchedule.staff_notes = e.target.value"
       />
     </div>
-    <button class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white">
+    <button @click="scheduleMaintenance" class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white">
       Schedule Maintenance
     </button>
   </Popup>
@@ -756,6 +765,42 @@
       Save Changes
     </button>
   </Popup>
+  <Popup :visible="showMaintenancesPopup" @update:visible="showMaintenancesPopup = $event">
+    <div class="">
+      <h2 class="mb-4 text-2xl font-semibold">Maintenances</h2>
+
+
+      <!-- Table -->
+      <table class="w-full border text-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="border p-2 text-left">Workstation ID</th>
+            <th class="border p-2 text-left">Maintenance Date</th>
+            <th class="border p-2 text-left">Maintenance Time</th>
+            <th class="border p-2 text-left">Recurrence</th>
+            <th class="border p-2 text-left">Description</th>
+            <th class="border p-2 text-left">Staff Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="(main, index) in allMaintenances"
+
+          >
+            <td class="cursor-pointer border p-2 text-blue-600 underline">{{ main.workstation }}</td>
+            <td class="border p-2">{{ main.maintenance_date }}</td>
+            <td class="border p-2">{{ main.maintenance_time }}</td>
+            <td class="border p-2"> {{main.recurrence}}
+            </td>
+            <td class="border p-2">{{ main.description }}</td>
+            <td class="border p-2">
+              {{main.staff_notes}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+          </div>
+  </Popup>
 </template>
 
 <script setup lang="ts">
@@ -783,6 +828,7 @@ const showEditMachinePopup = ref(false)
 const showAddMachinePopup = ref(false)
 const showEditToolPopup = ref(false)
 const showAddToolPopup = ref(false)
+const showMaintenancesPopup = ref(false)
 
 interface Workstation {
   name: string
@@ -793,6 +839,7 @@ interface Workstation {
 const currentWorkCentersNames = defineModel("currentWorkCentersNames", {default: ''})
 const { data: workCenters } = useAxios(`${baseApiUrl}/workcentre/workcenters/`, { method: 'GET' })
 const { data: allWorkstations } = useAxios(`${baseApiUrl}/workcentre/workstations/`, { method: 'GET' })
+const { data: allMaintenances } = useAxios(`${baseApiUrl}/workcentre/maintenances/`, { method: 'GET' })
 const workCentersNames = computed(() => {
   if (!workCenters.value) return []
   return workCenters.value.map(w => w.name)
@@ -818,6 +865,14 @@ const newWorkCenter = reactive({
   location: '',
   status: '',
   remarks: ''
+})
+const newSchedule = reactive({
+  workstation: '',
+  maintenance_date: '',
+  maintenance_time: '',
+  recurrence: '',
+  description: '',
+  staff_notes:''
 })
 
 function getStatusClass(status: string): string {
@@ -851,6 +906,10 @@ function CreateWorkCenter(){
   console.log(newWorkCenter);
   
   const { data } = useAxios(`${baseApiUrl}/workcentre/workcenters/`, { method: 'POST', data: newWorkCenter })
+  //location.reload()
+}
+function scheduleMaintenance(){
+  useAxios(`${baseApiUrl}/workcentre/maintenances/`, { method: 'POST', data: newSchedule })
   //location.reload()
 }
 </script>
