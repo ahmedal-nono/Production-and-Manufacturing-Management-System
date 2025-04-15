@@ -99,7 +99,7 @@ class BackupConfig(models.Model):
 class BackupRecord(models.Model):
     backup_file = models.FileField(upload_to='backups/')
     created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True,blank=True,default=None)
     file_size = models.PositiveIntegerField()
     is_automated = models.BooleanField(default=True)
     

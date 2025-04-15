@@ -80,7 +80,9 @@ class BackupRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = BackupRecord
         fields = '__all__'
-        read_only_fields = ['backup_file', 'created_at', 'file_size']
+        extra_kwargs = {
+            'created_by': {'required': False, 'allow_null': True}
+        }
 
 class SystemSettingSerializer(serializers.ModelSerializer):
     class Meta:

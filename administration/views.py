@@ -14,6 +14,9 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import logout
 import os
+import os
+import subprocess
+from pathlib import Path
 from .permissions import IsProductionManager, IsSameUserOrManager
 from datetime import datetime
 import subprocess
@@ -35,91 +38,197 @@ class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
     permission_classes = [permissions.IsAdminUser]
-
+MARIADB_BIN_PATH = r"C:\Program Files\MariaDB 11.6\bin"
+MYSQLDUMP_PATH = os.path.join(MARIADB_BIN_PATH, "mysqldump.exe")
 class BackupRecordViewSet(viewsets.ModelViewSet):
-    queryset = BackupRecord.objects.all()
     serializer_class = BackupRecordSerializer
-    permission_classes = [permissions.AllowAny]
-    
+    queryset = BackupRecord.objects.all()
+    permission_classes = []
     @action(detail=False, methods=['post'])
     def create_backup(self, request):
-        # Generate filename with timestamp
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f"fpms_backup_{timestamp}.sql"
-        backup_path = os.path.join(settings.MEDIA_ROOT, 'backups', filename)
+        backup_dir = os.path.join(settings.MEDIA_ROOT, 'backups')
+        backup_path = os.path.join(backup_dir, filename)
         
-        # Create directory if not exists
-        os.makedirs(os.path.dirname(backup_path), exist_ok=True)
+        # Create backup directory if not exists
+        Path(backup_dir).mkdir(parents=True, exist_ok=True)
         
-        # Run mysqldump command
         db_settings = settings.DATABASES['default']
-        command =  f"""
-            "mysqldump" 
-            --user={db_settings['USER']}
-            --password={db_settings['PASSWORD']}
-            --host={db_settings['HOST']}
-            {db_settings['NAME']}
-            --result-file="{backup_path}"
-             subprocess.run(command, shell=True, check=True)
-            """
-           
-
+        
+        command = [
+            MYSQLDUMP_PATH,
+            f"--user={db_settings['USER']}",
+            f"--password={db_settings['PASSWORD']}",
+            f"--host={db_settings['HOST']}",
+            f"--port={db_settings.get('PORT', '3306')}",
+            db_settings['NAME'],
+            f"--result-file={backup_path}"
+        ]
+        
         try:
-            subprocess.run(command, check=True)
+            # Set the PATH environment variable temporarily
+            env = os.environ.copy()
+            env['PATH'] = f"{MARIADB_BIN_PATH};{env['PATH']}"
             
-            # Get file size
+            result = subprocess.run(
+                command,
+                check=True,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            
+            if result.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    result.returncode, 
+                    command, 
+                    result.stdout, 
+                    result.stderr
+                )
+            
             file_size = os.path.getsize(backup_path)
             
-            # Create backup record
             backup = BackupRecord.objects.create(
                 backup_file=f'backups/{filename}',
-                created_by=request.user,
+                created_by=None,
                 file_size=file_size,
                 is_automated=False
             )
             
             return Response({
                 'status': 'success',
-                'backup_id': backup.id
+                'backup_id': backup.id,
+                'file_path': backup_path
             })
+            
         except subprocess.CalledProcessError as e:
-            return Response({
-                'status': 'error',
-                'message': str(e)
-            }, status=500)
-    
+            error_msg = f"Backup failed: {e.stderr}" if e.stderr else str(e)
+            return Response(
+                {'status': 'error', 'message': error_msg},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     @action(detail=True, methods=['get'])
     def download(self, request, pk=None):
         backup = self.get_object()
-        file_path = backup.backup_file.path
-        return FileResponse(open(file_path, 'rb'), as_attachment=True)
-    
-    @action(detail=True, methods=['post'])
-    def restore(self, request, pk=None):
-        if not request.user.is_superuser:
-            return Response({'status': 'error', 'message': 'Only superusers can restore backups'}, status=403)
         
-        backup = self.get_object()
-        file_path = backup.backup_file.path
-        
-        db_settings = settings.DATABASES['default']
-        command = [
-            'mysql',
-            '-u', db_settings['USER'],
-            '-p' + db_settings['PASSWORD'],
-            '-h', db_settings['HOST'],
-            db_settings['NAME'],
-            '<', file_path
-        ]
+        if not backup.backup_file:
+            return Response(
+                {"error": "Backup file not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
         
         try:
-            subprocess.run(' '.join(command), shell=True, check=True)
-            return Response({'status': 'success'})
-        except subprocess.CalledProcessError as e:
-            return Response({
-                'status': 'error',
-                'message': str(e)
-            }, status=500)
+            if not os.path.exists(backup.backup_file.path):
+                return Response(
+                    {"error": "File does not exist on server"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+                
+            response = FileResponse(
+                open(backup.backup_file.path, 'rb'),
+                as_attachment=True,
+                filename=os.path.basename(backup.backup_file.path)
+            )
+            return response
+            
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+    @action(detail=True, methods=['post'])
+    def restore(self, request, pk=None):
+        try:
+            backup = self.get_object()
+            file_path = backup.backup_file.path
+            
+            if not os.path.exists(file_path):
+                return Response(
+                    {"error": f"Backup file not found at {file_path}"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            db_settings = settings.DATABASES['default']
+            mysql_path = r"C:\Program Files\MariaDB 11.6\bin\mysql.exe"
+            
+            # Method 1: Using command list with shell=False (recommended)
+            command = [
+                mysql_path,
+                f"--user={db_settings['USER']}",
+                f"--password={db_settings['PASSWORD']}",
+                f"--host={db_settings['HOST']}",
+                db_settings['NAME'],
+                f"--execute=source {file_path}"
+            ]
+
+            # Method 2: Alternative approach using file input
+            # command = [
+            #     mysql_path,
+            #     f"--user={db_settings['USER']}",
+            #     f"--password={db_settings['PASSWORD']}",
+            #     f"--host={db_settings['HOST']}",
+            #     db_settings['NAME']
+            # ]
+
+            try:
+                # For Method 1:
+                result = subprocess.run(
+                    command,
+                    shell=False,
+                    check=True,
+                    stderr=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    text=True,
+                    timeout=300  # 5 minute timeout
+                )
+
+                # For Method 2:
+                # with open(file_path, 'r') as f:
+                #     result = subprocess.run(
+                #         command,
+                #         stdin=f,
+                #         stderr=subprocess.PIPE,
+                #         stdout=subprocess.PIPE,
+                #         text=True,
+                #         timeout=300
+                #     )
+
+                return Response({
+                    "status": "success",
+                    "message": "Database restored successfully",
+                    "output": result.stdout
+                })
+
+            except subprocess.TimeoutExpired:
+                return Response({
+                    "status": "error",
+                    "message": "Restore timed out after 5 minutes"
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
+            except subprocess.CalledProcessError as e:
+                error_msg = e.stderr if e.stderr else "Unknown error occurred"
+                return Response({
+                    "status": "error",
+                    "message": "Restore failed",
+                    "error": error_msg,
+                    "command": ' '.join(command),
+                    "returncode": e.returncode
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        except BackupRecord.DoesNotExist:
+            return Response(
+                {"error": "Backup record not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
 
 
 
@@ -135,7 +244,7 @@ class SystemSettingViewSet(viewsets.ModelViewSet):
 class HealthMetricViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = HealthMetric.objects.all()
     serializer_class = HealthMetricSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = []
     
     @action(detail=False, methods=['get'])
     def current(self, request):
@@ -216,15 +325,22 @@ from .serializers import ActivityLogSerializer
 class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ActivityLog.objects.all()
     serializer_class = ActivityLogSerializer
-    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['user', 'action', 'model', 'timestamp']
-    
+    filterset_fields = ['action', 'model', 'timestamp']
+
     def get_queryset(self):
-        # Non-admin users can only see their own logs
-        if not self.request.user.is_staff:
-            return self.queryset.filter(user=self.request.user)
-        return self.queryset
+        queryset = super().get_queryset()
+        
+        # Handle user filtering safely
+        user_id = self.request.query_params.get('user')
+        if user_id:
+            try:
+                user_id = int(user_id)
+                queryset = queryset.filter(user_id=user_id)
+            except (ValueError, TypeError):
+                pass  # Ignore invalid user IDs
+                
+        return queryset
 from .models import User
 from .serializers import UserSerializer
 
@@ -240,11 +356,11 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action in ['create', 'destroy']:
             permission_classes = [permissions.AllowAny]
         elif self.action in ['update', 'partial_update']:
-            permission_classes = [IsSameUserOrManager | permissions.IsAdminUser | IsProductionManager]
+            permission_classes = [permissions.AllowAny]
         elif self.action == 'logout':
             permission_classes = [permissions.AllowAny]  # No auth required
         else:
-            permission_classes = [permissions.IsAuthenticated]
+            permission_classes = [permissions.AllowAny]
         return [permission() for permission in permission_classes]
 
     @action(detail=False, methods=['post'])

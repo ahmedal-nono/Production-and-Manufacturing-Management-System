@@ -2,15 +2,17 @@
 from pathlib import Path
 import os
 from datetime import timedelta
-
+# settings.py
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BACKUP_ROOT = os.path.join(BASE_DIR, 'backups')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# BACKUP_ROOT = os.path.join(BASE_DIR, 'backups')
 
 # Create the backups directory if it doesn't exist
-if not os.path.exists(BACKUP_ROOT):
-    os.makedirs(BACKUP_ROOT)
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+# if not os.path.exists(BACKUP_ROOT):
+#     os.makedirs(BACKUP_ROOT)
+# # Build paths inside the project like this: BASE_DIR / 'subdir'.
+# BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
