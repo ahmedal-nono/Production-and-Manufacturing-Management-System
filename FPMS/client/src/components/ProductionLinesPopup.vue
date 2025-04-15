@@ -29,23 +29,23 @@
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full border text-left">
-            <thead>
+          <table class="w-full text-center">
+            <thead class="bg-blue-500 text-white">
               <tr class="">
-                <th class="p-2">Line Name</th>
-                <th class="p-2">Status</th>
-                <th class="p-2">Current Output</th>
-                <th class="p-2">Capacity Utilization</th>
-                <th class="p-2">OEE</th>
-                <th class="p-2">Workcenters</th>
-                <th class="p-2">Assigned Workflows</th>
-                <th class="p-2">Actions</th>
+                <th class="border border-gray-700 px-4 py-2">Line Name</th>
+                <th class="border border-gray-700 px-4 py-2">Status</th>
+                <th class="border border-gray-700 px-4 py-2">Current Output</th>
+                <th class="border border-gray-700 px-4 py-2">Capacity Utilization</th>
+                <th class="border border-gray-700 px-4 py-2">OEE</th>
+                <th class="border border-gray-700 px-4 py-2">Workcenters</th>
+                <th class="border border-gray-700 px-4 py-2">Assigned Workflows</th>
+                <th class="border border-gray-700 px-4 py-2">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="line in filteredLines" :key="line.name" class="border-t hover:bg-gray-100">
-                <td class="p-2">{{ line.name }}</td>
-                <td class="p-2">
+                <td class="border border-gray-700 px-4 py-2">{{ line.name }}</td>
+                <td class="border border-gray-700 px-4 py-2">
                   <span
                     :class="[
                       'rounded-full px-2 py-1 text-xs font-semibold',
@@ -59,17 +59,19 @@
                     {{ line.status }}
                   </span>
                 </td>
-                <td class="p-2">{{ line.currentOutput }}/{{ line.capacity }} units</td>
-                <td class="p-2">{{ line.utilization }}%</td>
-                <td class="p-2">{{ line.oee ?? '-' }}</td>
-                <td class="p-2">{{ line.workcenters }}</td>
-                <td class="p-2">
+                <td class="border border-gray-700 px-4 py-2">
+                  {{ line.currentOutput }}/{{ line.capacity }} units
+                </td>
+                <td class="border border-gray-700 px-4 py-2">{{ line.utilization }}%</td>
+                <td class="border border-gray-700 px-4 py-2">{{ line.oee ?? '-' }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ line.workcenters }}</td>
+                <td class="border border-gray-700 px-4 py-2">
                   <span v-if="line.workflows?.length">
                     {{ line.workflows.join(', ') }}
                   </span>
                   <span v-else class="text-gray-400">-</span>
                 </td>
-                <td class="p-2">
+                <td class="border border-gray-700 px-4 py-2">
                   <button
                     @click="showEditProductionLinesPopup = true"
                     class="cursor-pointer rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-500"
@@ -470,11 +472,8 @@ const searchQuery = ref('')
 const statusFilter = ref('all')
 </script>
 
-<style scoped>
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
+<style>
+button {
+  cursor: pointer;
 }
 </style>

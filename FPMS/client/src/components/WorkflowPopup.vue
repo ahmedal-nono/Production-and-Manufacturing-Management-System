@@ -7,11 +7,11 @@
       <div>
         <h1 class="mb-6 text-3xl font-extrabold">Existing Workflows</h1>
         <div class="overflow-x-auto">
-          <table class="w-full border text-left">
+          <table class="w-full border text-center">
             <thead>
               <tr class="bg-blue-500 text-white">
-                <th class="p-2">Workflow Name</th>
-                <th class="p-2">Actions</th>
+                <th class="border border-gray-700 px-4 py-2">Workflow Name</th>
+                <th class="border border-gray-700 px-4 py-2">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -20,8 +20,8 @@
                 :key="product.sku"
                 class="border-t hover:bg-gray-100"
               >
-                <td class="p-2">{{ product.workflow }}</td>
-                <td class="p-2">
+                <td class="border border-gray-700 px-4 py-2">{{ product.workflow }}</td>
+                <td class="border border-gray-700 px-4 py-2">
                   <button
                     @click="showViewWorkflowPopup = true"
                     class="mr-2 rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-500"
@@ -87,16 +87,15 @@
       <h1 class="mb-2 text-xl font-semibold">Define Stages</h1>
 
       <div class="overflow-x-auto">
-        <table class="w-full border text-left">
+        <table class="w-full text-center">
           <thead>
             <tr class="bg-blue-500 text-white">
-              <th class="p-2">Stage Name</th>
-              <th class="p-2">Description</th>
-              <th class="p-2">Assigned Workcenter</th>
-              <th class="p-2">Duration (min)</th>
-              <th class="p-2">Workorders</th>
-              <th class="p-2">Inspection checkpoint</th>
-              <th class="p-2">Actions</th>
+              <th class="border border-gray-700 px-4 py-2">Stage Name</th>
+              <th class="border border-gray-700 px-4 py-2">Description</th>
+              <th class="border border-gray-700 px-4 py-2">Assigned Workcenter</th>
+              <th class="border border-gray-700 px-4 py-2">Duration (min)</th>
+              <th class="border border-gray-700 px-4 py-2">Workorders</th>
+              <th class="border border-gray-700 px-4 py-2">Inspection checkpoint</th>
             </tr>
           </thead>
           <tbody>
@@ -105,63 +104,47 @@
               :key="product.sku"
               class="border-t hover:bg-gray-100"
             >
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <input
                   class="rounded-xl border border-black p-1"
                   type="text"
                   placeholder="Stage Name"
                 />
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <input
                   class="rounded-xl border border-black p-1"
                   type="text"
                   placeholder="Description"
                 />
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <select v-model="selectedCategory" class="rounded border p-2">
                   <option value="">Select Workcenter</option>
                   <option>Category 1</option>
                   <option>Category 2</option>
                 </select>
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <input
                   class="rounded-xl border border-black p-1"
                   type="text"
                   placeholder="Duration"
                 />
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <select v-model="selectedCategory" class="rounded border p-2">
                   <option value="">Select Workorder</option>
                   <option>Category 1</option>
                   <option>Category 2</option>
                 </select>
               </td>
-              <td class="p-2">
-                <button
-                  @click="showCreateQualityInspectionCheckpointPopup = true"
-                  class="w-9/12 rounded-md bg-gray-300 p-0.5"
-                >
-                  Create
-                </button>
-              </td>
-              <td class="p-2">
-                <button class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500">
-                  Remove
-                </button>
+              <td class="border border-gray-700 px-4 py-2">
+                <input class="rounded-xl border border-black p-1" type="text" />
               </td>
             </tr>
           </tbody>
         </table>
-      </div>
-
-      <div class="flex justify-end">
-        <button class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white">
-          Save
-        </button>
       </div>
     </Popup>
     <Popup :visible="showEditWorkflowPopup" @update:visible="showEditWorkflowPopup = $event">
@@ -208,21 +191,21 @@
       <!-- Stages -->
       <h1 class="mb-2 text-xl font-semibold">Define Stages</h1>
       <div class="overflow-x-auto">
-        <table class="w-full border text-left">
+        <table class="w-full text-center">
           <thead>
             <tr class="bg-blue-500 text-white">
-              <th class="p-2">Stage Name</th>
-              <th class="p-2">Description</th>
-              <th class="p-2">Assigned Workcenter</th>
-              <th class="p-2">Duration (min)</th>
-              <th class="p-2">Workorders</th>
-              <th class="p-2">Inspection checkpoint</th>
-              <th class="p-2">Actions</th>
+              <th class="border border-gray-700 px-4 py-2">Stage Name</th>
+              <th class="border border-gray-700 px-4 py-2">Description</th>
+              <th class="border border-gray-700 px-4 py-2">Assigned Workcenter</th>
+              <th class="border border-gray-700 px-4 py-2">Duration (min)</th>
+              <th class="border border-gray-700 px-4 py-2">Workorders</th>
+              <th class="border border-gray-700 px-4 py-2">Inspection checkpoint</th>
+              <th class="border border-gray-700 px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(stage, index) in stages" :key="index" class="border-t hover:bg-gray-100">
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <input
                   v-model="stage.name"
                   class="rounded-xl border p-1"
@@ -230,7 +213,7 @@
                   placeholder="Stage Name"
                 />
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <input
                   v-model="stage.description"
                   class="rounded-xl border p-1"
@@ -238,14 +221,14 @@
                   placeholder="Description"
                 />
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <select v-model="stage.workcenter" class="rounded border p-2">
                   <option value="">Select Workcenter</option>
                   <option>Category 1</option>
                   <option>Category 2</option>
                 </select>
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <input
                   v-model="stage.duration"
                   class="rounded-xl border p-1"
@@ -253,14 +236,14 @@
                   placeholder="Duration"
                 />
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <select v-model="stage.workorder" class="rounded border p-2">
                   <option value="">Select Workorder</option>
                   <option>Category 1</option>
                   <option>Category 2</option>
                 </select>
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <button
                   @click="showCreateQualityInspectionCheckpointPopup = true"
                   class="w-9/12 rounded-md bg-gray-300 p-0.5"
@@ -268,7 +251,7 @@
                   Create
                 </button>
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <button
                   @click="removeStage(index)"
                   class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
@@ -342,21 +325,21 @@
       <!-- Stages -->
       <h1 class="mb-2 text-xl font-semibold">Define Stages</h1>
       <div class="overflow-x-auto">
-        <table class="w-full border text-left">
+        <table class="w-full text-center">
           <thead>
             <tr class="bg-blue-500 text-white">
-              <th class="p-2">Stage Name</th>
-              <th class="p-2">Description</th>
-              <th class="p-2">Assigned Workcenter</th>
-              <th class="p-2">Duration (min)</th>
-              <th class="p-2">Workorders</th>
-              <th class="p-2">Inspection checkpoint</th>
-              <th class="p-2">Actions</th>
+              <th class="border border-gray-700 px-4 py-2">Stage Name</th>
+              <th class="border border-gray-700 px-4 py-2">Description</th>
+              <th class="border border-gray-700 px-4 py-2">Assigned Workcenter</th>
+              <th class="border border-gray-700 px-4 py-2">Duration (min)</th>
+              <th class="border border-gray-700 px-4 py-2">Workorders</th>
+              <th class="border border-gray-700 px-4 py-2">Inspection checkpoint</th>
+              <th class="border border-gray-700 px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(stage, index) in stages" :key="index" class="border-t hover:bg-gray-100">
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <input
                   v-model="stage.name"
                   class="rounded-xl border p-1"
@@ -364,7 +347,7 @@
                   placeholder="Stage Name"
                 />
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <input
                   v-model="stage.description"
                   class="rounded-xl border p-1"
@@ -372,14 +355,14 @@
                   placeholder="Description"
                 />
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <select v-model="stage.workcenter" class="rounded border p-2">
                   <option value="">Select Workcenter</option>
                   <option>Category 1</option>
                   <option>Category 2</option>
                 </select>
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <input
                   v-model="stage.duration"
                   class="rounded-xl border p-1"
@@ -387,14 +370,14 @@
                   placeholder="Duration"
                 />
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <select v-model="stage.workorder" class="rounded border p-2">
                   <option value="">Select Workorder</option>
                   <option>Category 1</option>
                   <option>Category 2</option>
                 </select>
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <button
                   @click="showCreateQualityInspectionCheckpointPopup = true"
                   class="w-9/12 rounded-md bg-gray-300 p-0.5"
@@ -402,7 +385,7 @@
                   Create
                 </button>
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <button
                   @click="removeStage(index)"
                   class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
@@ -567,11 +550,8 @@ function saveWorkflow() {
 }
 </script>
 
-<style scoped>
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
+<style>
+button {
+  cursor: pointer;
 }
 </style>

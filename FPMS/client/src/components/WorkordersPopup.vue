@@ -40,16 +40,16 @@
         </div>
 
         <!-- Table -->
-        <table class="w-full border text-sm">
-          <thead class="">
-            <tr class="text-left">
-              <th class="p-2">Work Order ID</th>
-              <th class="p-2">Product</th>
-              <th class="p-2">Quantity</th>
-              <th class="p-2">Due Time</th>
-              <th class="p-2">Priority</th>
-              <th class="p-2">Status</th>
-              <th class="p-2">Actions</th>
+        <table class="w-full text-center">
+          <thead class="bg-blue-500 text-white">
+            <tr class="">
+              <th class="border border-gray-700 px-4 py-2">Work Order ID</th>
+              <th class="border border-gray-700 px-4 py-2">Product</th>
+              <th class="border border-gray-700 px-4 py-2">Quantity</th>
+              <th class="border border-gray-700 px-4 py-2">Due Time</th>
+              <th class="border border-gray-700 px-4 py-2">Priority</th>
+              <th class="border border-gray-700 px-4 py-2">Status</th>
+              <th class="border border-gray-700 px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -58,21 +58,21 @@
               :key="index"
               class="border-t bg-white hover:bg-gray-50"
             >
-              <td class="p-2">{{ order.id }}</td>
-              <td class="p-2">{{ order.product }}</td>
-              <td class="p-2">{{ order.quantity }}</td>
-              <td class="p-2">{{ order.due }}</td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">{{ order.id }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ order.product }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ order.quantity }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ order.due }}</td>
+              <td class="border border-gray-700 px-4 py-2">
                 <span :class="getPriorityClass(order.priority)"> ● {{ order.priority }} </span>
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <span
                   :class="getStatusClass(order.status)"
                   class="rounded-full bg-green-100 px-2 py-1 text-xs text-green-700"
                   >{{ order.status }}</span
                 >
               </td>
-              <td class="p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <button
                   @click="showViewWorkOrderPopup = true"
                   class="m-1 rounded bg-gray-200 px-2 py-1 text-sm hover:bg-gray-300"
@@ -96,10 +96,6 @@
       <div class="p-6">
         <div class="mb-6 flex flex-row justify-center">
           <h2 class="w-full text-center text-2xl font-bold">Create New Work Order</h2>
-
-          <span class="flex w-[13%] items-center justify-end gap-1 text-sm text-gray-600">
-            <span class="h-2 w-2 rounded-full bg-green-500"></span> Synced 2 min ago
-          </span>
         </div>
 
         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -222,10 +218,6 @@
       <div class="p-6">
         <div class="mb-6 flex flex-row justify-center">
           <h2 class="w-full text-center text-2xl font-bold">Edit Work Order</h2>
-
-          <span class="flex w-[13%] items-center justify-end gap-1 text-sm text-gray-600">
-            <span class="h-2 w-2 rounded-full bg-green-500"></span> Synced 2 min ago
-          </span>
         </div>
         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
           <!-- Left Section -->
@@ -347,10 +339,6 @@
       <div class="p-6">
         <div class="mb-6 flex flex-row justify-center">
           <h2 class="w-full text-center text-2xl font-bold">View Work Order</h2>
-
-          <span class="flex w-[13%] items-center justify-end gap-1 text-sm text-gray-600">
-            <span class="h-2 w-2 rounded-full bg-green-500"></span> Synced 2 min ago
-          </span>
         </div>
 
         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -557,11 +545,8 @@ const form = ref({
 })
 </script>
 
-<style scoped>
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
+<style>
+button {
+  cursor: pointer;
 }
 </style>

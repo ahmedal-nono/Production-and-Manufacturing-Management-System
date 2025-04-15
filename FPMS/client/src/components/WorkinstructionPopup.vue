@@ -36,15 +36,15 @@
 
       <!-- Table -->
       <div class="overflow-x-auto">
-        <table class="w-full border text-sm">
-          <thead class="">
-            <tr class="text-left">
-              <th class="border p-2">Title</th>
-              <th class="border p-2">Product</th>
-              <th class="border p-2">Last Updated</th>
-              <th class="border p-2">Status</th>
-              <th class="border p-2">Attachments</th>
-              <th class="border p-2">Actions</th>
+        <table class="w-full text-center">
+          <thead class="bg-blue-500 text-white">
+            <tr>
+              <th class="border border-gray-700 px-4 py-2">Title</th>
+              <th class="border border-gray-700 px-4 py-2">Product</th>
+              <th class="border border-gray-700 px-4 py-2">Last Updated</th>
+              <th class="border border-gray-700 px-4 py-2">Status</th>
+              <th class="border border-gray-700 px-4 py-2">Attachments</th>
+              <th class="border border-gray-700 px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -53,10 +53,10 @@
               :key="index"
               class="border bg-white hover:bg-gray-50"
             >
-              <td class="border p-2">{{ item.title }}</td>
-              <td class="border p-2">{{ item.product }}</td>
-              <td class="border p-2">{{ item.updated }}</td>
-              <td class="border p-2">
+              <td class="border border-gray-700 px-4 py-2">{{ item.title }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ item.product }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ item.updated }}</td>
+              <td class="border border-gray-700 px-4 py-2">
                 <span
                   :class="
                     item.status === 'Active'
@@ -68,11 +68,11 @@
                   {{ item.status }}
                 </span>
               </td>
-              <td class="space-x-2 border p-2">
+              <td class="space-x-2 border border-gray-700 px-4 py-2">
                 <button class="text-gray-700 hover:text-black">📄</button>
                 <button class="text-gray-700 hover:text-black">🖼️</button>
               </td>
-              <td class="space-x-2 p-2">
+              <td class="space-x-2 border border-gray-700 px-4 py-2">
                 <button
                   @click="showViewWorkinstructionPopup = true"
                   class="m-1 rounded bg-gray-200 px-2 py-1 text-sm hover:bg-gray-300"
@@ -475,3 +475,9 @@ const steps = [
 
 const attachments = [{ name: 'Welding_Specs.pdf' }, { name: 'Welding_Demo.mp4' }]
 </script>
+
+<style>
+button {
+  cursor: pointer;
+}
+</style>

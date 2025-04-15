@@ -55,24 +55,24 @@ x§
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full border text-left">
-            <thead>
+          <table class="w-full text-center">
+            <thead class="bg-blue-500 text-white">
               <tr class="">
-                <th class="p-2">BOM Name</th>
-                <th class="p-2">Product Code</th>
-                <th class="p-2">Version</th>
-                <th class="p-2">Status</th>
-                <th class="p-2">Last Updated</th>
-                <th class="p-2">Created By</th>
-                <th class="p-2">Actions</th>
+                <th class="border border-gray-700 px-4 py-2">BOM Name</th>
+                <th class="border border-gray-700 px-4 py-2">Product Code</th>
+                <th class="border border-gray-700 px-4 py-2">Version</th>
+                <th class="border border-gray-700 px-4 py-2">Status</th>
+                <th class="border border-gray-700 px-4 py-2">Last Updated</th>
+                <th class="border border-gray-700 px-4 py-2">Created By</th>
+                <th class="border border-gray-700 px-4 py-2">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="bom in filteredBOMs" :key="bom.id" class="border-t hover:bg-gray-100">
-                <td class="p-2">{{ bom.name }}</td>
-                <td class="p-2">{{ bom.productCode }}</td>
-                <td class="p-2">{{ bom.version }}</td>
-                <td class="p-2">
+                <td class="border border-gray-700 px-4 py-2">{{ bom.name }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ bom.productCode }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ bom.version }}</td>
+                <td class="border border-gray-700 px-4 py-2">
                   <span
                     :class="[
                       'rounded-full px-2 py-1 text-xs font-semibold',
@@ -86,9 +86,9 @@ x§
                     {{ bom.status }}
                   </span>
                 </td>
-                <td class="p-2">{{ bom.lastUpdated }}</td>
-                <td class="p-2">{{ bom.createdBy }}</td>
-                <td class="space-x-2 p-2">
+                <td class="border border-gray-700 px-4 py-2">{{ bom.lastUpdated }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ bom.createdBy }}</td>
+                <td class="space-x-2 border border-gray-700 px-4 py-2">
                   <button
                     @click="showEditBOMsPopup = true"
                     class="mt-4 cursor-pointer rounded-lg bg-gray-200 p-1.5"
@@ -159,20 +159,20 @@ x§
           <!-- Components & Materials Section -->
           <div>
             <h2 class="mb-4 text-xl font-semibold">Components & Materials</h2>
-            <table class="w-full border">
-              <thead>
-                <tr class="bg-gray-100">
-                  <th class="p-2 text-left">Component</th>
-                  <th class="p-2 text-left">Part Number</th>
-                  <th class="p-2 text-left">Quantity</th>
-                  <th class="p-2 text-left">Unit</th>
-                  <th class="p-2 text-left">Unit Cost</th>
-                  <th class="p-2 text-left">Actions</th>
+            <table class="w-full text-center">
+              <thead class="bg-blue-500 text-white">
+                <tr class="">
+                  <th class="border border-gray-700 px-4 py-2">Component</th>
+                  <th class="border border-gray-700 px-4 py-2">Part Number</th>
+                  <th class="border border-gray-700 px-4 py-2">Quantity</th>
+                  <th class="border border-gray-700 px-4 py-2">Unit</th>
+                  <th class="border border-gray-700 px-4 py-2">Unit Cost</th>
+                  <th class="border border-gray-700 px-4 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(component, index) in form.components" :key="index" class="border-t">
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     <input
                       v-model="component.name"
                       type="text"
@@ -180,7 +180,7 @@ x§
                       class="w-full rounded border border-gray-300 px-2 py-1"
                     />
                   </td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     <input
                       v-model="component.partNumber"
                       type="text"
@@ -188,7 +188,7 @@ x§
                       class="w-full rounded border border-gray-300 px-2 py-1"
                     />
                   </td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     <div class="flex items-center">
                       <input
                         v-model="component.quantity"
@@ -205,7 +205,7 @@ x§
                       </button>
                     </div>
                   </td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     <select
                       v-model="component.unit"
                       class="w-full rounded border border-gray-300 px-2 py-1"
@@ -216,7 +216,7 @@ x§
                       <option value="l">l</option>
                     </select>
                   </td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     <input
                       v-model="component.unitCost"
                       type="number"
@@ -225,7 +225,7 @@ x§
                       class="w-full rounded border border-gray-300 px-2 py-1"
                     />
                   </td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     <button
                       type="button"
                       @click="removeComponent(index)"
@@ -314,39 +314,43 @@ x§
           <!-- Components Table -->
           <div>
             <h2 class="mb-4 text-xl font-semibold">Component Structure</h2>
-            <table class="w-full border text-sm">
-              <thead class="bg-gray-100">
+            <table class="w-full text-center">
+              <thead class="bg-blue-500 text-white">
                 <tr>
-                  <th class="p-2 text-left">Level</th>
-                  <th class="p-2 text-left">Component</th>
-                  <th class="p-2 text-left">Part Number</th>
-                  <th class="p-2 text-left">Quantity</th>
-                  <th class="p-2 text-left">Unit</th>
-                  <th class="p-2 text-left">Unit Cost</th>
-                  <th class="p-2 text-left">Total Cost</th>
-                  <th class="p-2 text-left">Actions</th>
+                  <th class="border border-gray-700 px-4 py-2">Level</th>
+                  <th class="border border-gray-700 px-4 py-2">Component</th>
+                  <th class="border border-gray-700 px-4 py-2">Part Number</th>
+                  <th class="border border-gray-700 px-4 py-2">Quantity</th>
+                  <th class="border border-gray-700 px-4 py-2">Unit</th>
+                  <th class="border border-gray-700 px-4 py-2">Unit Cost</th>
+                  <th class="border border-gray-700 px-4 py-2">Total Cost</th>
+                  <th class="border border-gray-700 px-4 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(component, index) in components" :key="index" class="border-t">
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     {{ component.level }}
                   </td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     {{ component.name }}
                   </td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     {{ component.part }}
                   </td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     {{ component.quantity }}
                   </td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     {{ component.unit }}
                   </td>
-                  <td class="p-2">${{ component.unitCost.toFixed(2) }}</td>
-                  <td class="p-2">${{ (component.quantity * component.unitCost).toFixed(2) }}</td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
+                    ${{ component.unitCost.toFixed(2) }}
+                  </td>
+                  <td class="border border-gray-700 px-4 py-2">
+                    ${{ (component.quantity * component.unitCost).toFixed(2) }}
+                  </td>
+                  <td class="border border-gray-700 px-4 py-2">
                     <button
                       type="button"
                       @click="editComponent(index)"
@@ -473,39 +477,43 @@ x§
           <!-- Components Table -->
           <div>
             <h2 class="mb-4 text-xl font-semibold">Component Structure</h2>
-            <table class="w-full border text-sm">
-              <thead class="bg-gray-100">
+            <table class="w-full text-center">
+              <thead class="bg-blue-500 text-white">
                 <tr>
-                  <th class="p-2 text-left">Level</th>
-                  <th class="p-2 text-left">Component</th>
-                  <th class="p-2 text-left">Part Number</th>
-                  <th class="p-2 text-left">Quantity</th>
-                  <th class="p-2 text-left">Unit</th>
-                  <th class="p-2 text-left">Unit Cost</th>
-                  <th class="p-2 text-left">Total Cost</th>
-                  <th class="p-2 text-left">Actions</th>
+                  <th class="border border-gray-700 px-4 py-2">Level</th>
+                  <th class="border border-gray-700 px-4 py-2">Component</th>
+                  <th class="border border-gray-700 px-4 py-2">Part Number</th>
+                  <th class="border border-gray-700 px-4 py-2">Quantity</th>
+                  <th class="border border-gray-700 px-4 py-2">Unit</th>
+                  <th class="border border-gray-700 px-4 py-2">Unit Cost</th>
+                  <th class="border border-gray-700 px-4 py-2">Total Cost</th>
+                  <th class="border border-gray-700 px-4 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(component, index) in components" :key="index" class="border-t">
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     {{ component.level }}
                   </td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     {{ component.name }}
                   </td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     {{ component.part }}
                   </td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     {{ component.quantity }}
                   </td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
                     {{ component.unit }}
                   </td>
-                  <td class="p-2">${{ component.unitCost.toFixed(2) }}</td>
-                  <td class="p-2">${{ (component.quantity * component.unitCost).toFixed(2) }}</td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">
+                    ${{ component.unitCost.toFixed(2) }}
+                  </td>
+                  <td class="border border-gray-700 px-4 py-2">
+                    ${{ (component.quantity * component.unitCost).toFixed(2) }}
+                  </td>
+                  <td class="border border-gray-700 px-4 py-2">
                     <button
                       type="button"
                       @click="editComponent(index)"
@@ -726,11 +734,6 @@ function getDateDaysAgo(days: number): string {
   return date.toISOString().split('T')[0]
 }
 
-function viewBOM(id: string) {
-  console.log('View BOM:', id)
-  // Implement view functionality
-}
-
 const bomForm = ref({
   bomName: '',
   productCode: '',
@@ -854,11 +857,8 @@ function addOrUpdateComponent() {
 }
 </script>
 
-<style scoped>
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
+<style>
+button {
+  cursor: pointer;
 }
 </style>

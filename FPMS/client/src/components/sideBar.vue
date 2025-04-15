@@ -56,3 +56,9 @@ const links = [
   },
 ]
 </script>
+
+<style>
+button {
+  cursor: pointer;
+}
+</style>

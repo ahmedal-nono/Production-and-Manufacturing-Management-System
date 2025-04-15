@@ -50,3 +50,9 @@
     </div>
   </section>
 </template>
+
+<style>
+button {
+  cursor: pointer;
+}
+</style>

@@ -4,7 +4,7 @@
       :visible="showProductionSchedulePopup"
       @update:visible="(value: boolean) => emitEvent('update:showProductionSchedulePopup', value)"
     >
-      <div class="rounded-lg bg-white p-4 shadow-md">
+      <div class="">
         <h2 class="mb-4 text-xl font-semibold">Production Orders</h2>
 
         <!-- Filters -->
@@ -28,26 +28,32 @@
         </div>
 
         <!-- Table -->
-        <table class="w-full border-collapse border">
-          <thead class="bg-gray-100">
+        <table class="w-full text-center">
+          <thead class="bg-blue-500 text-white">
             <tr>
-              <th class="border p-2">Order ID</th>
-              <th class="border p-2">Product</th>
-              <th class="border p-2">Quantity</th>
-              <th class="border p-2">Status</th>
-              <th class="border p-2">Start Date</th>
-              <th class="border p-2">End Date</th>
-              <th class="border p-2">Production Line</th>
-              <th class="border p-2">Priority</th>
-              <th class="border p-2">Actions</th>
+              <th class="border border-gray-700 px-4 py-2">Order ID</th>
+              <th class="border border-gray-700 px-4 py-2">Product</th>
+              <th class="border border-gray-700 px-4 py-2">Quantity</th>
+              <th class="border border-gray-700 px-4 py-2">Status</th>
+              <th class="border border-gray-700 px-4 py-2">Start Date</th>
+              <th class="border border-gray-700 px-4 py-2">End Date</th>
+              <th class="border border-gray-700 px-4 py-2">Production Line</th>
+              <th class="border border-gray-700 px-4 py-2">Priority</th>
+              <th class="border border-gray-700 px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="order in filteredOrders" :key="order.id" class="text-center">
-              <td @click="showProductInfoPopup = true" class="border p-2">{{ order.id }}</td>
-              <td class="border p-2">{{ order.product }}</td>
-              <td class="border p-2">{{ order.quantity }}</td>
-              <td class="border p-2">
+            <tr
+              v-for="order in filteredOrders"
+              :key="order.id"
+              class="border border-gray-700 px-4 py-2"
+            >
+              <td @click="showProductInfoPopup = true" class="border border-gray-700 px-4 py-2">
+                {{ order.id }}
+              </td>
+              <td class="border border-gray-700 px-4 py-2">{{ order.product }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ order.quantity }}</td>
+              <td class="border border-gray-700 px-4 py-2">
                 <span
                   @click="showProductInfoPopup = true"
                   class="rounded px-2 py-1"
@@ -56,17 +62,17 @@
                   {{ order.status }}
                 </span>
               </td>
-              <td class="border p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <input type="date" v-model="order.startDate" class="w-full rounded border p-1" />
               </td>
-              <td class="border p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <input type="date" v-model="order.endDate" class="w-full rounded border p-1" />
               </td>
-              <td class="border p-2">{{ order.productionLine }}</td>
-              <td class="border p-2">
+              <td class="border border-gray-700 px-4 py-2">{{ order.productionLine }}</td>
+              <td class="border border-gray-700 px-4 py-2">
                 <span :class="getPriorityClass(order.priority)"> ● {{ order.priority }} </span>
               </td>
-              <td class="border p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <button
                   @click="showReschedulePopup = true"
                   class="mt-4 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
@@ -228,7 +234,7 @@ const getStatusClass = (status: string) => {
 }
 
 const getPriorityClass = (priority: string) => {
-  return priority === 'High' || 'high' ? 'text-red-600' : 'text-blue-600'
+  return priority === 'High' && 'high' ? 'text-red-600' : 'text-blue-600'
 }
 
 const props = defineProps<{
@@ -279,11 +285,8 @@ const stages = ref([
 const searchQuery = ref('')
 </script>
 
-<style scoped>
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
+<style>
+button {
+  cursor: pointer;
 }
 </style>

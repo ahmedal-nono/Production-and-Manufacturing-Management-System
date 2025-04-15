@@ -84,9 +84,9 @@
       </table>
     </div>
     <div class="mt-2 flex flex-row justify-center space-x-4">
-      <button class="w-2/12 rounded-lg bg-blue-600 p-1.5 text-white">Prev</button>
+      <button class="w-2/12 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white">Prev</button>
       <p class="mt-2">Page 1 of 5</p>
-      <button class="w-2/12 rounded-lg bg-blue-600 p-1.5 text-white">Next</button>
+      <button class="w-2/12 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white">Next</button>
     </div>
   </Popup>
   <Popup :visible="showUserMngtPopup" @update:visible="showUserMngtPopup = $event">
@@ -101,25 +101,29 @@
     </div>
     <div>
       <h3 class="mb-4 text-lg font-bold">Existing Users</h3>
-      <table class="min-w-full table-auto">
-        <thead>
-          <tr>
-            <th class="px-4 py-2">Name</th>
-            <th class="px-4 py-2">Email</th>
-            <th class="px-4 py-2">Department</th>
-            <th class="px-4 py-2">Role</th>
-            <th class="px-4 py-2">Status</th>
-            <th class="px-4 py-2">Action</th>
+      <table class="w-full">
+        <thead class="bg-blue-500 text-white">
+          <tr class="">
+            <th class="border border-gray-700 px-4 py-2">Name</th>
+            <th class="border border-gray-700 px-4 py-2">Email</th>
+            <th class="border border-gray-700 px-4 py-2">Department</th>
+            <th class="border border-gray-700 px-4 py-2">Role</th>
+            <th class="border border-gray-700 px-4 py-2">Status</th>
+            <th class="border border-gray-700 px-4 py-2">Action</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(user, index) in users" :key="index">
-            <td class="px-4 py-2">{{ user.name }}</td>
-            <td class="px-4 py-2">{{ user.email }}</td>
-            <td class="px-4 py-2">{{ user.department }}</td>
-            <td class="px-4 py-2">{{ user.role }}</td>
-            <td class="px-4 py-2">{{ user.status }}</td>
-            <td class="flex gap-2 px-4 py-2">
+          <tr
+            v-for="(user, index) in users"
+            :key="index"
+            class="border border-gray-700 text-center"
+          >
+            <td class="border border-gray-700 px-4 py-2">{{ user.name }}</td>
+            <td class="border border-gray-700 px-4 py-2">{{ user.email }}</td>
+            <td class="border border-gray-700 px-4 py-2">{{ user.department }}</td>
+            <td class="border border-gray-700 px-4 py-2">{{ user.role }}</td>
+            <td class="border border-gray-700 px-4 py-2">{{ user.status }}</td>
+            <td class="flex justify-center gap-2 border px-4 py-2">
               <button
                 @click="showEditUserPopup = true"
                 class="cursor-pointer rounded-lg bg-yellow-500 p-2 text-white"
@@ -208,14 +212,16 @@
           />
         </div>
         <div class="flex justify-end gap-4">
-          <button type="submit" class="rounded-lg bg-blue-600 p-2 text-white">Create User</button>
+          <button type="submit" class="cursor-pointer rounded-lg bg-blue-600 p-2 text-white">
+            Create User
+          </button>
         </div>
       </form>
     </div>
   </Popup>
 
   <Popup :visible="showEditUserPopup" @update:visible="showEditUserPopup = $event">
-    <h3 class="mb-4 flex justify-center text-2xl font-bold">Create New User</h3>
+    <h3 class="mb-4 flex justify-center text-2xl font-bold">Edit User</h3>
     <div>
       <form @submit.prevent="createUser" class="space-y-4">
         <div class="flex flex-col">
@@ -287,7 +293,9 @@
           />
         </div>
         <div class="flex justify-end gap-4">
-          <button type="submit" class="rounded-lg bg-blue-600 p-2 text-white">Create User</button>
+          <button type="submit" class="cursor-pointer rounded-lg bg-blue-600 p-2 text-white">
+            Create User
+          </button>
         </div>
       </form>
     </div>
@@ -322,7 +330,7 @@
       </div>
       <button
         @click="saveBackupSettings"
-        class="w-full rounded-lg bg-blue-600 px-4 py-2 text-white"
+        class="w-full cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-white"
       >
         Save Backup Settings
       </button>
@@ -485,3 +493,9 @@ const downloadBackup = (fileName: string) => {
   console.log('Downloading backup:', fileName)
 }
 </script>
+
+<style>
+button {
+  cursor: pointer;
+}
+</style>

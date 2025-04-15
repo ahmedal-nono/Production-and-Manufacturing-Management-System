@@ -40,3 +40,9 @@ const markAsRead = () => {
   //   emit here
 }
 </script>
+
+<style>
+button {
+  cursor: pointer;
+}
+</style>

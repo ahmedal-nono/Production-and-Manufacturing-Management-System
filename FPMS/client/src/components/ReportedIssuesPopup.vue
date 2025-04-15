@@ -27,17 +27,16 @@
         </select>
       </div>
 
-      <!-- Table -->
       <div class="overflow-x-auto">
-        <table class="w-full border text-sm">
-          <thead class="">
-            <tr class="text-left">
-              <th class="border p-2">Issue ID</th>
-              <th class="border p-2">Category</th>
-              <th class="border p-2">Priority</th>
-              <th class="border p-2">Affected Workflow/Job card</th>
-              <th class="border p-2">Time Stamp</th>
-              <th class="border p-2">Status</th>
+        <table class="w-full text-center">
+          <thead class="bg-blue-500 text-white">
+            <tr class="">
+              <th class="border border-gray-700 px-4 py-2">Issue ID</th>
+              <th class="border border-gray-700 px-4 py-2">Category</th>
+              <th class="border border-gray-700 px-4 py-2">Priority</th>
+              <th class="border border-gray-700 px-4 py-2">Affected Workflow/Job card</th>
+              <th class="border border-gray-700 px-4 py-2">Time Stamp</th>
+              <th class="border border-gray-700 px-4 py-2">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -46,14 +45,14 @@
               :key="index"
               class="border bg-white hover:bg-gray-50"
             >
-              <td class="border p-2">{{ item.id }}</td>
-              <td class="border p-2">{{ item.product }}</td>
-              <td class="border p-2">{{ item.quantity }}</td>
-              <td class="border p-2">{{ item.dueDate }}</td>
-              <td class="border p-2">
+              <td class="border border-gray-700 px-4 py-2">{{ item.id }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ item.product }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ item.quantity }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ item.dueDate }}</td>
+              <td class="border border-gray-700 px-4 py-2">
                 <input readonly disabled type="date" name="" id="" value="22/03/2025" />
               </td>
-              <td class="border p-2">
+              <td class="border border-gray-700 px-4 py-2">
                 <span
                   :class="
                     item.status === 'Active'
@@ -147,7 +146,7 @@
             </div>
           </div>
           <button
-            class="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+            class="mt-4 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
             @click="removeAttachment()"
           >
             Remove Attachment
@@ -228,3 +227,9 @@ const removeAttachment = () => {
   }
 }
 </script>
+
+<style>
+button {
+  cursor: pointer;
+}
+</style>

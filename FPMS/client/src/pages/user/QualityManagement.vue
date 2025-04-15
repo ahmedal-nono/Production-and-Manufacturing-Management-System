@@ -36,4 +36,8 @@ const showQualityInspectionPopup = ref(false)
 const showReworkPopup = ref(false)
 </script>
 
-<style scoped></style>
+<style>
+button {
+  cursor: pointer;
+}
+</style>

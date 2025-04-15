@@ -25,4 +25,8 @@ import ReportedIssuesPopup from '@/components/ReportedIssuesPopup.vue'
 const showReportedIssuesPopup = ref(false)
 </script>
 
-<style scoped></style>
+<style>
+button {
+  cursor: pointer;
+}
+</style>

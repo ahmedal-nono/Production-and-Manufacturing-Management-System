@@ -17,24 +17,24 @@
 
         <div class="">
           <h3 class="p-4 text-lg font-medium">Existing Production Orders</h3>
-          <table class="min-w-full table-auto">
+          <table class="w-full text-center">
             <thead>
-              <tr class="bg-blue-700 text-white">
-                <th class="px-4 py-2 text-left">Order ID</th>
-                <th class="px-4 py-2 text-left">Product name</th>
-                <th class="px-4 py-2 text-left">Quantity</th>
-                <th class="px-4 py-2 text-left">Due Date</th>
-                <th class="px-4 py-2 text-left">Status</th>
-                <th class="px-4 py-2 text-left">Actions</th>
+              <tr class="bg-blue-500 text-white">
+                <th class="border border-gray-700 px-4 py-2">Order ID</th>
+                <th class="border border-gray-700 px-4 py-2">Product name</th>
+                <th class="border border-gray-700 px-4 py-2">Quantity</th>
+                <th class="border border-gray-700 px-4 py-2">Due Date</th>
+                <th class="border border-gray-700 px-4 py-2">Status</th>
+                <th class="border border-gray-700 px-4 py-2">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="order in orders" :key="order.id" class="border-b">
-                <td class="px-4 py-2">{{ order.id }}</td>
-                <td class="px-4 py-2">{{ order.product }}</td>
-                <td class="px-4 py-2">{{ order.quantity }}</td>
-                <td class="px-4 py-2">{{ order.dueDate }}</td>
-                <td class="px-4 py-2">
+              <tr v-for="order in orders" :key="order.id" class="border border-gray-700 px-4 py-2">
+                <td class="border border-gray-700 px-4 py-2">{{ order.id }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ order.product }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ order.quantity }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ order.dueDate }}</td>
+                <td class="border border-gray-700 px-4 py-2">
                   <span
                     :class="getStatusClass(order.status)"
                     class="rounded px-2 py-1 text-sm font-medium"
@@ -366,11 +366,8 @@ const submitOrder = () => {
 }
 </script>
 
-<style scoped>
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
+<style>
+button {
+  cursor: pointer;
 }
 </style>

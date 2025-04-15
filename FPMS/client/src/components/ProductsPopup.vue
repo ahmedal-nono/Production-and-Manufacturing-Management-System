@@ -43,15 +43,15 @@
 
           <!-- Products Table -->
           <div class="overflow-x-auto">
-            <table class="w-full border text-left">
+            <table class="w-full border text-center">
               <thead>
                 <tr class="bg-blue-500 text-white">
-                  <th class="p-2">Name</th>
-                  <th class="p-2">SKU</th>
-                  <th class="p-2">Category</th>
-                  <th class="p-2">BOM</th>
-                  <th class="p-2">Workflow</th>
-                  <th class="p-2">Actions</th>
+                  <th class="border border-gray-700 px-4 py-2">Name</th>
+                  <th class="border border-gray-700 px-4 py-2">SKU</th>
+                  <th class="border border-gray-700 px-4 py-2">Category</th>
+                  <th class="border border-gray-700 px-4 py-2">BOM</th>
+                  <th class="border border-gray-700 px-4 py-2">Workflow</th>
+                  <th class="border border-gray-700 px-4 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -60,12 +60,12 @@
                   :key="product.sku"
                   class="border-t hover:bg-gray-100"
                 >
-                  <td class="p-2">{{ product.name }}</td>
-                  <td class="p-2">{{ product.sku }}</td>
-                  <td class="p-2">{{ product.category }}</td>
-                  <td class="p-2">{{ product.bom }}</td>
-                  <td class="p-2">{{ product.workflow }}</td>
-                  <td class="p-2">
+                  <td class="border border-gray-700 px-4 py-2">{{ product.name }}</td>
+                  <td class="border border-gray-700 px-4 py-2">{{ product.sku }}</td>
+                  <td class="border border-gray-700 px-4 py-2">{{ product.category }}</td>
+                  <td class="border border-gray-700 px-4 py-2">{{ product.bom }}</td>
+                  <td class="border border-gray-700 px-4 py-2">{{ product.workflow }}</td>
+                  <td class="border border-gray-700 px-4 py-2">
                     <button
                       @click="showEditProductsPopup = true"
                       class="mr-2 rounded bg-green-600 px-3 py-1 text-white hover:bg-green-600"
@@ -244,11 +244,8 @@ const filteredProducts = computed(() => {
 })
 </script>
 
-<style scoped>
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
+<style>
+button {
+  cursor: pointer;
 }
 </style>

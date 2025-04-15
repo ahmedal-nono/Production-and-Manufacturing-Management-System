@@ -181,4 +181,7 @@ function handleImageUpload(event: Event) {
 span {
   font-weight: normal;
 }
+button {
+  cursor: pointer;
+}
 </style>
