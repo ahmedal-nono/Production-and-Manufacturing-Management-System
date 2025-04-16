@@ -2,6 +2,7 @@
 from rest_framework import serializers
 from .models import User, Department, Role, HealthMetric, BackupConfig, BackupRecord, SystemSetting, ActivityLog
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth import authenticate
 
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,7 +13,17 @@ class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
         fields = '__all__'
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
 
+    def validate(self, data):
+        user = authenticate(email=data['email'], password=data['password'])
+        if not user:
+            raise serializers.ValidationError("Invalid credentials")
+        if not user.is_active:
+            raise serializers.ValidationError("Account is inactive")
+        return user
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     department = serializers.CharField(write_only=True)  # Accepts free-text department
@@ -70,6 +81,7 @@ class UserSerializer(serializers.ModelSerializer):
         representation['department'] = instance.department.name if instance.department else None
         representation['role'] = instance.role.get_name_display() if instance.role else None
         return representation
+    
 
 class BackupConfigSerializer(serializers.ModelSerializer):
     class Meta:

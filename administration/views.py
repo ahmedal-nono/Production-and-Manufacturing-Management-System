@@ -12,7 +12,7 @@ from rest_framework.permissions import AllowAny
 from django.http import FileResponse
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
-from django.contrib.auth import logout
+from django.contrib.auth import logout, authenticate
 import os
 import os
 import subprocess
@@ -22,7 +22,7 @@ from datetime import datetime
 import subprocess
 from .models import BackupConfig, BackupRecord, Department, SystemSetting, HealthMetric, Role
 from django.contrib.auth.models import User
-from .serializers import BackupConfigSerializer, BackupRecordSerializer, DepartmentSerializer, SystemSettingSerializer, HealthMetricSerializer, RoleSerializer, UserSerializer
+from .serializers import BackupConfigSerializer, BackupRecordSerializer, DepartmentSerializer, SystemSettingSerializer, HealthMetricSerializer, RoleSerializer, UserSerializer, LoginSerializer
 
 class BackupConfigViewSet(viewsets.ModelViewSet):
     queryset = BackupConfig.objects.all()
@@ -317,6 +317,7 @@ class HealthMetricViewSet(viewsets.ReadOnlyModelViewSet):
     
 
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework_simplejwt.tokens import RefreshToken
 from .models import ActivityLog
 from .serializers import ActivityLogSerializer
 
@@ -363,29 +364,69 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes = [permissions.AllowAny]
         return [permission() for permission in permission_classes]
 
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def login(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        user = authenticate(email=email, password=password)
+        if not user:
+            return Response(
+                {'error': 'Invalid credentials'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        refresh = RefreshToken.for_user(user)
+        response = Response({
+            'user': UserSerializer(user).data,
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+        }, status=status.HTTP_200_OK)
+
+        # Set secure cookies
+        response.set_cookie(
+            'access_token',
+            str(refresh.access_token),
+            httponly=True,
+            secure=not settings.DEBUG,
+            samesite='Lax',
+            max_age=60 * 60  # 1 hour
+        )
+        response.set_cookie(
+            'refresh_token',
+            str(refresh),
+            httponly=True,
+            secure=not settings.DEBUG,
+            samesite='Lax',
+            max_age=24 * 60 * 60  # 1 day
+        )
+
+        return response
+
     @action(detail=False, methods=['post'])
     def logout(self, request):
-        """Public logout endpoint that safely handles:
-        - Token invalidation (if provided)
-        - Session cleanup (if exists)
-        - Always returns success
-        """
         response = Response(
-            {"detail": "Logout completed"},
+            {'detail': 'Successfully logged out'},
             status=status.HTTP_200_OK
         )
         
-        # Safely handle token deletion if exists
-        if hasattr(request, 'auth') and request.auth:
+        # Clear cookies
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
+        
+        # Blacklist refresh token if provided
+        refresh_token = request.data.get('refresh')
+        if refresh_token:
             try:
-                request.auth.delete()
-            except:
-                pass  # Silently fail if token is invalid
-        
-        # Clear session if exists
-        if request.user.is_authenticated:
-            logout(request)
-            response.delete_cookie('sessionid')
-            response.delete_cookie('csrftoken')
-        
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except Exception:
+                pass
+                
         return response
+
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        if request.user.is_authenticated:
+            return Response(UserSerializer(request.user).data)
+        return Response({'error': 'Not authenticated'}, status=401)
