@@ -34,7 +34,7 @@
   </div>
 
   <Popup :visible="showProductionPopup" @update:visible="showProductionPopup = $event">
-    <div class="m-2 flex h-max flex-col justify-center rounded-2xl bg-gray-200 p-4">
+    <div class="m-2 flex h-max flex-col justify-center rounded-2xl p-4">
       <p class="flex justify-center text-xl font-bold">Production Management</p>
       <div class="flex flex-row gap-10 py-4">
         <div
