@@ -1,8 +1,8 @@
 <template>
-  <div v-if="isNotLoggedIn" class="flex flex-row">
+  <div v-if="isNotLoggedIn">
     <RouterView />
   </div>
-  <div v-else>
+  <div v-else class="flex flex-row">
     <sideBar class="" />
     <navBar class="">
       <RouterView />
@@ -19,7 +19,7 @@ import { computed } from 'vue'
 
 const isNotLoggedIn = computed(() => {
   const x = router.currentRoute.value.name === 'login' && !userStore.isAuthenticated
-  if (!x) router.push({ name: 'home' })
+  // if (!x) router.push({ name: 'home' })
   return x
 })
 
