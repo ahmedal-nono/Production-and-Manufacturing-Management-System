@@ -17,6 +17,7 @@ class Role(models.Model):
         ('operator', 'Operator'),
         ('production_planner', 'Production Planner'),
         ('production_manager', 'Production Manager'),
+        ('admin', 'Admin'),
     ]
     
     name = models.CharField(max_length=50, choices=ROLE_CHOICES, unique=True)

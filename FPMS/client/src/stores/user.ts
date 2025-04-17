@@ -1,32 +1,44 @@
 import { defineStore } from 'pinia'
 
-interface User {
-  id: number
-  name: string
+
+export interface UserType {
+  id: string
+  full_name: string
   email: string
+  contact_number: string
+  account_status: boolean
+  department: string
+  role: string
 }
 
 interface UserState {
-  user: User | null
-  token: string | null
+  user: UserType | null
+  access: string | null
+  refresh: string | null
 }
 
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({
     user: null,
-    token: null,
+    access: null,
+    refresh: null,
   }),
   actions: {
-    setUser(user: User, token: string) {
-      this.user = user
-      this.token = token
+    setUser(user: UserType, access: string, refresh: string) {
+      this.user = user;
+      this.access = access;
+      this.refresh = refresh;
+      localStorage.setItem('user', JSON.stringify(user))
     },
     logout() {
-      this.user = null
-      this.token = null
+      this.user = null;
+      this.access = null;
+      this.refresh = null;
     },
   },
   getters: {
-    isAuthenticated: (state) => !!state.user && !!state.token,
+    isAuthenticated: (state) => {
+      return !!state.user && !!state.access;
+    },
   },
 })

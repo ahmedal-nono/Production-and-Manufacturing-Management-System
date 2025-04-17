@@ -374,14 +374,14 @@ class UserViewSet(viewsets.ModelViewSet):
 
         user = authenticate(email=email, password=password)
         if not user:
-            log_activity(
-            action="login_failed",
-            model="user",
-            details={"email": email, "reason": "invalid_credentials"},
-            request=request
-        )
+            # log_activity(
+            # action="login_failed",
+            # model="user",
+            # details={"email": email, "reason": "invalid_credentials"},
+            # request=request
+        # )
             return Response(
-                {'error': 'Invalid credentials'},
+                {'error': 'Username or password is wrong'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
         log_activity(
