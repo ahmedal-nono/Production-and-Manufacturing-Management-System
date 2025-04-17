@@ -49,7 +49,7 @@
   </div>
 
   <Popup :visible="showActivityLogPopup" @update:visible="showActivityLogPopup = $event">
-    <div>
+    <!-- <div>
       <h3 class="mb-4 text-xl font-bold">Filter Activity Log</h3>
       <h5 class="my-2 text-sm font-bold">Start Date</h5>
       <input type="date" name="" id="" class="w-full rounded-md border-2 p-1" />
@@ -59,7 +59,7 @@
       <select name="" id="" class="mb-2 w-full rounded-md border-2 p-1">
         <option value="">All Users</option>
       </select>
-    </div>
+    </div> -->
     <h3 class="mb-4 text-xl font-bold">Activity Log</h3>
     <div class="overflow-x-auto">
       <table class="w-full text-center">
@@ -73,7 +73,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(activity, index) in userActivities" :key="index">
+          <tr v-for="(activity, index) in userActivities" :key="index" class="overflow-y-auto">
             <td class="border border-gray-700 px-4 py-2">{{ activity.user }}</td>
             <td class="border border-gray-700 px-4 py-2">{{ activity.activity }}</td>
             <td class="border border-gray-700 px-4 py-2">{{ activity.date }}</td>
