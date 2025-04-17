@@ -1,6 +1,7 @@
 # administration/views.py
 import psutil
 import time
+from .utils import log_activity
 from datetime import timedelta
 from django.db.models import Avg
 from rest_framework.decorators import action
@@ -325,6 +326,7 @@ from .serializers import ActivityLogSerializer
 
 class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ActivityLog.objects.all()
+    permission_classes= []
     serializer_class = ActivityLogSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['action', 'model', 'timestamp']
@@ -352,6 +354,7 @@ from .serializers import UserSerializer
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    
 
     def get_permissions(self):
         if self.action in ['create', 'destroy']:
@@ -371,10 +374,23 @@ class UserViewSet(viewsets.ModelViewSet):
 
         user = authenticate(email=email, password=password)
         if not user:
+            log_activity(
+            action="login_failed",
+            model="user",
+            details={"email": email, "reason": "invalid_credentials"},
+            request=request
+        )
             return Response(
                 {'error': 'Invalid credentials'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
+        log_activity(
+        user=user,
+        action="login",
+        model="user",
+        details={"email": email},
+        request=request
+    )
 
         refresh = RefreshToken.for_user(user)
         response = Response({
