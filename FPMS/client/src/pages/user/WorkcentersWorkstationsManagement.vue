@@ -93,9 +93,9 @@
       </div>
       <div class="flex flex-col pt-8">
         <h3 class="text-xl font-bold">Workstations</h3>
-        <table class="w-full">
+        <table class="w-full text-center">
           <thead class="bg-blue-500 text-white">
-            <tr class="text-white">
+            <tr class="">
               <th class="border border-gray-700 px-4 py-2">Workstation</th>
               <th class="border border-gray-700 px-4 py-2">Status</th>
               <th class="border border-gray-700 px-4 py-2">Capacity</th>

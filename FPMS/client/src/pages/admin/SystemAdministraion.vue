@@ -62,23 +62,23 @@
     </div>
     <h3 class="mb-4 text-xl font-bold">Activity Log</h3>
     <div class="overflow-x-auto">
-      <table class="min-w-full table-auto">
-        <thead>
+      <table class="w-full text-center">
+        <thead class="bg-blue-500 text-white">
           <tr>
-            <th class="px-4 py-2">User</th>
-            <th class="px-4 py-2">Activity</th>
-            <th class="px-4 py-2">Date</th>
-            <th class="px-4 py-2">Time</th>
-            <th class="px-4 py-2">IP Address</th>
+            <th class="border border-gray-700 px-4 py-2">User</th>
+            <th class="border border-gray-700 px-4 py-2">Activity</th>
+            <th class="border border-gray-700 px-4 py-2">Date</th>
+            <th class="border border-gray-700 px-4 py-2">Time</th>
+            <th class="border border-gray-700 px-4 py-2">IP Address</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(activity, index) in userActivities" :key="index">
-            <td class="px-4 py-2">{{ activity.user }}</td>
-            <td class="px-4 py-2">{{ activity.activity }}</td>
-            <td class="px-4 py-2">{{ activity.date }}</td>
-            <td class="px-4 py-2">{{ activity.time }}</td>
-            <td class="px-4 py-2">{{ activity.ip }}</td>
+            <td class="border border-gray-700 px-4 py-2">{{ activity.user }}</td>
+            <td class="border border-gray-700 px-4 py-2">{{ activity.activity }}</td>
+            <td class="border border-gray-700 px-4 py-2">{{ activity.date }}</td>
+            <td class="border border-gray-700 px-4 py-2">{{ activity.time }}</td>
+            <td class="border border-gray-700 px-4 py-2">{{ activity.ip }}</td>
           </tr>
         </tbody>
       </table>
@@ -101,7 +101,7 @@
     </div>
     <div>
       <h3 class="mb-4 text-lg font-bold">Existing Users</h3>
-      <table class="w-full">
+      <table class="w-full text-center">
         <thead class="bg-blue-500 text-white">
           <tr class="">
             <th class="border border-gray-700 px-4 py-2">Name</th>
@@ -123,16 +123,14 @@
             <td class="border border-gray-700 px-4 py-2">{{ user.department }}</td>
             <td class="border border-gray-700 px-4 py-2">{{ user.role }}</td>
             <td class="border border-gray-700 px-4 py-2">{{ user.status }}</td>
-            <td class="flex justify-center gap-2 border px-4 py-2">
+            <td class="flex justify-center gap-2 border border-gray-700 px-4 py-2">
               <button
                 @click="showEditUserPopup = true"
                 class="cursor-pointer rounded-lg bg-yellow-500 p-2 text-white"
               >
                 Edit
               </button>
-              <button class="cursor-pointer rounded-lg bg-red-600 p-2 text-white">
-                Deactivate
-              </button>
+              <button class="cursor-pointer rounded-lg bg-red-600 p-2 text-white">Delete</button>
             </td>
           </tr>
         </tbody>
@@ -197,7 +195,6 @@
           <label for="status" class="text-sm font-bold">Status</label>
           <select id="status" v-model="newUser.status" class="rounded-md border p-2" required>
             <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
           </select>
         </div>
         <div class="flex flex-col">
@@ -278,7 +275,6 @@
           <label for="status" class="text-sm font-bold">Status</label>
           <select id="status" v-model="newUser.status" class="rounded-md border p-2" required>
             <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
           </select>
         </div>
         <div class="flex flex-col">
@@ -302,75 +298,25 @@
   </Popup>
 
   <Popup :visible="showBackupPopup" @update:visible="showBackupPopup = $event">
-    <h3 class="mb-6 text-center text-2xl font-bold">Backup and Restore</h3>
+    <h3 class="mb-6 text-center text-2xl font-bold">Backup</h3>
 
-    <!-- Automated Backup Settings -->
-    <div class="mb-6 rounded-lg border bg-gray-100 p-4">
-      <h4 class="mb-4 text-lg font-bold">Automated Backup Settings</h4>
-      <div class="mb-4">
-        <label for="backup-frequency" class="mb-1 block text-sm font-bold">Backup Frequency</label>
-        <select
-          id="backup-frequency"
-          v-model="backupSettings.frequency"
-          class="w-full rounded-md border p-2"
-        >
-          <option value="Daily">Daily</option>
-          <option value="Weekly">Weekly</option>
-          <option value="Monthly">Monthly</option>
-        </select>
-      </div>
-      <div class="mb-4">
-        <label for="backup-time" class="mb-1 block text-sm font-bold">Backup Time</label>
-        <input
-          type="time"
-          id="backup-time"
-          v-model="backupSettings.time"
-          class="w-full rounded-md border p-2"
-        />
-      </div>
-      <button
-        @click="saveBackupSettings"
-        class="w-full cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-white"
-      >
-        Save Backup Settings
-      </button>
-    </div>
-
-    <!-- Restore Data -->
-    <div class="mb-6 rounded-lg border bg-gray-100 p-4">
-      <h4 class="mb-4 text-lg font-bold">Restore Data</h4>
-      <div class="mb-4">
-        <label for="restore-file" class="mb-1 block text-sm font-bold">Select Backup File</label>
-        <input
-          type="file"
-          id="restore-file"
-          @change="handleFileUpload"
-          class="w-full rounded-md border p-2"
-        />
-      </div>
-      <button @click="restoreData" class="w-full rounded-lg bg-red-600 px-4 py-2 text-white">
-        Restore Data
-      </button>
-    </div>
-
-    <!-- Backup History -->
-    <div class="rounded-lg border bg-gray-100 p-4">
+    <div class="">
       <h4 class="mb-4 text-lg font-bold">Backup History</h4>
-      <table class="min-w-full table-auto border-collapse border">
-        <thead>
-          <tr class="bg-gray-200">
-            <th class="border px-4 py-2">Backup Name</th>
-            <th class="border px-4 py-2">Date</th>
-            <th class="border px-4 py-2">Status</th>
-            <th class="border px-4 py-2">Action</th>
+      <table class="w-full text-center">
+        <thead class="bg-blue-500 text-white">
+          <tr class="">
+            <th class="border border-gray-700 px-4 py-2">Backup Name</th>
+            <th class="border border-gray-700 px-4 py-2">Date</th>
+            <th class="border border-gray-700 px-4 py-2">Status</th>
+            <th class="border border-gray-700 px-4 py-2">Action</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="backup in backupHistory" :key="backup.name">
-            <td class="border px-4 py-2">{{ backup.name }}</td>
-            <td class="border px-4 py-2">{{ backup.date }}</td>
-            <td class="border px-4 py-2">{{ backup.status }}</td>
-            <td class="border px-4 py-2">
+            <td class="border border-gray-700 px-4 py-2">{{ backup.name }}</td>
+            <td class="border border-gray-700 px-4 py-2">{{ backup.date }}</td>
+            <td class="border border-gray-700 px-4 py-2">{{ backup.status }}</td>
+            <td class="border border-gray-700 px-4 py-2">
               <button
                 class="w-full rounded-lg bg-green-600 px-3 py-1 text-white"
                 @click="downloadBackup(backup.name)"
