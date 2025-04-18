@@ -5,11 +5,10 @@
       <div class="flex w-3/6 flex-col rounded-lg bg-gray-100 p-2">
         <p class="font-bold">System Performance Monitoring</p>
         <div class="flex w-3/6 flex-col rounded-lg bg-gray-100 p-2">
-          <div class="flex justify-between">
-            <p class="font-bold">System Performance Monitoring</p>
+          <div class="flex justify-end">
             <button
               @click="fetchHealthMetrics"
-              class="text-xs text-blue-600 hover:text-blue-800"
+              class="mt-1 rounded-xl bg-blue-500 px-1.5 text-sm text-white hover:text-blue-800"
               :disabled="healthLoading"
             >
               {{ healthLoading ? 'Refreshing...' : 'Refresh' }}

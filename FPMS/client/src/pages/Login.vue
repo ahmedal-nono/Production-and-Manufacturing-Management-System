@@ -92,7 +92,7 @@ const handleLogin = async () => {
     const roleRoutes = {
       'Quality Control Manager': { name: 'quality' },
       'Quality Control Inspector': { name: 'reports' },
-      Admin: { name: 'home' },
+      'Admin': { name: 'home' },
       'Production Planner': { name: 'production' },
       'Production Manager': { name: 'workcenters' },
       '404': { name: 'not-found' },
