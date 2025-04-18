@@ -73,12 +73,6 @@
                 >
                   Reschedule
                 </button>
-                <button
-                  @click="deleteOrder(order.id)"
-                  class="rounded bg-red-600 px-2 py-1 text-white"
-                >
-                  Delete
-                </button>
               </td>
             </tr>
           </tbody>
@@ -158,68 +152,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import useOrders from '@/composables/useOrders.ts'
+import { computed, ref } from 'vue'
 import Popup from '@/components/popup.vue'
+
+const { orders, deleteOrder, updateOrderDates } = useOrders()
 
 const showReschedulePopup = ref(false)
 const showProductInfoPopup = ref(false)
-
-interface Order {
-  id: string
-  product: string
-  quantity: number
-  status: 'On Track' | 'Delayed'
-  startDate: string
-  endDate: string
-  productionLine: string
-  priority: 'High' | 'Low'
-  dueDate: string
-}
-
-const LOCAL_STORAGE_KEY = 'production_orders'
-
-// Load from localStorage or fallback to dummy data
-const loadOrders = (): Order[] => {
-  const saved = localStorage.getItem(LOCAL_STORAGE_KEY)
-  if (saved) return JSON.parse(saved)
-  const dummy = [
-    {
-      id: '#1234',
-      product: 'Product A',
-      quantity: 500,
-      status: 'On Track',
-      startDate: '2024-03-15',
-      endDate: '2024-03-20',
-      productionLine: 'Line 1',
-      priority: 'High',
-      dueDate: '2024-03-20',
-    },
-    {
-      id: '#1235',
-      product: 'Product B',
-      quantity: 1000,
-      status: 'Delayed',
-      startDate: '2024-03-18',
-      endDate: '2024-03-22',
-      productionLine: 'Line 2',
-      priority: 'Low',
-      dueDate: '2024-03-22',
-    },
-  ]
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dummy))
-  return dummy
-}
-
-const orders = ref<Order[]>(loadOrders())
-
-// Save to localStorage when orders change
-watch(
-  orders,
-  (newVal) => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newVal))
-  },
-  { deep: true },
-)
 
 const selectedStatus = ref('All Statuses')
 const selectedLine = ref('All Lines')
@@ -243,11 +183,6 @@ const getPriorityClass = (priority: string) => {
   return priority === 'High' ? 'text-red-600' : 'text-blue-600'
 }
 
-// Handle deleting an order
-const deleteOrder = (id: string) => {
-  orders.value = orders.value.filter((order) => order.id !== id)
-}
-
 const props = defineProps<{
   showProductionSchedulePopup: boolean
   orderId: string
@@ -263,7 +198,12 @@ const props = defineProps<{
   }[]
 }>()
 
-const emitEvent = defineEmits(['close', 'submit', 'update:showProductionSchedulePopup'])
+const emitEvent = defineEmits([
+  'close',
+  'submit',
+  'update:showProductionSchedulePopup',
+  'update-dates',
+])
 
 const newStartTime = ref<string>('')
 const newEndTime = ref<string>('')
@@ -279,20 +219,25 @@ const reasons = [
 ]
 
 const submitReschedule = () => {
-  const index = orders.value.findIndex((o) => o.id === props.orderId)
-  if (index !== -1) {
-    orders.value[index].startDate = newStartTime.value
-    orders.value[index].endDate = newEndTime.value
-  }
+  const success = updateOrderDates(props.orderId, newStartTime.value, newEndTime.value)
 
-  const payload = {
-    orderId: props.orderId,
-    newStartTime: newStartTime.value,
-    newEndTime: newEndTime.value,
-    reason: reason.value,
-    note: note.value,
+  if (success) {
+    const orderIndex = orders.value.findIndex((order) => order.id === props.orderId)
+    if (orderIndex !== -1) {
+      orders.value[orderIndex].startDate = newStartTime.value
+      orders.value[orderIndex].endDate = newEndTime.value
+    }
+
+    const payload = {
+      orderId: props.orderId,
+      newStartTime: newStartTime.value,
+      newEndTime: newEndTime.value,
+    }
+    emitEvent('submit', payload)
+    emitEvent('update-dates', payload)
+  } else {
+    console.error(`Failed to update order with ID ${props.orderId}.`)
   }
-  emitEvent('submit', payload)
 }
 
 const stages = ref([
