@@ -23,32 +23,15 @@
           </template>
         </Popup>
       </div>
-
-      <div class="flex h-9 w-3/12 cursor-pointer space-x-2 rounded-xl border-black bg-white">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="chakra-icon css-ugv5hc mt-1.5 ml-2"
-        >
-          <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"></path>
-          <path d="M21 21l-6 -6"></path>
-        </svg>
-        <input type="text" name="" id="" placeholder="Search" class="w-full rounded-xl p-1" />
+      <div class="flex flex-row space-x-6">
+        <button class="mt-2 h-fit rounded-xl bg-red-500 px-6 py-1 text-white">Logout</button>
+        <img
+          src="../assets/avatar.png"
+          alt=""
+          class="size-12 cursor-pointer"
+          @click="showAvatarPopup = true"
+        />
       </div>
-
-      <img
-        src="../assets/avatar.png"
-        alt=""
-        class="size-12 cursor-pointer"
-        @click="showAvatarPopup = true"
-      />
       <Popup :visible="showAvatarPopup" @update:visible="showAvatarPopup = $event">
         <div class="flex flex-col items-center space-y-4">
           <div class="flex flex-col justify-center space-y-1">

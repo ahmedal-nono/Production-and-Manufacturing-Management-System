@@ -28,17 +28,17 @@ from .serializers import BackupConfigSerializer, BackupRecordSerializer, Departm
 class BackupConfigViewSet(viewsets.ModelViewSet):
     queryset = BackupConfig.objects.all()
     serializer_class = BackupConfigSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = []
 
 class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = []
 
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = []
 MARIADB_BIN_PATH = r"C:\Program Files\MariaDB 11.6\bin"
 MYSQLDUMP_PATH = os.path.join(MARIADB_BIN_PATH, "mysqldump.exe")
 class BackupRecordViewSet(viewsets.ModelViewSet):

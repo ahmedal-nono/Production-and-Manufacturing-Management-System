@@ -4,13 +4,50 @@
     <div class="flex flex-row gap-20 py-4">
       <div class="flex w-3/6 flex-col rounded-lg bg-gray-100 p-2">
         <p class="font-bold">System Performance Monitoring</p>
-        <div class="flex flex-col space-y-1 pt-2 text-[13px] font-bold">
-          <p>Server Load: <span>75%</span></p>
-          <p>Response Time: <span>120ms</span></p>
-          <p>Errors: <span>3 errors</span></p>
-          <p>CPU Usage: <span>65%</span></p>
-          <p>Memory Usage: <span>80%</span></p>
-          <p>Disk Space: <span>90 / 120GB</span></p>
+        <div class="flex w-3/6 flex-col rounded-lg bg-gray-100 p-2">
+          <div class="flex justify-between">
+            <p class="font-bold">System Performance Monitoring</p>
+            <button
+              @click="fetchHealthMetrics"
+              class="text-xs text-blue-600 hover:text-blue-800"
+              :disabled="healthLoading"
+            >
+              {{ healthLoading ? 'Refreshing...' : 'Refresh' }}
+            </button>
+          </div>
+          <div class="flex flex-col space-y-1 pt-2 text-[13px] font-bold">
+            <p>
+              CPU Usage:
+              <span :class="{ 'text-red-500': healthMetrics.cpu_usage > 80 }">
+                {{ healthMetrics.cpu_usage }}%
+              </span>
+            </p>
+            <p>
+              Memory Usage:
+              <span :class="{ 'text-red-500': healthMetrics.memory_usage > 85 }">
+                {{ healthMetrics.memory_usage }}%
+              </span>
+            </p>
+            <p>
+              Disk Usage:
+              <span :class="{ 'text-red-500': healthMetrics.disk_usage > 90 }">
+                {{ healthMetrics.disk_usage }}%
+              </span>
+            </p>
+            <p>
+              Disk Space:
+              <span>{{ healthMetrics.disk_space }} GB available</span>
+            </p>
+            <p>
+              Response Time:
+              <span :class="{ 'text-red-500': healthMetrics.response_time > 100 }">
+                {{ healthMetrics.response_time }} ms
+              </span>
+            </p>
+            <p class="text-xs text-gray-500">
+              Last updated: {{ formatDateTime(healthMetrics.timestamp) }}
+            </p>
+          </div>
         </div>
       </div>
       <div class="flex flex-col rounded-lg bg-gray-100 p-2">
@@ -49,45 +86,82 @@
 
     <!-- Activity Log Popup -->
     <Popup :visible="showActivityLogPopup" @update:visible="showActivityLogPopup = $event">
-      <h3 class="mb-4 text-xl font-bold">Activity Log</h3>
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-xl font-bold">Activity Log</h3>
+        <div class="flex items-center space-x-2">
+          <select
+            v-model="logFilter"
+            class="rounded-md border p-1 text-sm"
+            @change="fetchActivityLogs(1)"
+          >
+            <option value="all">All Actions</option>
+            <option value="login">Login</option>
+            <!-- Add other filter options as needed -->
+          </select>
+          <input
+            type="text"
+            v-model="logSearch"
+            placeholder="Search..."
+            class="rounded-md border p-1 text-sm"
+            @input="fetchActivityLogs(1)"
+          />
+        </div>
+      </div>
+
       <div class="overflow-x-auto">
         <table class="w-full text-center">
           <thead class="bg-blue-500 text-white">
             <tr>
+              <th class="border border-gray-700 px-4 py-2">ID</th>
               <th class="border border-gray-700 px-4 py-2">User</th>
-              <th class="border border-gray-700 px-4 py-2">Activity</th>
-              <th class="border border-gray-700 px-4 py-2">Date</th>
-              <th class="border border-gray-700 px-4 py-2">Time</th>
+              <th class="border border-gray-700 px-4 py-2">Action</th>
+              <th class="border border-gray-700 px-4 py-2">Email</th>
               <th class="border border-gray-700 px-4 py-2">IP Address</th>
+              <th class="border border-gray-700 px-4 py-2">Date/Time</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(activity, index) in activityLogs" :key="index" class="overflow-y-auto">
-              <td class="border border-gray-700 px-4 py-2">{{ activity.user }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ activity.action }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ formatDate(activity.timestamp) }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ formatTime(activity.timestamp) }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ activity.ip_address }}</td>
+            <tr v-for="activity in activityLogs" :key="activity.id" class="overflow-y-auto">
+              <td class="border border-gray-700 px-4 py-2">{{ activity.id }}</td>
+              <td class="border border-gray-700 px-4 py-2">
+                {{ activity.user || 'N/A' }}
+              </td>
+              <td class="border border-gray-700 px-4 py-2 capitalize">
+                {{ activity.action }}
+              </td>
+              <td class="border border-gray-700 px-4 py-2">
+                {{ activity.details?.email || 'N/A' }}
+              </td>
+              <td class="border border-gray-700 px-4 py-2">
+                {{ activity.ip_address }}
+              </td>
+              <td class="border border-gray-700 px-4 py-2">
+                {{ formatDateTime(activity.timestamp) }}
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div class="mt-2 flex flex-row justify-center space-x-4">
-        <button
-          @click="fetchActivityLogs(currentPage - 1)"
-          :disabled="currentPage === 1"
-          class="w-2/12 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white disabled:opacity-50"
-        >
-          Prev
-        </button>
-        <p class="mt-2">Page {{ currentPage }} of {{ totalPages }}</p>
-        <button
-          @click="fetchActivityLogs(currentPage + 1)"
-          :disabled="currentPage === totalPages"
-          class="w-2/12 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white disabled:opacity-50"
-        >
-          Next
-        </button>
+
+      <div class="mt-4 flex items-center justify-between">
+        <div>Showing {{ activityLogs.length }} records</div>
+        <div class="flex items-center space-x-4">
+          <button
+            @click="fetchActivityLogs(currentPage - 1)"
+            :disabled="currentPage === 1"
+            class="cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <span>Page {{ currentPage }} of {{ totalPages }}</span>
+          <button
+            @click="fetchActivityLogs(currentPage + 1)"
+            :disabled="currentPage === totalPages"
+            class="cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </Popup>
 
@@ -243,55 +317,52 @@
 
     <!-- Backup Popup -->
     <Popup :visible="showBackupPopup" @update:visible="showBackupPopup = $event">
-      <h3 class="mb-6 text-center text-2xl font-bold">Backup</h3>
-      <div class="mb-4">
-        <button
-          @click="createBackup()"
-          class="w-full cursor-pointer rounded-lg bg-green-600 p-2 text-white"
-        >
-          Create New Backup
-        </button>
-      </div>
-      <div class="">
-        <h4 class="mb-4 text-lg font-bold">Backup History</h4>
+      <h3 class="mb-6 text-center text-2xl font-bold">Backup Management</h3>
+
+      <button
+        @click="createBackup"
+        :disabled="loading"
+        class="mb-4 w-full rounded-lg bg-green-600 p-2 text-white disabled:opacity-50"
+      >
+        {{ loading ? 'Creating...' : 'Create New Backup' }}
+      </button>
+
+      <div class="max-h-96 overflow-y-auto">
         <table class="w-full text-center">
           <thead class="bg-blue-500 text-white">
-            <tr class="">
-              <th class="border border-gray-700 px-4 py-2">Backup Name</th>
-              <th class="border border-gray-700 px-4 py-2">Date</th>
-              <th class="border border-gray-700 px-4 py-2">Status</th>
-              <th class="border border-gray-700 px-4 py-2">Action</th>
+            <tr>
+              <th class="border border-gray-700 px-4 py-2">ID</th>
+              <th class="border border-gray-700 px-4 py-2">Created At</th>
+              <th class="border border-gray-700 px-4 py-2">Name of the file</th>
+              <th class="border border-gray-700 px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="backup in backups" :key="backup.name">
-              <td class="border border-gray-700 px-4 py-2">{{ backup.name }}</td>
+            <tr v-for="backup in backups" :key="backup.id">
+              <td class="border border-gray-700 px-4 py-2">{{ backup.id }}</td>
               <td class="border border-gray-700 px-4 py-2">
                 {{ formatDateTime(backup.created_at) }}
               </td>
-              <td class="border border-gray-700 px-4 py-2">{{ backup.status }}</td>
-              <td class="border border-gray-700 px-4 py-2">
+              <td class="border border-gray-700 px-4 py-2 text-lg">
+                {{ `fpms_backup_${backup.id}.sql` }}
+              </td>
+              <td class="space-x-2 border border-gray-700 px-4 py-2">
                 <button
-                  class="w-full rounded-lg bg-green-600 px-3 py-1 text-white"
-                  @click="downloadBackup(backup.name)"
+                  @click="downloadBackup(backup.id)"
+                  class="rounded-lg bg-blue-600 px-3 py-1 text-white"
                 >
                   Download
+                </button>
+                <button
+                  @click="restoreBackup(backup.id)"
+                  class="rounded-lg bg-yellow-600 px-3 py-1 text-white"
+                >
+                  Restore
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
-      </div>
-      <div class="mt-4">
-        <h4 class="mb-2 text-lg font-bold">Restore Backup</h4>
-        <input type="file" @change="handleFileUpload" class="mb-2 w-full rounded-md border p-2" />
-        <button
-          @click="restoreBackup()"
-          :disabled="!selectedBackupFile"
-          class="w-full cursor-pointer rounded-lg bg-blue-600 p-2 text-white disabled:opacity-50"
-        >
-          Restore
-        </button>
       </div>
     </Popup>
   </div>
@@ -316,10 +387,16 @@ interface User {
 
 interface ActivityLog {
   id: number
-  user: string
+  user: string | null
   action: string
-  timestamp: string
+  model: string
+  object_id: string
+  details: {
+    email?: string
+    // Add other possible detail fields here
+  }
   ip_address: string
+  timestamp: string
 }
 
 interface Backup {
@@ -333,14 +410,29 @@ interface Backup {
 const userStore = useUserStore()
 
 // State
+// Add this with your other ref declarations
+const healthMetrics = ref({
+  cpu_usage: 0,
+  memory_usage: 0,
+  disk_usage: 0,
+  disk_space: 0,
+  response_time: 0,
+  timestamp: '',
+})
+const healthLoading = ref(false)
 const showActivityLogPopup = ref(false)
 const showUserMngtPopup = ref(false)
 const showUserCrtPopup = ref(false)
+// const showBackupPopup = ref(false)
+
+const backups = ref<any[]>([])
+const loading = ref(false)
 const showBackupPopup = ref(false)
+const backupLoading = ref(false) // Define the missing variable
 
 const users = ref<User[]>([])
 const activityLogs = ref<ActivityLog[]>([])
-const backups = ref<Backup[]>([])
+// const backups = ref<Backup[]>([])
 const selectedBackupFile = ref<File | null>(null)
 
 const currentPage = ref(1)
@@ -373,7 +465,6 @@ const formatDateTime = (dateString: string) => {
   return new Date(dateString).toLocaleString()
 }
 
-  
 // API Functions
 const fetchUsers = async () => {
   const { data } = await useAxios(`${baseURL}/users/`, { method: 'GET' })
@@ -381,21 +472,40 @@ const fetchUsers = async () => {
 }
 
 const fetchActivityLogs = async (page = 1) => {
-  const { data } = await useAxios(`${baseURL}/activity-logs/?page=${page}`, { method: 'GET' })
-  if (data.value) {
-    activityLogs.value = data.value.results
-    currentPage.value = page
-    totalPages.value = Math.ceil(data.value.count / 10) // Assuming 10 items per page
+  try {
+    const params: any = {
+      page: page,
+      page_size: 3,
+    }
+
+    if (logFilter.value !== 'all') {
+      params.action = logFilter.value
+    }
+
+    if (logSearch.value) {
+      params.search = logSearch.value
+    }
+
+    const { data } = await useAxios(`${baseURL}/activity-logs/`, {
+      params: params,
+    })
+
+    if (data.value) {
+      activityLogs.value = data.value.results || data.value
+      if (data.value.count) {
+        totalPages.value = Math.ceil(data.value.count / 10)
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch activity logs:', err)
   }
 }
-
-const fetchBackups = async () => {
-  const { data } = await useAxios(`${baseURL}/backups/`, { method: 'GET' })
-  backups.value = data.value || []
-}
+// const fetchBackups = async () => {
+//   const { data } = await useAxios(`${baseURL}/backups/`, { method: 'GET' })
+//   backups.value = data.value || []
+// }
 
 const submitUserForm = async () => {
-  
   if (editingUserId.value) {
     await updateUser()
   } else {
@@ -443,32 +553,32 @@ const deleteUser = async (userId: number) => {
   }
 }
 
-const createBackup = async () => {
-  const { error } = await useAxios(`${baseURL}/backups/`, {
-    method: 'POST',
-  })
+// const createBackup = async () => {
+//   const { error } = await useAxios(`${baseURL}/backups/`, {
+//     method: 'POST',
+//   })
 
-  if (!error.value) {
-    await fetchBackups()
-  }
-}
+//   if (!error.value) {
+//     await fetchBackups()
+//   }
+// }
 
-const downloadBackup = async (backupName: string) => {
-  const { data } = await useAxios(`${baseURL}/backups/${backupName}/download/`, {
-    method: 'GET',
-    responseType: 'blob',
-  })
+// const downloadBackup = async (backupName: string) => {
+//   const { data } = await useAxios(`${baseURL}/backups/${backupName}/download/`, {
+//     method: 'GET',
+//     responseType: 'blob',
+//   })
 
-  if (data.value) {
-    const url = window.URL.createObjectURL(new Blob([data.value]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', backupName)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
-}
+//   if (data.value) {
+//     const url = window.URL.createObjectURL(new Blob([data.value]))
+//     const link = document.createElement('a')
+//     link.href = url
+//     link.setAttribute('download', backupName)
+//     document.body.appendChild(link)
+//     link.click()
+//     document.body.removeChild(link)
+//   }
+// }
 
 const handleFileUpload = (event: Event) => {
   const input = event.target as HTMLInputElement
@@ -477,27 +587,113 @@ const handleFileUpload = (event: Event) => {
   }
 }
 
-const restoreBackup = async () => {
-  if (!selectedBackupFile.value) return
+// const restoreBackup = async () => {
+//   if (!selectedBackupFile.value) return
 
-  const formData = new FormData()
-  formData.append('file', selectedBackupFile.value)
+//   const formData = new FormData()
+//   formData.append('file', selectedBackupFile.value)
 
-  const { error } = await useAxios(`${baseURL}/backups/restore/`, {
-    method: 'POST',
-    data: formData,
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  })
+//   const { error } = await useAxios(`${baseURL}/backups/restore/`, {
+//     method: 'POST',
+//     data: formData,
+//     headers: {
+//       'Content-Type': 'multipart/form-data',
+//     },
+//   })
 
-  if (!error.value) {
-    alert('Backup restored successfully')
-    selectedBackupFile.value = null
-    await fetchBackups()
+const fetchBackups = async () => {
+  try {
+    backupLoading.value = true
+    const { data } = await useAxios(`${baseURL}/backups/`, {
+      method: 'GET',
+    })
+    backups.value = data.value || []
+  } catch (err) {
+    console.error('Failed to fetch backups:', err)
+  } finally {
+    backupLoading.value = false
   }
 }
 
+const createBackup = async () => {
+  try {
+    backupLoading.value = true
+    const { data } = await useAxios(`${baseURL}/backups/create_backup/`, {
+      method: 'POST',
+    })
+
+    if (data.value?.status === 'success') {
+      alert(`Backup created successfully!\nFile: ${data.value.file_path}`)
+      await fetchBackups()
+    }
+  } catch (err) {
+    console.error('Backup creation failed:', err)
+    alert('Failed to create backup. Please check console for details.')
+  } finally {
+    backupLoading.value = false
+  }
+}
+
+const downloadBackup = async (backup_Id: number) => {
+  try {
+    backupLoading.value = true
+    const { data } = await useAxios(`${baseURL}/backups/${backup_Id}/download/`, {
+      method: 'GET',
+      responseType: 'blob',
+    })
+
+    if (data.value) {
+      const url = window.URL.createObjectURL(new Blob([data.value]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `fpms_backup_${backup_Id}.sql`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+  } catch (err) {
+    console.error('Download failed:', err)
+    alert('Failed to download backup. Please check console for details.')
+  } finally {
+    backupLoading.value = false
+  }
+}
+
+const restoreBackup = async (backup_Id: number) => {
+  if (!confirm('WARNING: This will overwrite current data. Are you sure?')) {
+    return
+  }
+
+  try {
+    backupLoading.value = true
+    const { data } = await useAxios(`${baseURL}/backups/${backup_Id}/restore/`, {
+      method: 'POST',
+    })
+
+    if (data.value?.status === 'success') {
+      alert('Database restored successfully!')
+    }
+  } catch (err) {
+    console.error('Restore failed:', err)
+    alert('Failed to restore backup. Please check console for details.')
+  } finally {
+    backupLoading.value = false
+  }
+}
+const fetchHealthMetrics = async () => {
+  try {
+    healthLoading.value = true
+    const { data } = await useAxios(`${baseURL}/health-metrics/current/`)
+
+    if (data.value) {
+      healthMetrics.value = data.value
+    }
+  } catch (err) {
+    console.error('Failed to fetch health metrics:', err)
+  } finally {
+    healthLoading.value = false
+  }
+}
 // Helper functions
 const resetUserForm = () => {
   userForm.value = {
@@ -535,8 +731,13 @@ const openEditUserPopup = (user: User) => {
 onMounted(() => {
   fetchUsers()
   fetchActivityLogs()
+  // fetchBackups()
+  // fetchBackups()
   fetchBackups()
+  fetchHealthMetrics()
 })
+const logFilter = ref('all')
+const logSearch = ref('')
 </script>
 
 <style>
