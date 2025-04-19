@@ -8,7 +8,7 @@
       <div class="mb-6 flex items-center justify-between">
         <h1 class="text-2xl font-bold">Job Cards</h1>
         <span class="flex items-center gap-1 text-sm text-gray-600">
-          <span class="h-2 w-2 rounded-full bg-green-500"></span> 
+          <span class="h-2 w-2 rounded-full bg-green-500"></span>
           Synced {{ lastSynced }}
         </span>
       </div>
@@ -57,7 +57,7 @@
         >
           <div class="mb-2 flex items-center justify-between">
             <h2 class="font-semibold">JC-{{ card.id }}</h2>
-            <span 
+            <span
               class="rounded-full px-3 py-1 text-xs font-medium"
               :class="getStatusClass(card.status)"
             >
@@ -67,7 +67,7 @@
 
           <div class="mb-3 space-y-1 text-sm">
             <p><strong>Task:</strong> {{ card.task_name }}</p>
-            <p><strong>Work Order:</strong> WO-{{ card.work_order }}</p>
+            <p><strong>Work Order:</strong> WO-{{ card.work_order.name }}</p>
             <p><strong>Assigned To:</strong> {{ getEmployeeName(card.assigned_to) }}</p>
             <p class="flex items-center gap-2">
               <strong>Priority:</strong>
@@ -85,13 +85,13 @@
           </div>
 
           <div class="flex gap-2">
-            <button 
+            <button
               @click="viewJobCardDetails(card.id)"
               class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-500"
             >
               View Details
             </button>
-            <button 
+            <button
               @click="showUpdateStatusModal(card)"
               class="rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-500"
             >
@@ -104,7 +104,7 @@
   </Popup>
 
   <!-- Job Card Details Modal -->
-  <JobCardDetailsModal 
+  <JobCardDetailsModal
     v-if="selectedJobCard"
     :jobCard="selectedJobCard"
     :visible="showDetailsModal"
@@ -162,13 +162,7 @@ const filters = ref({
 })
 
 // Options
-const statusOptions = ref([
-  'Not Started',
-  'In Progress',
-  'Completed',
-  'On Hold',
-  'Cancelled'
-])
+const statusOptions = ref(['Not Started', 'In Progress', 'Completed', 'On Hold', 'Cancelled'])
 
 // Fetch data
 const fetchJobCards = async () => {
@@ -207,14 +201,11 @@ const filteredJobCards = computed(() => {
       card.task_name.toLowerCase().includes(filters.value.search.toLowerCase()) ||
       getEmployeeName(card.assigned_to).toLowerCase().includes(filters.value.search.toLowerCase())
 
-    const matchStatus =
-      filters.value.status === '' || card.status === filters.value.status
+    const matchStatus = filters.value.status === '' || card.status === filters.value.status
 
-    const matchPriority =
-      filters.value.priority === '' || card.priority === filters.value.priority
+    const matchPriority = filters.value.priority === '' || card.priority === filters.value.priority
 
-    const matchLine =
-      filters.value.line === '' || card.production_line === filters.value.line
+    const matchLine = filters.value.line === '' || card.production_line === filters.value.line
 
     return matchSearch && matchStatus && matchPriority && matchLine
   })
@@ -222,18 +213,24 @@ const filteredJobCards = computed(() => {
 
 // Helpers
 const getEmployeeName = (employeeId: number) => {
-  const employee = employees.value.find(e => e.id === employeeId)
+  const employee = employees.value.find((e) => e.id === employeeId)
   return employee ? `${employee.first_name} ${employee.last_name}` : 'Unassigned'
 }
 
 const getStatusClass = (status: string) => {
   switch (status) {
-    case 'Not Started': return 'bg-gray-200 text-gray-800'
-    case 'In Progress': return 'bg-blue-200 text-blue-800'
-    case 'Completed': return 'bg-green-200 text-green-800'
-    case 'On Hold': return 'bg-yellow-200 text-yellow-800'
-    case 'Cancelled': return 'bg-red-200 text-red-800'
-    default: return 'bg-gray-200 text-gray-800'
+    case 'Not Started':
+      return 'bg-gray-200 text-gray-800'
+    case 'In Progress':
+      return 'bg-blue-200 text-blue-800'
+    case 'Completed':
+      return 'bg-green-200 text-green-800'
+    case 'On Hold':
+      return 'bg-yellow-200 text-yellow-800'
+    case 'Cancelled':
+      return 'bg-red-200 text-red-800'
+    default:
+      return 'bg-gray-200 text-gray-800'
   }
 }
 
@@ -254,7 +251,7 @@ const showUpdateStatusModal = (card: any) => {
 }
 
 const handleStatusUpdate = (updatedCard: any) => {
-  const index = jobCards.value.findIndex(c => c.id === updatedCard.id)
+  const index = jobCards.value.findIndex((c) => c.id === updatedCard.id)
   if (index !== -1) {
     jobCards.value[index] = updatedCard
   }
