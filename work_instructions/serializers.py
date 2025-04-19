@@ -19,12 +19,34 @@ class WorkOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkOrder
         fields = ['id', 'name', 'quantity_required', 'due_date', 'priority', 'work_instruction', 'production_line']
-
     def create(self, validated_data):
-        work_instruction_data = validated_data.pop('work_instruction')
-        work_instruction = WorkInstruction.objects.create(**work_instruction_data)
-        work_order = WorkOrder.objects.create(work_instruction=work_instruction, **validated_data)
+        work_order = super().create(validated_data)
+        work_instruction = work_order.work_instruction
+        
+        # Get the assigned work center (simplest working version)
+        assigned_to = None
+        if work_order.production_line and work_order.production_line.work_centers.exists():
+            assigned_to = WorkCenter.objects.get(pk=work_order.production_line.work_centers.first().pk)
+        
+        # Create job cards
+        if work_instruction.task_steps:
+            JobCard.objects.bulk_create([
+                JobCard(
+                    work_order=work_order,
+                    task_name=task.strip(),
+                    required_tools=work_instruction.tools_required,
+                    required_materials=work_instruction.materials_required,
+                    status='Not Started',
+                    assigned_to=assigned_to
+                )
+                for task in work_instruction.task_steps.split('\n')
+                if task.strip()
+            ])
+        
         return work_order
+    
+
+
 
 
 class JobCardSerializer(serializers.ModelSerializer):

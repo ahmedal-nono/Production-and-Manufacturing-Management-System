@@ -6,9 +6,11 @@ from .models import WorkOrder, JobCard, WorkInstruction
 from .serializers import WorkOrderSerializer, JobCardSerializer, WorkInstructionSerializer
 from rest_framework.decorators import action
 
+
 class WorkOrderViewSet(viewsets.ModelViewSet):
     queryset = WorkOrder.objects.all()
     serializer_class = WorkOrderSerializer
+    permission_classes =[ ]
 
     @action(detail=True, methods=['post'])
     def generate_job_cards(self, request, pk=None):
@@ -32,6 +34,7 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
 class JobCardViewSet(viewsets.ModelViewSet):
     queryset = JobCard.objects.all()
     serializer_class = JobCardSerializer
+    permission_classes =[ ]
 
     def get_queryset(self):
         work_order_id = self.request.query_params.get('work_order_id')
@@ -42,3 +45,4 @@ class JobCardViewSet(viewsets.ModelViewSet):
 class WorkInstructionViewSet(viewsets.ModelViewSet):
     queryset = WorkInstruction.objects.all()
     serializer_class = WorkInstructionSerializer
+    permission_classes =[ ]
