@@ -7,7 +7,9 @@ from .serializers import (
 
 
 class IssueViewSet(viewsets.ModelViewSet):
+    
     queryset = Issue.objects.all().order_by('-created_at')
+    permission_classes= []
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -17,6 +19,7 @@ class IssueViewSet(viewsets.ModelViewSet):
 
 class ReportViewSet(viewsets.ModelViewSet):
     queryset = Report.objects.all().order_by('-created_at')
+    permission_classes= []
 
     def get_serializer_class(self):
         if self.action == 'list':

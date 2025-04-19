@@ -27,16 +27,18 @@
         </select>
       </div>
 
+      <!-- Issues Table -->
       <div class="overflow-x-auto">
         <table class="w-full text-center">
           <thead class="bg-blue-500 text-white">
-            <tr class="">
+            <tr>
               <th class="border border-gray-700 px-4 py-2">Issue ID</th>
               <th class="border border-gray-700 px-4 py-2">Category</th>
               <th class="border border-gray-700 px-4 py-2">Priority</th>
               <th class="border border-gray-700 px-4 py-2">Affected Workflow/Job card</th>
               <th class="border border-gray-700 px-4 py-2">Time Stamp</th>
               <th class="border border-gray-700 px-4 py-2">Status</th>
+              <th class="border border-gray-700 px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -46,12 +48,10 @@
               class="border bg-white hover:bg-gray-50"
             >
               <td class="border border-gray-700 px-4 py-2">{{ item.id }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ item.product }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ item.quantity }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ item.dueDate }}</td>
-              <td class="border border-gray-700 px-4 py-2">
-                <input readonly disabled type="date" name="" id="" value="22/03/2025" />
-              </td>
+              <td class="border border-gray-700 px-4 py-2">{{ item.category }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ item.priority }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ item.affected_item }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ item.created_at }}</td>
               <td class="border border-gray-700 px-4 py-2">
                 <span
                   :class="
@@ -64,6 +64,20 @@
                   {{ item.status }}
                 </span>
               </td>
+              <td class="space-x-2 border border-gray-700 px-4 py-2">
+                <button
+                  @click="openEditIssuePopup(item)"
+                  class="rounded bg-yellow-500 px-2 py-1 text-white hover:bg-yellow-600"
+                >
+                  Edit
+                </button>
+                <button
+                  @click="deleteIssue(item.id)"
+                  class="rounded bg-red-600 px-2 py-1 text-white hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -71,9 +85,12 @@
     </div>
   </Popup>
 
+  <!-- New/Edit Issue Popup -->
   <Popup :visible="showNewIssuePopup" @update:visible="showNewIssuePopup = $event">
     <div class="">
-      <h2 class="mb-4 text-xl font-semibold">Submit an Issue</h2>
+      <h2 class="mb-4 text-xl font-semibold">
+        {{ editingIssueId ? 'Edit Issue' : 'Submit an Issue' }}
+      </h2>
 
       <form @submit.prevent="submitIssue" class="space-y-4">
         <!-- Issue Category -->
@@ -129,34 +146,10 @@
           </div>
         </div>
 
-        <!-- Attachments -->
-        <div>
-          <label class="mb-1 block font-medium">Attachments</label>
-          <div class="rounded border border-dashed p-4 text-center">
-            <input type="file" @change="handleFileUpload" class="hidden" ref="fileInput" />
-            <button
-              type="button"
-              @click="fileInput?.click()"
-              class="rounded bg-gray-100 px-4 py-2 hover:bg-gray-200"
-            >
-              Attach Files
-            </button>
-            <div v-if="form.attachment" class="mt-2 text-sm text-gray-600">
-              {{ form.attachment.name }}
-            </div>
-          </div>
-          <button
-            class="mt-4 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-            @click="removeAttachment()"
-          >
-            Remove Attachment
-          </button>
-        </div>
-
         <!-- Actions -->
         <div class="mt-4 flex justify-end gap-2">
           <button type="submit" class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-            Submit Issue
+            {{ editingIssueId ? 'Update Issue' : 'Submit Issue' }}
           </button>
         </div>
       </form>
@@ -165,67 +158,144 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue'
+import { ref, onMounted } from 'vue'
 import Popup from '@/components/popup.vue'
+import { useAxios } from '@vueuse/integrations/useAxios'
 
-const showNewIssuePopup = ref(false)
+const API_BASE_URL = 'http://localhost:8000/api/'
 
-const instructions = ref([
-  {
-    id: 'WO-1234',
-    product: 'Product A',
-    quantity: 100,
-    dueDate: '2023-10-01',
-    status: 'Active',
-  },
-  {
-    id: 'WO-1235',
-    product: 'Product B',
-    quantity: 200,
-    dueDate: '2023-10-02',
-    status: 'Inactive',
-  },
-])
-
-defineProps<{
-  showReportedIssuesPopup: boolean
-}>()
-
-const emitEvent = defineEmits(['close', 'submit', 'update:showReportedIssuesPopup'])
-
-const form = ref<{
+// Interfaces
+interface Issue {
+  id: number
   category: string
-  workflow: string
+  affected_item: string
   priority: string
   description: string
-  attachment: File | null
-}>({
+  created_at: string
+  status?: string
+}
+
+// State
+const showNewIssuePopup = ref(false)
+const instructions = ref<Issue[]>([])
+const isLoading = ref(false)
+const error = ref<string | null>(null)
+const editingIssueId = ref<number | null>(null)
+
+// Props and Emits
+defineProps<{ showReportedIssuesPopup: boolean }>()
+const emitEvent = defineEmits(['close', 'submit', 'update:showReportedIssuesPopup'])
+
+// Form Data
+const form = ref({
   category: '',
   workflow: '',
   priority: '',
   description: '',
-  attachment: null,
 })
 
-const handleFileUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement | null
-  if (target && target.files) {
-    form.value.attachment = target.files[0]
+// Fetch Issues
+const fetchIssues = async () => {
+  try {
+    isLoading.value = true
+    const { data } = await useAxios<Issue[]>(`${API_BASE_URL}issues/`, { method: 'GET' })
+    if (data.value) {
+      instructions.value = data.value
+        .map((issue) => ({
+          ...issue,
+          status: 'Active', // Default status
+        }))
+        .sort((a, b) => a.id - b.id) // Sort in ascending order by id
+    }
+  } catch (err) {
+    error.value = 'Failed to fetch issues'
+    console.error('Error fetching issues:', err)
+  } finally {
+    isLoading.value = false
   }
 }
-const submitIssue = () => {
-  console.log('Issue submitted:', form.value)
-  close()
-}
 
-const fileInput = useTemplateRef('fileInput')
+// Submit New or Update Issue
+const submitIssue = async () => {
+  try {
+    const payload = {
+      category: form.value.category,
+      affected_item: form.value.workflow,
+      priority: form.value.priority.toLowerCase(),
+      description: form.value.description,
+    }
 
-const removeAttachment = () => {
-  if (fileInput?.value) {
-    fileInput.value.value = ''
-    form.value.attachment = null
+    if (editingIssueId.value) {
+      // Update Issue
+      await useAxios(`${API_BASE_URL}issues/${editingIssueId.value}/`, {
+        method: 'PUT',
+        data: payload,
+      })
+    } else {
+      // Create New Issue
+      const { data } = await useAxios<Issue>(`${API_BASE_URL}issues/`, {
+        method: 'POST',
+        data: payload,
+      })
+      if (data.value) {
+        instructions.value = [
+          {
+            ...data.value,
+            status: 'Active',
+          },
+          ...instructions.value,
+        ]
+      }
+    }
+
+    resetForm()
+    showNewIssuePopup.value = false
+  } catch (err) {
+    error.value = 'Failed to submit issue'
+    console.error('Error submitting issue:', err)
   }
 }
+
+// Delete Issue
+const deleteIssue = async (id: number) => {
+  if (!confirm('Are you sure you want to delete this issue?')) return
+
+  try {
+    await useAxios(`${API_BASE_URL}issues/${id}/`, { method: 'DELETE' })
+    instructions.value = instructions.value.filter((issue) => issue.id !== id)
+  } catch (err) {
+    error.value = 'Failed to delete issue'
+    console.error('Error deleting issue:', err)
+  }
+}
+
+// Open Edit Issue Popup
+const openEditIssuePopup = (issue: Issue) => {
+  form.value = {
+    category: issue.category,
+    workflow: issue.affected_item,
+    priority: issue.priority,
+    description: issue.description,
+  }
+  editingIssueId.value = issue.id
+  showNewIssuePopup.value = true
+}
+
+// Reset Form
+const resetForm = () => {
+  form.value = {
+    category: '',
+    workflow: '',
+    priority: '',
+    description: '',
+  }
+  editingIssueId.value = null
+}
+
+// On Component Mount
+onMounted(async () => {
+  await fetchIssues()
+})
 </script>
 
 <style>
