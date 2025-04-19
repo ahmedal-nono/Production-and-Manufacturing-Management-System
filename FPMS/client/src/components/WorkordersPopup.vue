@@ -34,6 +34,7 @@
           <select v-model="filters.priority" class="rounded border px-2 py-1">
             <option>All Priorities</option>
             <option>High</option>
+            <option>Medium</option>
             <option>Low</option>
           </select>
           <input v-model="filters.date" type="date" class="rounded border px-2 py-1" />
@@ -44,9 +45,9 @@
           <thead class="bg-blue-500 text-white">
             <tr class="">
               <th class="border border-gray-700 px-4 py-2">Work Order ID</th>
-              <th class="border border-gray-700 px-4 py-2">Product</th>
+              <th class="border border-gray-700 px-4 py-2">Name</th>
               <th class="border border-gray-700 px-4 py-2">Quantity</th>
-              <th class="border border-gray-700 px-4 py-2">Due Time</th>
+              <th class="border border-gray-700 px-4 py-2">Due Date</th>
               <th class="border border-gray-700 px-4 py-2">Priority</th>
               <th class="border border-gray-700 px-4 py-2">Status</th>
               <th class="border border-gray-700 px-4 py-2">Actions</th>
@@ -59,31 +60,37 @@
               class="border-t bg-white hover:bg-gray-50"
             >
               <td class="border border-gray-700 px-4 py-2">{{ order.id }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ order.product }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ order.quantity }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ order.due }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ order.name }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ order.quantity_required }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ formatDate(order.due_date) }}</td>
               <td class="border border-gray-700 px-4 py-2">
                 <span :class="getPriorityClass(order.priority)"> ● {{ order.priority }} </span>
               </td>
               <td class="border border-gray-700 px-4 py-2">
                 <span
                   :class="getStatusClass(order.status)"
-                  class="rounded-full bg-green-100 px-2 py-1 text-xs text-green-700"
-                  >{{ order.status }}</span
+                  class="rounded-full px-2 py-1 text-xs"
+                  >{{ order.status || 'Active' }}</span
                 >
               </td>
               <td class="border border-gray-700 px-4 py-2">
                 <button
-                  @click="showViewWorkOrderPopup = true"
+                  @click="viewWorkOrder(order.id)"
                   class="m-1 rounded bg-gray-200 px-2 py-1 text-sm hover:bg-gray-300"
                 >
                   View
                 </button>
                 <button
-                  @click="showEditWorkOrderPopup = true"
+                  @click="editWorkOrder(order.id)"
                   class="m-1 rounded bg-gray-200 px-2 py-1 text-sm hover:bg-gray-300"
                 >
                   Edit
+                </button>
+                <button
+                  @click="deleteWorkOrder(order.id)"
+                  class="m-1 rounded bg-red-200 px-2 py-1 text-sm hover:bg-red-300"
+                >
+                  Delete
                 </button>
               </td>
             </tr>
@@ -102,9 +109,9 @@
           <!-- Left Section -->
           <div class="space-y-4 md:col-span-2">
             <div>
-              <label class="font-semibold">Workorder Name </label>
+              <label class="font-semibold">Workorder Name</label>
               <input
-                v-model="form.workorderName"
+                v-model="form.name"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
                 type="text"
               />
@@ -113,57 +120,75 @@
             <div>
               <label class="font-semibold">Select Work Instruction</label>
               <select
-                v-model="form.workInstruction"
+                v-model="form.work_instruction"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
               >
                 <option disabled value="">Select Work Instruction</option>
-                <option>Weld & Inspect</option>
-                <option>Electrical Assembly</option>
+                <option
+                  v-for="instruction in workInstructions"
+                  :key="instruction.id"
+                  :value="instruction.id"
+                >
+                  {{ instruction.title }}
+                </option>
               </select>
             </div>
 
             <div>
               <label class="font-semibold">Assign to Production Line</label>
               <select
-                v-model="form.productionLine"
+                v-model="form.production_line"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
               >
                 <option disabled value="">Select Production Line</option>
-                <option>Line A</option>
-                <option>Line B</option>
+                <option v-for="line in productionLines" :key="line.id" :value="line.id">
+                  {{ line.line_name }}
+                </option>
               </select>
             </div>
 
             <div>
               <label class="font-semibold">Quantity</label>
               <input
-                v-model="form.quantity"
+                v-model.number="form.quantity_required"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
                 type="number"
               />
             </div>
 
             <div>
-              <label class="font-semibold">Due Time</label>
+              <label class="font-semibold">Due Date</label>
               <input
-                v-model="form.dueTime"
+                v-model="form.due_date"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
-                type="time"
+                type="datetime-local"
               />
             </div>
 
             <div>
-              <label class="font-semibold">Additional Notes</label>
-              <textarea
-                v-model="form.notes"
+              <label class="font-semibold">Priority</label>
+              <select
+                v-model="form.priority"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
-                rows="3"
-              />
+              >
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
             </div>
 
             <div class="flex gap-3">
-              <button class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+              <button
+                @click="createWorkOrder"
+                class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              >
                 Create Work Order
+              </button>
+              <button
+                @click="showCreateWorkOrderPopup = false"
+                class="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+              >
+                Cancel
               </button>
             </div>
           </div>
@@ -177,24 +202,24 @@
                 <input
                   class="m-1 w-full rounded border border-gray-300 px-2 py-1"
                   type="text"
-                  name=""
-                  id=""
+                  readonly
+                  value="Prepare materials"
                 />
               </li>
               <li>
                 <input
                   class="m-1 w-full rounded border border-gray-300 px-2 py-1"
                   type="text"
-                  name=""
-                  id=""
+                  readonly
+                  value="Assemble components"
                 />
               </li>
               <li>
                 <input
                   class="m-1 w-full rounded border border-gray-300 px-2 py-1"
                   type="text"
-                  name=""
-                  id=""
+                  readonly
+                  value="Quality inspection"
                 />
               </li>
             </ul>
@@ -214,6 +239,7 @@
         </div>
       </div>
     </Popup>
+
     <Popup :visible="showEditWorkOrderPopup" @update:visible="showEditWorkOrderPopup = $event">
       <div class="p-6">
         <div class="mb-6 flex flex-row justify-center">
@@ -223,9 +249,9 @@
           <!-- Left Section -->
           <div class="space-y-4 md:col-span-2">
             <div>
-              <label class="font-semibold">Workorder Name </label>
+              <label class="font-semibold">Workorder Name</label>
               <input
-                v-model="form.workorderName"
+                v-model="form.name"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
                 type="text"
               />
@@ -234,57 +260,70 @@
             <div>
               <label class="font-semibold">Select Work Instruction</label>
               <select
-                v-model="form.workInstruction"
+                v-model="form.work_instruction"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
               >
                 <option disabled value="">Select Work Instruction</option>
-                <option>Weld & Inspect</option>
-                <option>Electrical Assembly</option>
+                <option value="1">Weld & Inspect</option>
+                <option value="2">Electrical Assembly</option>
               </select>
             </div>
 
             <div>
               <label class="font-semibold">Assign to Production Line</label>
               <select
-                v-model="form.productionLine"
+                v-model="form.production_line"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
               >
                 <option disabled value="">Select Production Line</option>
-                <option>Line A</option>
-                <option>Line B</option>
+                <option v-for="line in productionLines" :key="line.id" :value="line.line_name">
+                  {{ line.line_name }}
+                </option>
               </select>
             </div>
 
             <div>
               <label class="font-semibold">Quantity</label>
               <input
-                v-model="form.quantity"
+                v-model.number="form.quantity_required"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
                 type="number"
               />
             </div>
 
             <div>
-              <label class="font-semibold">Due Time</label>
+              <label class="font-semibold">Due Date</label>
               <input
-                v-model="form.dueTime"
+                v-model="form.due_date"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
-                type="time"
+                type="datetime-local"
               />
             </div>
 
             <div>
-              <label class="font-semibold">Additional Notes</label>
-              <textarea
-                v-model="form.notes"
+              <label class="font-semibold">Priority</label>
+              <select
+                v-model="form.priority"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
-                rows="3"
-              />
+              >
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
             </div>
 
             <div class="flex gap-3">
-              <button class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-                Create Work Order
+              <button
+                @click="updateWorkOrder"
+                class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              >
+                Update Work Order
+              </button>
+              <button
+                @click="showEditWorkOrderPopup = false"
+                class="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+              >
+                Cancel
               </button>
             </div>
           </div>
@@ -298,24 +337,24 @@
                 <input
                   class="m-1 w-full rounded border border-gray-300 px-2 py-1"
                   type="text"
-                  name=""
-                  id=""
+                  readonly
+                  value="Prepare materials"
                 />
               </li>
               <li>
                 <input
                   class="m-1 w-full rounded border border-gray-300 px-2 py-1"
                   type="text"
-                  name=""
-                  id=""
+                  readonly
+                  value="Assemble components"
                 />
               </li>
               <li>
                 <input
                   class="m-1 w-full rounded border border-gray-300 px-2 py-1"
                   type="text"
-                  name=""
-                  id=""
+                  readonly
+                  value="Quality inspection"
                 />
               </li>
             </ul>
@@ -335,6 +374,7 @@
         </div>
       </div>
     </Popup>
+
     <Popup :visible="showViewWorkOrderPopup" @update:visible="showViewWorkOrderPopup = $event">
       <div class="p-6">
         <div class="mb-6 flex flex-row justify-center">
@@ -345,69 +385,63 @@
           <!-- Left Section -->
           <div class="space-y-4 md:col-span-2">
             <div>
-              <label class="font-semibold">Workorder Name </label>
+              <label class="font-semibold">Workorder Name</label>
               <input
-                v-model="form.workorderName"
+                :value="currentWorkOrder?.name"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
                 type="text"
+                readonly
               />
             </div>
 
             <div>
-              <label class="font-semibold">Select Work Instruction</label>
-              <select
-                v-model="form.workInstruction"
+              <label class="font-semibold">Work Instruction ID</label>
+              <input
+                :value="currentWorkOrder?.work_instruction"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
-              >
-                <option disabled value="">Select Work Instruction</option>
-                <option>Weld & Inspect</option>
-                <option>Electrical Assembly</option>
-              </select>
+                type="text"
+                readonly
+              />
             </div>
 
             <div>
-              <label class="font-semibold">Assign to Production Line</label>
-              <select
-                v-model="form.productionLine"
+              <label class="font-semibold">Production Line ID</label>
+              <input
+                :value="currentWorkOrder?.production_line"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
-              >
-                <option disabled value="">Select Production Line</option>
-                <option>Line A</option>
-                <option>Line B</option>
-              </select>
+                type="text"
+                readonly
+              />
             </div>
 
             <div>
               <label class="font-semibold">Quantity</label>
               <input
-                v-model="form.quantity"
+                :value="currentWorkOrder?.quantity_required"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
-                type="number"
+                type="text"
+                readonly
               />
             </div>
 
             <div>
-              <label class="font-semibold">Due Time</label>
+              <label class="font-semibold">Due Date</label>
               <input
-                v-model="form.dueTime"
+                :value="formatDate(currentWorkOrder?.due_date)"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
-                type="time"
+                type="text"
+                readonly
               />
             </div>
 
             <div>
-              <label class="font-semibold">Additional Notes</label>
-              <textarea
-                v-model="form.notes"
+              <label class="font-semibold">Priority</label>
+              <input
+                :value="currentWorkOrder?.priority"
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
-                rows="3"
+                type="text"
+                readonly
               />
-            </div>
-
-            <div class="flex gap-3">
-              <button class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-                Create Work Order
-              </button>
             </div>
           </div>
 
@@ -420,30 +454,24 @@
                 <input
                   class="m-1 w-full rounded border border-gray-300 px-2 py-1"
                   type="text"
-                  name=""
-                  id=""
-                  value=""
                   readonly
+                  value="Prepare materials"
                 />
               </li>
               <li>
                 <input
                   class="m-1 w-full rounded border border-gray-300 px-2 py-1"
                   type="text"
-                  name=""
-                  id=""
-                  value=""
                   readonly
+                  value="Assemble components"
                 />
               </li>
               <li>
                 <input
                   class="m-1 w-full rounded border border-gray-300 px-2 py-1"
                   type="text"
-                  name=""
-                  id=""
-                  value=""
                   readonly
+                  value="Quality inspection"
                 />
               </li>
             </ul>
@@ -467,9 +495,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
+import axios from 'axios'
 import Popup from '@/components/popup.vue'
 
+// API configuration
+const API_BASE_URL = 'http://localhost:8000/api'
+const PRODUCTION_LINES_ENDPOINT = `${API_BASE_URL}/production-lines/`
+const WORK_ORDERS_ENDPOINT = `${API_BASE_URL}/work_orders/`
+
+// Popup visibility states
 const showCreateWorkOrderPopup = ref(false)
 const showEditWorkOrderPopup = ref(false)
 const showViewWorkOrderPopup = ref(false)
@@ -485,6 +520,7 @@ const emitEvent = defineEmits([
   'update:showCreateWorkOrderPopup',
 ])
 
+// Filters
 const filters = reactive({
   search: '',
   status: 'All Statuses',
@@ -492,33 +528,179 @@ const filters = reactive({
   date: '',
 })
 
-const orders = ref([
-  {
-    id: 'WO-1234',
-    product: 'SUV Door Assembly',
-    quantity: 50,
-    due: '50hr',
-    priority: 'High',
-    status: 'Active',
-  },
-  {
-    id: 'WO-1234',
-    product: 'SUV Door Assembly',
-    quantity: 50,
-    due: '50hr',
-    priority: 'Low',
-    status: 'Inactive',
-  },
-])
+// Work orders data
+const orders = ref<WorkOrder[]>([])
+const productionLines = ref<ProductionLine[]>([])
+const currentWorkOrder = ref<WorkOrder | null>(null)
 
+// Form data
+const form = reactive({
+  id: null as number | null,
+  name: '',
+  quantity_required: 0,
+  due_date: '',
+  priority: 'Medium',
+  work_instruction: '',
+  production_line: '',
+})
+
+// Type definitions
+interface WorkOrder {
+  id: number
+  name: string
+  quantity_required: number
+  due_date: string
+  priority: string
+  work_instruction: number
+  production_line: number
+  status?: string
+}
+
+interface ProductionLine {
+  id: number
+  line_name: string // Changed from 'name' to 'line_name'
+  capacity_limit: number
+  maintenance_schedule: string
+  preferred_shift: string
+  status: string
+  oee_target: number
+}
+
+const activeProductionLines = computed(() => {
+  return productionLines.value.filter((line) => line.status === 'Active')
+})
+
+// Fetch all work orders
+const fetchWorkOrders = async () => {
+  try {
+    const response = await axios.get(WORK_ORDERS_ENDPOINT)
+    orders.value = response.data
+  } catch (error) {
+    console.error('Error fetching work orders:', error)
+  }
+}
+
+// Create a new work order
+const createWorkOrder = async () => {
+  try {
+    const payload = {
+      name: form.name,
+      quantity_required: form.quantity_required,
+      due_date: form.due_date,
+      priority: form.priority,
+      work_instruction: parseInt(form.work_instruction as string),
+      production_line: parseInt(form.production_line as string),
+    }
+
+    const response = await axios.post(WORK_ORDERS_ENDPOINT, payload)
+    orders.value.push(response.data)
+    showCreateWorkOrderPopup.value = false
+    resetForm()
+  } catch (error) {
+    console.error('Error creating work order:', error)
+  }
+}
+
+// View a work order
+const viewWorkOrder = async (id: number) => {
+  try {
+    const response = await axios.get(`${WORK_ORDERS_ENDPOINT}${id}/`)
+    currentWorkOrder.value = response.data
+    showViewWorkOrderPopup.value = true
+  } catch (error) {
+    console.error('Error fetching work order:', error)
+  }
+}
+
+// Edit a work order
+const editWorkOrder = async (id: number) => {
+  try {
+    const response = await axios.get(`${WORK_ORDERS_ENDPOINT}${id}/`)
+    const order = response.data
+
+    // Populate form with existing data
+    form.id = order.id
+    form.name = order.name
+    form.quantity_required = order.quantity_required
+    form.due_date = order.due_date.slice(0, 16) // Convert to datetime-local format
+    form.priority = order.priority
+    form.work_instruction = order.work_instruction.toString()
+    form.production_line = order.production_line.toString()
+
+    showEditWorkOrderPopup.value = true
+  } catch (error) {
+    console.error('Error fetching work order for edit:', error)
+  }
+}
+
+// Update a work order
+const updateWorkOrder = async () => {
+  if (!form.id) return
+
+  try {
+    const payload = {
+      name: form.name,
+      quantity_required: form.quantity_required,
+      due_date: form.due_date,
+      priority: form.priority,
+      work_instruction: parseInt(form.work_instruction as string),
+      production_line: parseInt(form.production_line as string),
+    }
+
+    const response = await axios.put(`${WORK_ORDERS_ENDPOINT}${form.id}/`, payload)
+
+    // Update the order in the list
+    const index = orders.value.findIndex((order) => order.id === form.id)
+    if (index !== -1) {
+      orders.value[index] = response.data
+    }
+
+    showEditWorkOrderPopup.value = false
+    resetForm()
+  } catch (error) {
+    console.error('Error updating work order:', error)
+  }
+}
+
+// Delete a work order
+const deleteWorkOrder = async (id: number) => {
+  if (confirm('Are you sure you want to delete this work order?')) {
+    try {
+      await axios.delete(`${WORK_ORDERS_ENDPOINT}${id}/`)
+      orders.value = orders.value.filter((order) => order.id !== id)
+    } catch (error) {
+      console.error('Error deleting work order:', error)
+    }
+  }
+}
+
+// Reset form
+const resetForm = () => {
+  form.id = null
+  form.name = ''
+  form.quantity_required = 0
+  form.due_date = ''
+  form.priority = 'Medium'
+  form.work_instruction = ''
+  form.production_line = ''
+}
+
+// Format date for display
+const formatDate = (dateString?: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString()
+}
+
+// Filter work orders
 const filteredOrders = computed(() => {
   const searchLower = filters.search.toLowerCase()
   return orders.value.filter((order) => {
     const matchesSearch =
-      order.id.toLowerCase().includes(searchLower) ||
-      order.product.toLowerCase().includes(searchLower)
+      order.id.toString().includes(searchLower) || order.name.toLowerCase().includes(searchLower)
 
-    const matchesStatus = filters.status === 'All Statuses' || order.status === filters.status
+    const matchesStatus =
+      filters.status === 'All Statuses' || (order.status ? order.status === filters.status : true)
 
     const matchesPriority =
       filters.priority === 'All Priorities' || order.priority === filters.priority
@@ -527,21 +709,74 @@ const filteredOrders = computed(() => {
   })
 })
 
+// Priority and status styling
 const getPriorityClass = (priority: string) => {
-  return priority === 'High' ? 'text-red-600' : 'text-blue-600'
+  switch (priority) {
+    case 'High':
+      return 'text-red-600'
+    case 'Medium':
+      return 'text-yellow-600'
+    case 'Low':
+      return 'text-blue-600'
+    default:
+      return 'text-gray-600'
+  }
 }
 
-const getStatusClass = (status: string) => {
-  return status === 'Active' && 'active' ? 'bg-green-200 text-green-700' : 'bg-red-200 text-red-700'
+const getStatusClass = (status?: string) => {
+  switch (status) {
+    case 'Active':
+      return 'bg-green-200 text-green-700'
+    case 'Completed':
+      return 'bg-blue-200 text-blue-700'
+    case 'Pending':
+      return 'bg-yellow-200 text-yellow-700'
+    case 'Inactive':
+      return 'bg-red-200 text-red-700'
+    default:
+      return 'bg-gray-200 text-gray-700'
+  }
+}
+const fetchProductionLines = async () => {
+  try {
+    const response = await axios.get(PRODUCTION_LINES_ENDPOINT)
+    productionLines.value = response.data
+  } catch (error) {
+    console.error('Error fetching production lines:', error)
+  }
+}
+// Fetch work orders when component mounts
+onMounted(() => {
+  fetchWorkOrders()
+  fetchProductionLines() // Add this line
+})
+
+const WORK_INSTRUCTIONS_ENDPOINT = `${API_BASE_URL}/work_instructions/`
+
+// Add this interface
+interface WorkInstruction {
+  id: number
+  name: string
+  // Add other fields if your API returns more
 }
 
-const form = ref({
-  workorderName: '',
-  workInstruction: '',
-  productionLine: '',
-  quantity: '',
-  dueTime: '',
-  notes: '',
+// Add this reactive property
+const workInstructions = ref<WorkInstruction[]>([])
+
+// Add this fetch function
+const fetchWorkInstructions = async () => {
+  try {
+    const response = await axios.get(WORK_INSTRUCTIONS_ENDPOINT)
+    workInstructions.value = response.data
+  } catch (error) {
+    console.error('Error fetching work instructions:', error)
+  }
+}
+
+// Update your onMounted hook
+onMounted(() => {
+  fetchWorkOrders()
+  fetchWorkInstructions() // Add this line
 })
 </script>
 

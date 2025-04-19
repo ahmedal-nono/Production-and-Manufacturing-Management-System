@@ -17,12 +17,14 @@ from .serializers import BOMSerializer, ProductSerializer, WorkflowSerializer, S
 class InspectionCheckpointViewSet(viewsets.ModelViewSet):
     queryset = InspectionCheckpoint.objects.all()
     serializer_class = InspectionCheckpointSerializer
+    permission_classes = []  # No permission required for this viewset
 
 class BOMViewSet(viewsets.ModelViewSet):
     queryset = BOM.objects.all()
     serializer_class = BOMSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     search_fields = ['name', 'product_code', 'version']
+    permission_classes = [] 
 
 # Workflow ViewSet (Searchable Workflow)
 class WorkflowViewSet(viewsets.ModelViewSet):
@@ -30,6 +32,7 @@ class WorkflowViewSet(viewsets.ModelViewSet):
     serializer_class = WorkflowSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     search_fields = ['name', 'description']
+    permission_classes = [] 
 
     def create(self, request, *args, **kwargs):
         """
@@ -47,6 +50,7 @@ class WorkflowViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = [] 
 
     # Single endpoint to create the Product with BOM and Workflow
     def create(self, request, *args, **kwargs):
@@ -79,6 +83,7 @@ class StageViewSet(viewsets.ModelViewSet):
     serializer_class = StageSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)  # Enable filtering and searching
     search_fields = ['name', 'assigned_work_center__name', 'work_order']
+    permission_classes = [] 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -90,15 +95,18 @@ class StageViewSet(viewsets.ModelViewSet):
 class ProductionLineViewSet(viewsets.ModelViewSet):
     queryset = ProductionLine.objects.all()
     serializer_class = ProductionLineSerializer
+    permission_classes = [] 
 
 
 
 class ProductionOrderViewSet(viewsets.ModelViewSet):
     queryset = ProductionOrder.objects.all()
     serializer_class = ProductionOrderSerializer
+    permission_classes = [] 
 
 
 
 class ReschedulingViewSet(viewsets.ModelViewSet):
     queryset = Rescheduling.objects.all()
     serializer_class = ReschedulingSerializer
+    permission_classes = [] 
