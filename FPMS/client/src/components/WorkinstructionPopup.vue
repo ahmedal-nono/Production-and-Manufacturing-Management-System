@@ -18,72 +18,75 @@
       <!-- Filters -->
       <div class="mb-4 flex flex-wrap items-center gap-4">
         <input
+          v-model="searchQuery"
           type="text"
           placeholder="Search by title, product, or keyword"
           class="w-full flex-1 rounded border px-4 py-2 sm:w-auto"
+          @input="fetchWorkInstructions"
         />
-        <select class="rounded border px-4 py-2">
-          <option>All Products</option>
+        <select
+          v-model="statusFilter"
+          class="rounded border px-4 py-2"
+          @change="fetchWorkInstructions"
+        >
+          <option value="">All Statuses</option>
+          <option value="Not Started">Not Started</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Completed">Completed</option>
         </select>
-        <select class="rounded border px-4 py-2">
-          <option>All Workstations</option>
-        </select>
-        <select class="rounded border px-4 py-2">
-          <option>All Statuses</option>
-        </select>
-        <input type="date" class="rounded border px-4 py-2" />
+      </div>
+
+      <!-- Loading state -->
+      <div v-if="loading" class="flex justify-center py-8">
+        <div
+          class="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"
+        ></div>
       </div>
 
       <!-- Table -->
-      <div class="overflow-x-auto">
+      <div v-else class="overflow-x-auto">
         <table class="w-full text-center">
           <thead class="bg-blue-500 text-white">
             <tr>
               <th class="border border-gray-700 px-4 py-2">Title</th>
-              <th class="border border-gray-700 px-4 py-2">Product</th>
+              <th class="border border-gray-700 px-4 py-2">Tools Required</th>
               <th class="border border-gray-700 px-4 py-2">Last Updated</th>
               <th class="border border-gray-700 px-4 py-2">Status</th>
-              <th class="border border-gray-700 px-4 py-2">Attachments</th>
               <th class="border border-gray-700 px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="(item, index) in instructions"
+              v-for="(item, index) in workInstructions"
               :key="index"
               class="border bg-white hover:bg-gray-50"
             >
               <td class="border border-gray-700 px-4 py-2">{{ item.title }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ item.product }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ item.updated }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ item.tools_required }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ formatDate(item.updated_at) }}</td>
               <td class="border border-gray-700 px-4 py-2">
-                <span
-                  :class="
-                    item.status === 'Active'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-200 text-gray-600'
-                  "
-                  class="rounded-full px-2 py-1 text-xs"
-                >
+                <span :class="statusClass(item.status)" class="rounded-full px-2 py-1 text-xs">
                   {{ item.status }}
                 </span>
               </td>
               <td class="space-x-2 border border-gray-700 px-4 py-2">
-                <button class="text-gray-700 hover:text-black">📄</button>
-                <button class="text-gray-700 hover:text-black">🖼️</button>
-              </td>
-              <td class="space-x-2 border border-gray-700 px-4 py-2">
                 <button
-                  @click="showViewWorkinstructionPopup = true"
+                  @click="viewWorkInstruction(item.id)"
                   class="m-1 rounded bg-gray-200 px-2 py-1 text-sm hover:bg-gray-300"
                 >
                   View
                 </button>
-                <button class="m-1 rounded bg-gray-200 px-2 py-1 text-sm hover:bg-gray-300">
-                  Link
+                <button
+                  @click="editWorkInstruction(item.id)"
+                  class="m-1 rounded bg-gray-200 px-2 py-1 text-sm hover:bg-gray-300"
+                >
+                  Edit
                 </button>
-                <button class="m-1 rounded bg-gray-200 px-2 py-1 text-sm hover:bg-gray-300">
-                  Download
+                <button
+                  @click="deleteWorkInstruction(item.id)"
+                  class="m-1 rounded bg-red-200 px-2 py-1 text-sm hover:bg-red-300"
+                >
+                  Delete
                 </button>
               </td>
             </tr>
@@ -93,6 +96,7 @@
     </div>
   </Popup>
 
+  <!-- Create Work Instruction Popup -->
   <Popup
     :visible="showCreateWorkinstructionPopup"
     @update:visible="showCreateWorkinstructionPopup = $event"
@@ -104,50 +108,56 @@
       <section class="mb-6 rounded border p-4">
         <h2 class="mb-4 font-semibold">Work instruction Information</h2>
         <div class="mb-4">
-          <label class="mb-1 block font-medium">Task Name</label>
+          <label class="mb-1 block font-medium">Title</label>
           <input
-            v-model="form.taskName"
+            v-model="form.title"
             type="text"
             placeholder="E.g., Brake System Assembly"
             class="w-full rounded border px-3 py-2"
+            required
           />
         </div>
         <div>
           <label class="mb-1 block font-medium">Status</label>
           <select v-model="form.status" class="w-full rounded border px-3 py-2">
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
+            <option value="Not Started">Not Started</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
           </select>
         </div>
+      </section>
+
+      <!-- Overall Description -->
+      <section class="mb-6 rounded border p-4">
+        <h2 class="mb-4 font-semibold">Overall Description</h2>
+        <textarea
+          v-model="form.step_description"
+          rows="3"
+          class="w-full rounded border px-3 py-2"
+          placeholder="Overall description of the work instruction"
+          required
+        ></textarea>
       </section>
 
       <!-- Step-by-Step Instructions -->
       <section class="mb-6 rounded border p-4">
         <h2 class="mb-4 font-semibold">Step-by-Step Instructions</h2>
         <div
-          v-for="(step, index) in form.steps"
+          v-for="(step, index) in form.task_steps"
           :key="index"
           class="relative mb-6 rounded border p-3"
         >
-          <label class="mb-1 block font-medium">Step Description</label>
+          <label class="mb-1 block font-medium">Step {{ index + 1 }}</label>
           <textarea
-            v-model="step.description"
+            v-model="form.task_steps[index]"
             rows="3"
             class="w-full rounded border px-3 py-2"
+            placeholder="Enter step description"
+            required
           ></textarea>
-          <div class="mt-2 flex items-center gap-2">
-            <label class="inline-block text-sm">
-              <input type="file" class="hidden" @change="attachMedia($event, index)" />
-              <button class="rounded border bg-gray-100 px-3 py-1 text-sm hover:bg-gray-200">
-                📎 Attach Media
-              </button>
-            </label>
-            <span v-if="step.media" class="text-sm text-green-600"
-              >Attached: {{ step.media.name }}</span
-            >
-          </div>
           <button
             @click="removeStep(index)"
+            v-if="form.task_steps.length > 1"
             class="absolute top-2 right-4 text-lg text-red-500 hover:text-red-700"
           >
             Delete
@@ -167,38 +177,48 @@
         <div class="mb-4">
           <label class="mb-1 block font-medium">Tools Required</label>
           <textarea
-            v-model="form.tools"
+            v-model="form.tools_required"
             rows="3"
             class="w-full rounded border px-3 py-2"
+            required
           ></textarea>
         </div>
         <div>
-          <label class="mb-1 block font-medium">Materials</label>
-          <input v-model="form.materials" type="text" class="w-full rounded border px-3 py-2" />
+          <label class="mb-1 block font-medium">Materials Required</label>
+          <textarea
+            v-model="form.materials_required"
+            rows="3"
+            class="w-full rounded border px-3 py-2"
+            required
+          ></textarea>
         </div>
       </section>
 
       <!-- Buttons -->
       <div class="flex justify-end gap-4">
-        <button class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+        <button
+          @click="createWorkInstruction"
+          class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+        >
           Save & Publish
         </button>
       </div>
     </div>
   </Popup>
 
+  <!-- View Work Instruction Popup -->
   <Popup
     :visible="showViewWorkinstructionPopup"
     @update:visible="showViewWorkinstructionPopup = $event"
   >
-    <div class="">
+    <div v-if="currentWorkInstruction" class="">
       <!-- Header -->
       <div class="mb-6 flex items-center justify-between">
-        <h1 class="text-2xl font-bold">Car Door Welding Process</h1>
+        <h1 class="text-2xl font-bold">{{ currentWorkInstruction.title }}</h1>
         <div class="space-x-2">
           <button class="rounded bg-blue-500 px-3 py-1 text-white hover:bg-blue-600">PDF</button>
           <button
-            @click="showEditWorkinstructionPopup = true"
+            @click="editWorkInstruction(currentWorkInstruction.id)"
             class="rounded bg-blue-100 px-3 py-1 text-blue-700 hover:bg-blue-200"
           >
             Edit
@@ -209,28 +229,37 @@
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <!-- Left: Instructions -->
         <div class="space-y-6 lg:col-span-2">
+          <!-- Overall Description -->
+          <div class="rounded bg-white p-4 shadow">
+            <h2 class="mb-2 text-lg font-semibold">Description</h2>
+            <p class="text-gray-700">{{ currentWorkInstruction.step_description }}</p>
+          </div>
+
           <!-- Steps -->
-          <div v-for="(step, index) in steps" :key="index" class="rounded bg-white p-4 shadow">
+          <div
+            v-for="(step, index) in currentWorkInstruction.task_steps.split('\n')"
+            :key="index"
+            class="rounded bg-white p-4 shadow"
+          >
             <div class="flex items-start gap-4">
               <div class="text-xl font-bold text-gray-600">{{ index + 1 }}</div>
               <div>
-                <h3 class="mb-1 text-lg font-semibold">{{ step.title }}</h3>
-                <p class="mb-2 text-gray-700">{{ step.description }}</p>
-                <div v-if="step.media" class="overflow-hidden rounded border">
-                  <img :src="step.media" alt="Step media" class="w-full object-cover" />
-                </div>
+                <p class="mb-2 text-gray-700">{{ step }}</p>
               </div>
             </div>
           </div>
 
-          <!-- Safety Precautions -->
+          <!-- Tools & Materials -->
           <div class="rounded bg-white p-4 shadow">
-            <h2 class="mb-2 text-lg font-semibold">Safety Precautions</h2>
-            <ul class="list-disc space-y-1 pl-6 text-gray-700">
-              <li>Wear proper PPE (helmet, gloves, apron)</li>
-              <li>Verify machine grounding before operation</li>
-              <li>Keep work area ventilated</li>
-            </ul>
+            <h2 class="mb-2 text-lg font-semibold">Tools & Materials</h2>
+            <div class="mb-4">
+              <h3 class="font-medium">Tools Required:</h3>
+              <p class="text-gray-700">{{ currentWorkInstruction.tools_required }}</p>
+            </div>
+            <div>
+              <h3 class="font-medium">Materials Required:</h3>
+              <p class="text-gray-700">{{ currentWorkInstruction.materials_required }}</p>
+            </div>
           </div>
         </div>
 
@@ -238,92 +267,76 @@
         <div class="space-y-4 rounded bg-white p-4 shadow">
           <div>
             <h2 class="text-md font-semibold text-gray-800">Details</h2>
-            <p><strong>Product:</strong> SUV Model X</p>
-            <p><strong>Last Updated:</strong> 2023-08-15 14:30</p>
-            <p><strong>Status:</strong> Active</p>
-          </div>
-
-          <div>
-            <h2 class="text-md font-semibold text-gray-800">Attachments</h2>
-            <ul class="space-y-2">
-              <li
-                v-for="file in attachments"
-                :key="file.name"
-                class="flex items-center justify-between rounded bg-gray-100 px-3 py-2"
-              >
-                <span>{{ file.name }}</span>
-                <button class="text-blue-600 hover:underline">⬇</button>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h2 class="text-md font-semibold text-gray-800">Revision History</h2>
-            <ul class="list-disc space-y-1 pl-6 text-sm text-gray-700">
-              <li>2023-08-15: Updated safety guidelines</li>
-              <li>2023-07-01: Initial version approved</li>
-            </ul>
+            <p><strong>Status:</strong> {{ currentWorkInstruction.status }}</p>
+            <p>
+              <strong>Last Updated:</strong> {{ formatDate(currentWorkInstruction.updated_at) }}
+            </p>
           </div>
         </div>
       </div>
     </div>
   </Popup>
 
+  <!-- Edit Work Instruction Popup -->
   <Popup
     :visible="showEditWorkinstructionPopup"
     @update:visible="showEditWorkinstructionPopup = $event"
   >
-    <div class="">
+    <div v-if="currentWorkInstruction" class="">
       <h1 class="mb-6 text-2xl font-bold">Edit Work Instruction</h1>
 
       <!-- Basic Information -->
       <section class="mb-6 rounded border p-4">
         <h2 class="mb-4 font-semibold">Work instruction Information</h2>
         <div class="mb-4">
-          <label class="mb-1 block font-medium">Task Name</label>
+          <label class="mb-1 block font-medium">Title</label>
           <input
-            v-model="form.taskName"
+            v-model="currentWorkInstruction.title"
             type="text"
             placeholder="E.g., Brake System Assembly"
             class="w-full rounded border px-3 py-2"
+            required
           />
         </div>
         <div>
           <label class="mb-1 block font-medium">Status</label>
-          <select v-model="form.status" class="w-full rounded border px-3 py-2">
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
+          <select v-model="currentWorkInstruction.status" class="w-full rounded border px-3 py-2">
+            <option value="Not Started">Not Started</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
           </select>
         </div>
+      </section>
+
+      <!-- Overall Description -->
+      <section class="mb-6 rounded border p-4">
+        <h2 class="mb-4 font-semibold">Overall Description</h2>
+        <textarea
+          v-model="currentWorkInstruction.step_description"
+          rows="3"
+          class="w-full rounded border px-3 py-2"
+          required
+        ></textarea>
       </section>
 
       <!-- Step-by-Step Instructions -->
       <section class="mb-6 rounded border p-4">
         <h2 class="mb-4 font-semibold">Step-by-Step Instructions</h2>
         <div
-          v-for="(step, index) in form.steps"
+          v-for="(step, index) in currentWorkInstruction.task_steps_array"
           :key="index"
           class="relative mb-6 rounded border p-3"
         >
-          <label class="mb-1 block font-medium">Step Description</label>
+          <label class="mb-1 block font-medium">Step {{ index + 1 }}</label>
           <textarea
-            v-model="step.description"
+            v-model="currentWorkInstruction.task_steps_array[index]"
             rows="3"
             class="w-full rounded border px-3 py-2"
+            required
           ></textarea>
-          <div class="mt-2 flex items-center gap-2">
-            <label class="inline-block text-sm">
-              <input type="file" class="hidden" @change="attachMedia($event, index)" />
-              <button class="rounded border bg-gray-100 px-3 py-1 text-sm hover:bg-gray-200">
-                📎 Attach Media
-              </button>
-            </label>
-            <span v-if="step.media" class="text-sm text-green-600"
-              >Attached: {{ step.media.name }}</span
-            >
-          </div>
           <button
             @click="removeStep(index)"
+            v-if="currentWorkInstruction.task_steps_array.length > 1"
             class="absolute top-2 right-4 text-lg text-red-500 hover:text-red-700"
           >
             Delete
@@ -343,21 +356,30 @@
         <div class="mb-4">
           <label class="mb-1 block font-medium">Tools Required</label>
           <textarea
-            v-model="form.tools"
+            v-model="currentWorkInstruction.tools_required"
             rows="3"
             class="w-full rounded border px-3 py-2"
+            required
           ></textarea>
         </div>
         <div>
-          <label class="mb-1 block font-medium">Materials</label>
-          <input v-model="form.materials" type="text" class="w-full rounded border px-3 py-2" />
+          <label class="mb-1 block font-medium">Materials Required</label>
+          <textarea
+            v-model="currentWorkInstruction.materials_required"
+            rows="3"
+            class="w-full rounded border px-3 py-2"
+            required
+          ></textarea>
         </div>
       </section>
 
       <!-- Buttons -->
       <div class="flex justify-end gap-4">
-        <button class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-          Save & Publish
+        <button
+          @click="updateWorkInstruction"
+          class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+        >
+          Save Changes
         </button>
       </div>
     </div>
@@ -365,33 +387,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import axios from 'axios'
 import Popup from '@/components/popup.vue'
 
-interface Instruction {
+interface WorkInstruction {
+  id: number
   title: string
-  product: string
-  updated: string
+  task_steps: string
+  tools_required: string
+  materials_required: string
   status: string
-  attachments: string[]
+  step_description: string
+  created_at: string
+  updated_at: string
+  task_steps_array: string[]
 }
 
-interface Step {
-  description: string
-  media: File | null
-}
-
-interface Form {
-  taskName: string
-  status: string
-  steps: Step[]
-  tools: string
-  materials: string
-}
+const BASE_URL = 'http://127.0.0.1:8000/api'
 
 const showCreateWorkinstructionPopup = ref<boolean>(false)
 const showViewWorkinstructionPopup = ref<boolean>(false)
 const showEditWorkinstructionPopup = ref<boolean>(false)
+const loading = ref<boolean>(false)
+const searchQuery = ref<string>('')
+const statusFilter = ref<string>('')
+const workInstructions = ref<WorkInstruction[]>([])
+const currentWorkInstruction = ref<WorkInstruction | null>(null)
+
+const form = reactive({
+  title: '',
+  task_steps: [''] as string[],
+  tools_required: '',
+  materials_required: '',
+  status: 'Not Started',
+  step_description: ''
+})
 
 defineProps<{
   showWorkinstructionPopup: boolean
@@ -403,77 +434,236 @@ const emitEvent = defineEmits<{
   (e: 'update:showWorkinstructionPopup', value: boolean): void
 }>()
 
-const instructions = ref<Instruction[]>([
-  {
-    title: 'Car Door Welding Process',
-    product: 'SUV Model X',
-    updated: '2023-08-15 14:30',
-    status: 'Active',
-    attachments: ['pdf', 'image'],
-  },
-  {
-    title: 'Battery Installation',
-    product: 'SUV Model X',
-    updated: '2023-07-12 10:00',
-    status: 'Inactive',
-    attachments: ['pdf'],
-  },
-  {
-    title: 'Quality Final Check',
-    product: 'SUV Model Y',
-    updated: '2023-09-01 08:45',
-    status: 'Active',
-    attachments: ['pdf', 'image'],
-  },
-])
+// Fetch all work instructions
+const fetchWorkInstructions = async () => {
+  try {
+    loading.value = true
+    let url = `${BASE_URL}/work_instructions/`
+    const params = new URLSearchParams()
 
-const form = reactive<Form>({
-  taskName: '',
-  status: 'Active',
-  steps: [
-    {
-      description: '',
-      media: null,
-    },
-  ],
-  tools: '',
-  materials: '',
-})
+    if (searchQuery.value) {
+      params.append('search', searchQuery.value)
+    }
 
-const addStep = (): void => {
-  form.steps.push({ description: '', media: null })
-}
+    if (statusFilter.value) {
+      params.append('status', statusFilter.value)
+    }
 
-const removeStep = (index: number): void => {
-  form.steps.splice(index, 1)
-}
+    if (params.toString()) {
+      url += `?${params.toString()}`
+    }
 
-const attachMedia = (event: Event, index: number): void => {
-  const file = (event.target as HTMLInputElement).files?.[0]
-  if (file) {
-    form.steps[index].media = file
+    const response = await axios.get(url)
+    workInstructions.value = response.data
+  } catch (error) {
+    console.error('Error fetching work instructions:', error)
+  } finally {
+    loading.value = false
   }
 }
 
-const steps = [
-  {
-    title: 'Prepare Welding Equipment',
-    description: 'Check and calibrate welding machine according to specifications',
-    media: 'https://via.placeholder.com/400x150?text=Welding+machine+setup',
-  },
-  {
-    title: 'Component Alignment',
-    description: 'Position door components using alignment jig Model X-123',
-    media: 'https://via.placeholder.com/400x150?text=Component+alignment+jig',
-  },
-  {
-    title: 'Spot Welding Process',
-    description: 'Perform 12 spot welds at marked locations',
-    media: 'https://via.placeholder.com/400x150?text=Welding+points+diagram',
-  },
-]
+// View a single work instruction
+const viewWorkInstruction = async (id: number) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/work_instructions/${id}/`)
+    currentWorkInstruction.value = {
+      ...response.data,
+      task_steps_array: response.data.task_steps.split('\n').filter(step => step.trim())
+    }
+    showViewWorkinstructionPopup.value = true
+  } catch (error) {
+    console.error('Error fetching work instruction:', error)
+  }
+}
 
-const attachments = [{ name: 'Welding_Specs.pdf' }, { name: 'Welding_Demo.mp4' }]
+// Edit a work instruction
+const editWorkInstruction = async (id: number) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/work_instructions/${id}/`)
+    currentWorkInstruction.value = {
+      ...response.data,
+      task_steps_array: response.data.task_steps.split('\n').filter(step => step.trim())
+    }
+    showEditWorkinstructionPopup.value = true
+    showViewWorkinstructionPopup.value = false
+  } catch (error) {
+    console.error('Error fetching work instruction:', error)
+  }
+}
+
+// Create a new work instruction
+const createWorkInstruction = async () => {
+  try {
+    // Validate required fields
+    if (!form.title.trim()) {
+      alert('Please enter a title')
+      return
+    }
+
+    if (!form.step_description.trim()) {
+      alert('Please enter an overall description')
+      return
+    }
+
+    // Filter out empty steps
+    const nonEmptySteps = form.task_steps.filter(step => step.trim())
+    if (nonEmptySteps.length === 0) {
+      alert('Please add at least one step with content')
+      return
+    }
+
+    if (!form.tools_required.trim()) {
+      alert('Please enter required tools')
+      return
+    }
+
+    if (!form.materials_required.trim()) {
+      alert('Please enter required materials')
+      return
+    }
+
+    const payload = {
+      title: form.title,
+      task_steps: nonEmptySteps.join('\n'),
+      tools_required: form.tools_required,
+      materials_required: form.materials_required,
+      status: form.status,
+      step_description: form.step_description
+    }
+
+    await axios.post(`${BASE_URL}/work_instructions/`, payload)
+    showCreateWorkinstructionPopup.value = false
+    resetForm()
+    fetchWorkInstructions()
+  } catch (error) {
+    console.error('Error creating work instruction:', error)
+    alert('Failed to create work instruction. Please check all fields.')
+  }
+}
+
+// Update a work instruction
+const updateWorkInstruction = async () => {
+  if (!currentWorkInstruction.value) return
+
+  try {
+    // Validate required fields
+    if (!currentWorkInstruction.value.title.trim()) {
+      alert('Please enter a title')
+      return
+    }
+
+    if (!currentWorkInstruction.value.step_description.trim()) {
+      alert('Please enter an overall description')
+      return
+    }
+
+    // Filter out empty steps
+    const nonEmptySteps = currentWorkInstruction.value.task_steps_array.filter(step => step.trim())
+    if (nonEmptySteps.length === 0) {
+      alert('Please add at least one step with content')
+      return
+    }
+
+    if (!currentWorkInstruction.value.tools_required.trim()) {
+      alert('Please enter required tools')
+      return
+    }
+
+    if (!currentWorkInstruction.value.materials_required.trim()) {
+      alert('Please enter required materials')
+      return
+    }
+
+    const payload = {
+      title: currentWorkInstruction.value.title,
+      task_steps: nonEmptySteps.join('\n'),
+      tools_required: currentWorkInstruction.value.tools_required,
+      materials_required: currentWorkInstruction.value.materials_required,
+      status: currentWorkInstruction.value.status,
+      step_description: currentWorkInstruction.value.step_description
+    }
+
+    await axios.put(`${BASE_URL}/work_instructions/${currentWorkInstruction.value.id}/`, payload)
+    showEditWorkinstructionPopup.value = false
+    fetchWorkInstructions()
+  } catch (error) {
+    console.error('Error updating work instruction:', error)
+    alert('Failed to update work instruction. Please check all fields.')
+  }
+}
+
+// Delete a work instruction
+const deleteWorkInstruction = async (id: number) => {
+  if (!confirm('Are you sure you want to delete this work instruction?')) return
+
+  try {
+    await axios.delete(`${BASE_URL}/work_instructions/${id}/`)
+    fetchWorkInstructions()
+  } catch (error) {
+    console.error('Error deleting work instruction:', error)
+  }
+}
+
+// Add a new step
+const addStep = () => {
+  if (showEditWorkinstructionPopup.value && currentWorkInstruction.value) {
+    currentWorkInstruction.value.task_steps_array.push('')
+  } else {
+    form.task_steps.push('')
+  }
+}
+
+// Remove a step
+const removeStep = (index: number) => {
+  if (showEditWorkinstructionPopup.value && currentWorkInstruction.value) {
+    if (currentWorkInstruction.value.task_steps_array.length > 1) {
+      currentWorkInstruction.value.task_steps_array.splice(index, 1)
+    } else {
+      alert('You must have at least one step')
+    }
+  } else {
+    if (form.task_steps.length > 1) {
+      form.task_steps.splice(index, 1)
+    } else {
+      alert('You must have at least one step')
+    }
+  }
+}
+
+// Reset form
+const resetForm = () => {
+  form.title = ''
+  form.task_steps = ['']
+  form.tools_required = ''
+  form.materials_required = ''
+  form.status = 'Not Started'
+  form.step_description = ''
+}
+
+// Format date
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+}
+
+// Status class
+const statusClass = (status: string) => {
+  switch (status) {
+    case 'Completed':
+      return 'bg-green-100 text-green-700'
+    case 'In Progress':
+      return 'bg-blue-100 text-blue-700'
+    case 'Not Started':
+      return 'bg-gray-200 text-gray-600'
+    default:
+      return 'bg-gray-200 text-gray-600'
+  }
+}
+
+// Initialize
+onMounted(() => {
+  fetchWorkInstructions()
+})
 </script>
 
 <style>
