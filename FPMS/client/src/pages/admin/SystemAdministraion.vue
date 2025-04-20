@@ -201,7 +201,7 @@
               <td class="border border-gray-700 px-4 py-2">
                 {{ user.account_status ? 'Active' : 'Inactive' }}
               </td>
-              <td class="flex justify-center gap-2 border border-gray-700 px-4 py-2">
+              <td class="flex justify-center gap-2 border-gray-700 px-4 py-2">
                 <button
                   @click="openEditUserPopup(user)"
                   class="cursor-pointer rounded-lg bg-yellow-500 p-2 text-white"

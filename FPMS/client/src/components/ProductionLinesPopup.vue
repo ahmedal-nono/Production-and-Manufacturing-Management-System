@@ -64,7 +64,7 @@
                 <td class="border border-gray-700 px-4 py-2">{{ line.oee ?? '-' }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ line.workcenters }}</td>
                 <td class="border border-gray-700 px-4 py-2">
-                  <span v-if="line.workflows?.length">
+                  <span v-if="Array.isArray(line.workflows) && line.workflows.length">
                     {{ line.workflows.join(', ') }}
                   </span>
                   <span v-else class="text-gray-400">-</span>
@@ -76,6 +76,12 @@
                   >
                     Edit
                   </button>
+                  <button
+                    @click="deleteProductionLine(line.id)"
+                    class="ml-2 cursor-pointer rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -83,7 +89,7 @@
         </div>
 
         <button
-          @click="showAddProductionLinesPopup = true"
+          @click="openAddPopup"
           class="mt-4 inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
         >
           + Add New Line
@@ -364,8 +370,9 @@ const resetForm = () => {
 
 const handleAddProductionLine = () => {
   const newLine = {
-    id: productionLinesStore.getNextId,
+    id: productionLinesStore.getNextId(),
     ...form.value,
+    workflows: form.value.workflows.split(',').map((workflow) => workflow.trim()), // Ensure workflows are stored as an array
   }
   productionLinesStore.addProductionLine(newLine)
   resetForm()
@@ -374,19 +381,37 @@ const handleAddProductionLine = () => {
 
 const handleEditProductionLine = () => {
   if (editingLineId.value) {
-    productionLinesStore.editProductionLine(editingLineId.value, form.value)
+    const updatedLine = {
+      ...form.value,
+      workflows: form.value.workflows.split(',').map((workflow) => workflow.trim()), // Ensure workflows are stored as an array
+    }
+    productionLinesStore.editProductionLine(editingLineId.value, updatedLine)
     resetForm()
     showEditProductionLinesPopup.value = false
     editingLineId.value = null
   }
 }
 
+const openAddPopup = () => {
+  resetForm() // Reset the form before opening the "Create Production Line" popup
+  showAddProductionLinesPopup.value = true
+}
+
 const openEditPopup = (lineId: string) => {
   const line = productionLinesStore.getProductionLineById(lineId)
   if (line) {
-    form.value = { ...line }
+    form.value = {
+      ...line,
+      workflows: Array.isArray(line.workflows) ? line.workflows.join(', ') : '', // Convert workflows array to a comma-separated string for editing
+    }
     editingLineId.value = lineId
     showEditProductionLinesPopup.value = true
+  }
+}
+
+const deleteProductionLine = (lineId: string) => {
+  if (confirm('Are you sure you want to delete this production line?')) {
+    productionLinesStore.deleteProductionLine(lineId)
   }
 }
 </script>

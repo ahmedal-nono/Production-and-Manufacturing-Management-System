@@ -238,8 +238,8 @@ const reasons = [
 
 const submitReschedule = (id) => {
   console.log({ id })
-
   const success = ordersStore.updateOrderDates(id, newStartTime.value, newEndTime.value)
+  showReschedulePopup.value = false
 }
 
 const stages = ref([
