@@ -16,25 +16,22 @@
             </thead>
             <tbody>
               <tr
-                v-for="product in filteredProducts"
-                :key="product.sku"
+                v-for="workflow in filteredProducts"
+                :key="workflow.id"
                 class="border-t hover:bg-gray-100"
               >
-                <td class="border border-gray-700 px-4 py-2">{{ product.workflow }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ workflow.name }}</td>
                 <td class="border border-gray-700 px-4 py-2">
                   <button
-                    @click="showViewWorkflowPopup = true"
-                    class="mr-2 rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-500"
-                  >
-                    View
-                  </button>
-                  <button
-                    @click="showEditWorkflowPopup = true"
+                    @click="editWorkflow(workflow.id)"
                     class="mr-2 rounded bg-green-600 px-3 py-1 text-white hover:bg-green-500"
                   >
                     Edit
                   </button>
-                  <button class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500">
+                  <button
+                    @click="deleteWorkflow(workflow.id)"
+                    class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
+                  >
                     Delete
                   </button>
                 </td>
@@ -78,8 +75,9 @@
           <p class="font-medium">Product/Process Selection</p>
           <select v-model="selectedCategory" class="rounded border p-2">
             <option value="">Select Product</option>
-            <option>Category 1</option>
-            <option>Category 2</option>
+            <option v-for="product in workflowsStore.products" :key="product" :value="product">
+              {{ product }}
+            </option>
           </select>
         </div>
       </div>
@@ -100,8 +98,8 @@
           </thead>
           <tbody>
             <tr
-              v-for="product in filteredProducts"
-              :key="product.sku"
+              v-for="workflow in filteredProducts"
+              :key="workflow.id"
               class="border-t hover:bg-gray-100"
             >
               <td class="border border-gray-700 px-4 py-2">
@@ -182,8 +180,9 @@
           <p class="font-medium">Product/Process Selection</p>
           <select v-model="selectedProduct" class="rounded border p-2">
             <option value="">Select Product</option>
-            <option>Category 1</option>
-            <option>Category 2</option>
+            <option v-for="product in workflowsStore.products" :key="product" :value="product">
+              {{ product }}
+            </option>
           </select>
         </div>
       </div>
@@ -316,8 +315,9 @@
           <p class="font-medium">Product/Process Selection</p>
           <select v-model="selectedProduct" class="rounded border p-2">
             <option value="">Select Product</option>
-            <option>Category 1</option>
-            <option>Category 2</option>
+            <option v-for="product in workflowsStore.products" :key="product" :value="product">
+              {{ product }}
+            </option>
           </select>
         </div>
       </div>
@@ -461,8 +461,16 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Popup from '@/components/popup.vue'
+import { useWorkflowsStore } from '@/stores/useWorkflows'
+
+const workflowsStore = useWorkflowsStore()
+
+// Load products when the component is mounted
+onMounted(() => {
+  workflowsStore.loadProductsFromOrders()
+})
 
 const showCreateWorkflowPopup = defineModel<boolean>('visible')
 const showEditWorkflowPopup = ref(false)
@@ -477,58 +485,20 @@ defineProps<{
   showWorkflowsPopup: boolean
 }>()
 
-const products = ref([
-  {
-    name: 'Product A',
-    sku: 'SKU001',
-    category: 'Category 1',
-    bom: 'BOM name',
-    workflow: 'Workflow name',
-    variantAvailable: true,
-  },
-  {
-    name: 'Product B',
-    sku: 'SKU002',
-    category: 'Category 2',
-    bom: 'BOM name',
-    workflow: 'Workflow name',
-    variantAvailable: false,
-  },
-])
-
 const filteredProducts = computed(() => {
-  return products.value.filter((product) => {
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchQuery.value.toLowerCase())
-
+  return workflowsStore.workflows.filter((workflow) => {
+    const matchesSearch = workflow.name.toLowerCase().includes(searchQuery.value.toLowerCase())
     const matchesCategory =
-      selectedCategory.value === '' || product.category === selectedCategory.value
-
-    const matchesVariant =
-      variantAvailability.value === '' ||
-      (variantAvailability.value === 'Available' && product.variantAvailable) ||
-      (variantAvailability.value === 'Unavailable' && !product.variantAvailable)
-
-    return matchesSearch && matchesCategory && matchesVariant
+      selectedCategory.value === '' || workflow.product === selectedCategory.value
+    return matchesSearch && matchesCategory
   })
 })
 
 const workflowName = ref('')
 const description = ref('')
 const selectedProduct = ref('')
-
-interface Stage {
-  name: string
-  description: string
-  workcenter: string
-  duration: number | null
-  workorder: string
-}
-
-const stages = ref<Stage[]>([
-  { name: '', description: '', workcenter: '', duration: null, workorder: '' },
-])
+const stages = ref([])
+const editingWorkflowId = ref<string | null>(null)
 
 function addStage() {
   stages.value.push({ name: '', description: '', workcenter: '', duration: null, workorder: '' })
@@ -540,13 +510,46 @@ function removeStage(index: number) {
 
 function saveWorkflow() {
   const data = {
-    workflowName: workflowName.value,
+    id: editingWorkflowId.value || workflowsStore.getLastAndUniqueId,
+    name: workflowName.value,
     description: description.value,
     product: selectedProduct.value,
     stages: stages.value,
   }
-  console.log('Saving workflow:', data)
-  // emit or save to API
+
+  if (editingWorkflowId.value) {
+    workflowsStore.editWorkflow(editingWorkflowId.value, data)
+  } else {
+    workflowsStore.createWorkflow(data)
+  }
+
+  resetForm()
+}
+
+function editWorkflow(id: string) {
+  const workflow = workflowsStore.getWorkflowById(id)
+  if (workflow) {
+    editingWorkflowId.value = workflow.id
+    workflowName.value = workflow.name
+    description.value = workflow.description
+    selectedProduct.value = workflow.product
+    stages.value = [...workflow.stages]
+    showEditWorkflowPopup.value = true
+  }
+}
+
+function deleteWorkflow(id: string) {
+  workflowsStore.deleteWorkflow(id)
+}
+
+function resetForm() {
+  editingWorkflowId.value = null
+  workflowName.value = ''
+  description.value = ''
+  selectedProduct.value = ''
+  stages.value = []
+  showCreateWorkflowPopup.value = false
+  showEditWorkflowPopup.value = false
 }
 </script>
 

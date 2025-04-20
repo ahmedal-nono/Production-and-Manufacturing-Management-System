@@ -41,4 +41,5 @@ export const useUserStore = defineStore('user', {
       return !!state.user && !!state.access;
     },
   },
+  persist: true,
 })

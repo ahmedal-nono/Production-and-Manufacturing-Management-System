@@ -13,11 +13,9 @@
               type="text"
               placeholder="Search production lines..."
               class="min-w-[250px] rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              @input="filterLines"
             />
             <select
               v-model="statusFilter"
-              @change="filterLines"
               class="rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             >
               <option value="all">All Statuses</option>
@@ -43,7 +41,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="line in filteredLines" :key="line.name" class="border-t hover:bg-gray-100">
+              <tr v-for="line in filteredLines" :key="line.id" class="border-t hover:bg-gray-100">
                 <td class="border border-gray-700 px-4 py-2">{{ line.name }}</td>
                 <td class="border border-gray-700 px-4 py-2">
                   <span
@@ -73,7 +71,7 @@
                 </td>
                 <td class="border border-gray-700 px-4 py-2">
                   <button
-                    @click="showEditProductionLinesPopup = true"
+                    @click="openEditPopup(line.id)"
                     class="cursor-pointer rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-500"
                   >
                     Edit
@@ -97,15 +95,14 @@
       :visible="showAddProductionLinesPopup"
       @update:visible="showAddProductionLinesPopup = $event"
     >
-      <div class="">
+      <div>
         <h2 class="mb-6 text-2xl font-bold">Create Production Line</h2>
-
-        <form @submit.prevent="handleProductionLineFormSubmit" class="space-y-6">
+        <form @submit.prevent="handleAddProductionLine" class="space-y-6">
           <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
               <label class="mb-1 block text-sm font-medium">Line Name</label>
               <input
-                v-model="form.lineName"
+                v-model="form.name"
                 type="text"
                 placeholder="Enter line name"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -114,18 +111,32 @@
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">Maintenance Schedule</label>
-              <input
-                v-model="form.maintenanceSchedule"
-                type="date"
+              <label class="mb-1 block text-sm font-medium">Status</label>
+              <select
+                v-model="form.status"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="Active">Active</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm font-medium">Current Output (units)</label>
+              <input
+                v-model="form.currentOutput"
+                type="number"
+                placeholder="Enter current output"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
               />
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">Capacity Limit (units/hour)</label>
+              <label class="mb-1 block text-sm font-medium">Capacity (units/hour)</label>
               <input
-                v-model="form.capacityLimit"
+                v-model="form.capacity"
                 type="number"
                 placeholder="Enter capacity"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -134,44 +145,45 @@
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">Preferred Shift Pattern</label>
-              <select
-                v-model="selectedShiftPattern"
+              <label class="mb-1 block text-sm font-medium">Capacity Utilization (%)</label>
+              <input
+                v-model="form.utilization"
+                type="number"
+                placeholder="Enter utilization"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              >
-                <option value="" disabled selected>Select Shift Pattern</option>
-                <option value="8-hour shifts (3 shifts)">8-hour shifts (3 shifts)</option>
-                <option value="10-hour shifts (2 shifts)">10-hour shifts (2 shifts)</option>
-                <option value="12-hour shifts (2 shifts)">12-hour shifts (2 shifts)</option>
-                <option value="Day/Night rotation">Day/Night rotation</option>
-                <option value="Continental shift">Continental shift</option>
-              </select>
+                required
+              />
             </div>
-          </div>
 
-          <div>
-            <label class="mb-2 block text-sm font-medium">Workcenters</label>
-            <div class="space-y-3">
-              <div
-                v-for="(workcenter, index) in form.workcenters"
-                :key="index"
-                class="flex items-center gap-3"
-              >
-                <input
-                  v-model="workcenter.name"
-                  type="text"
-                  placeholder="Workcenter name"
-                  class="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  required
-                />
-              </div>
-              <button
-                type="button"
-                @click="addWorkcenter"
-                class="mt-2 text-sm font-medium text-blue-600 hover:text-blue-800"
-              >
-                + Add Workcenter
-              </button>
+            <div>
+              <label class="mb-1 block text-sm font-medium">OEE (%)</label>
+              <input
+                v-model="form.oee"
+                type="number"
+                placeholder="Enter OEE"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm font-medium">Workcenters</label>
+              <input
+                v-model="form.workcenters"
+                type="number"
+                placeholder="Enter number of workcenters"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm font-medium">Assigned Workflows</label>
+              <input
+                v-model="form.workflows"
+                type="text"
+                placeholder="Enter workflows (comma-separated)"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
             </div>
           </div>
 
@@ -191,23 +203,21 @@
       :visible="showEditProductionLinesPopup"
       @update:visible="showEditProductionLinesPopup = $event"
     >
-      <div class="">
+      <div>
         <h2 class="mb-6 text-2xl font-bold">Edit Production Line</h2>
-
-        <form @submit.prevent="handleProductionLineFormSubmit" class="space-y-6">
+        <form @submit.prevent="handleEditProductionLine" class="space-y-6">
           <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <!-- Line Name -->
             <div>
               <label class="mb-1 block text-sm font-medium">Line Name</label>
               <input
-                v-model="form.lineName"
+                v-model="form.name"
                 type="text"
+                placeholder="Enter line name"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
             </div>
 
-            <!-- Status Dropdown -->
             <div>
               <label class="mb-1 block text-sm font-medium">Status</label>
               <select
@@ -220,78 +230,68 @@
               </select>
             </div>
 
-            <!-- Capacity -->
             <div>
-              <label class="mb-1 block text-sm font-medium">Capacity (units/hr)</label>
+              <label class="mb-1 block text-sm font-medium">Current Output (units)</label>
               <input
-                v-model="form.capacity"
+                v-model="form.currentOutput"
                 type="number"
+                placeholder="Enter current output"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
             </div>
 
-            <!-- OEE Target -->
             <div>
-              <label class="mb-1 block text-sm font-medium">OEE Target (%)</label>
+              <label class="mb-1 block text-sm font-medium">Capacity (units/hour)</label>
               <input
-                v-model="form.oeeTarget"
+                v-model="form.capacity"
                 type="number"
-                min="0"
-                max="100"
+                placeholder="Enter capacity"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm font-medium">Capacity Utilization (%)</label>
+              <input
+                v-model="form.utilization"
+                type="number"
+                placeholder="Enter utilization"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm font-medium">OEE (%)</label>
+              <input
+                v-model="form.oee"
+                type="number"
+                placeholder="Enter OEE"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
-          </div>
 
-          <!-- Assign Workflows Section -->
-          <div>
-            <div class="mb-2 flex items-center justify-between">
-              <h3 class="text-lg font-medium">Assign Workflows</h3>
-              <div class="relative">
-                <input
-                  v-model="workflowSearch"
-                  type="text"
-                  placeholder="Search workflows..."
-                  class="rounded-md border border-gray-300 py-2 pr-4 pl-8 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-                <svg
-                  class="absolute top-2.5 left-2.5 h-4 w-4 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium">Workcenters</label>
+              <input
+                v-model="form.workcenters"
+                type="number"
+                placeholder="Enter number of workcenters"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
             </div>
 
-            <div class="space-y-3 rounded-md border p-4">
-              <div
-                v-for="workflow in filteredWorkflows"
-                :key="workflow.id"
-                class="flex items-center"
-              >
-                <input
-                  :id="'workflow-' + workflow.id"
-                  v-model="form.assignedWorkflows"
-                  type="checkbox"
-                  :value="workflow.id"
-                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <label :for="'workflow-' + workflow.id" class="ml-2 text-sm">
-                  {{ workflow.name }}
-                </label>
-              </div>
-
-              <div v-if="filteredWorkflows.length === 0" class="text-sm text-gray-500">
-                No workflows found
-              </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium">Assigned Workflows</label>
+              <input
+                v-model="form.workflows"
+                type="text"
+                placeholder="Enter workflows (comma-separated)"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
             </div>
           </div>
 
@@ -311,10 +311,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useProductionLinesStore } from '@/stores/useProductionLines'
 import Popup from '@/components/popup.vue'
 
 const showAddProductionLinesPopup = ref(false)
 const showEditProductionLinesPopup = ref(false)
+const editingLineId = ref<string | null>(null)
 
 defineProps<{
   showProductionLinesPopup: boolean
@@ -322,154 +324,71 @@ defineProps<{
 
 const emitEvent = defineEmits(['close', 'submit', 'update:showProductionLinesPopup'])
 
-interface ProductionLine {
-  name: string
-  status: 'Active' | 'Maintenance' | 'Inactive'
-  currentOutput: number
-  capacity: number
-  utilization: number
-  oee: number | null
-  workcenters: number
-  workflows: string[]
-}
+const productionLinesStore = useProductionLinesStore()
 
-const allLines: ProductionLine[] = [
-  {
-    name: 'Line A',
-    status: 'Active',
-    currentOutput: 850,
-    capacity: 1000,
-    utilization: 85,
-    oee: 88,
-    workcenters: 5,
-    workflows: ['Workflow X', 'Workflow Y'],
-  },
-  {
-    name: 'Line B',
-    status: 'Maintenance',
-    currentOutput: 0,
-    capacity: 1200,
-    utilization: 0,
-    oee: null,
-    workcenters: 6,
-    workflows: ['Workflow Z'],
-  },
-  {
-    name: 'Line C',
-    status: 'Inactive',
-    currentOutput: 0,
-    capacity: 800,
-    utilization: 0,
-    oee: null,
-    workcenters: 4,
-    workflows: [],
-  },
-]
+const searchQuery = ref('')
+const statusFilter = ref('all')
 
-const filterLines = () => {
-  filteredLines.value = allLines.filter((line) => {
+const filteredLines = computed(() => {
+  return productionLinesStore.productionLines.filter((line) => {
     const matchesSearch = line.name.toLowerCase().includes(searchQuery.value.toLowerCase())
     const matchesStatus =
       statusFilter.value === 'all' || line.status.toLowerCase() === statusFilter.value
     return matchesSearch && matchesStatus
   })
-}
-
-const filteredLines = ref(allLines)
-
-interface Workcenter {
-  name: string
-}
-
-interface ProductionLineForm {
-  lineName: string
-  maintenanceSchedule: string
-  capacityLimit: string
-  shiftPattern: string
-  workcenters: Workcenter[]
-}
-
-const productionLineForm = ref<ProductionLineForm>({
-  lineName: '',
-  status: 'Active', // Default status
-  capacity: 0, // Default capacity
-  oeeTarget: 0, // Default OEE target
-  assignedWorkflows: [], // Default empty workflows
-  maintenanceSchedule: '',
-  capacityLimit: '',
-  shiftPattern: '',
-  workcenters: [{ name: '' }],
 })
 
-const addWorkcenter = () => {
-  form.value.workcenters.push({ name: '' })
-}
-
-const selectedShiftPattern = ref('')
-
-interface Workflow {
-  id: string
-  name: string
-}
-
-interface ProductionLineForm {
-  lineName: string
-  status: string
-  capacity: number
-  oeeTarget: number
-  assignedWorkflows: string[]
-}
-
-// Sample data - replace with your actual data
-const sampleWorkflows: Workflow[] = [
-  { id: '1', name: 'Workflow X' },
-  { id: '2', name: 'Workflow Y' },
-  { id: '3', name: 'Workflow Z' },
-]
-
-const form = ref<
-  ProductionLineForm & {
-    bomName: string
-    productCode: string
-    components: {
-      name: string
-      partNumber: string
-      quantity: number
-      unit: string
-      unitCost: number
-    }[]
-  }
->({
-  lineName: 'Line A',
+const form = ref({
+  name: '',
   status: 'Active',
-  capacity: 1000,
-  oeeTarget: 85,
-  assignedWorkflows: ['1'], // Default to Workflow X selected
-  maintenanceSchedule: '', // Add default value for maintenanceSchedule
-  capacityLimit: '', // Add default value for capacityLimit
-  shiftPattern: '', // Add default value for shiftPattern
-  workcenters: [{ name: '' }], // Add default value for workcenters
-  bomName: '', // Add default value for bomName
-  productCode: '', // Add default value for productCode
-  components: [], // Initialize components as an empty array
+  currentOutput: 0,
+  capacity: 0,
+  utilization: 0,
+  oee: null,
+  workcenters: 0,
+  workflows: [] as string[],
 })
 
-const workflowSearch = ref('')
-
-const filteredWorkflows = computed(() => {
-  return sampleWorkflows.filter((workflow) =>
-    workflow.name.toLowerCase().includes(workflowSearch.value.toLowerCase()),
-  )
-})
-
-const handleProductionLineFormSubmit = () => {
-  // Handle form submission
-  console.log('Form submitted:', productionLineForm.value)
-  // You would typically call an API here to update the production line
+const resetForm = () => {
+  form.value = {
+    name: '',
+    status: 'Active',
+    currentOutput: 0,
+    capacity: 0,
+    utilization: 0,
+    oee: null,
+    workcenters: 0,
+    workflows: [],
+  }
 }
 
-const searchQuery = ref('')
-const statusFilter = ref('all')
+const handleAddProductionLine = () => {
+  const newLine = {
+    id: productionLinesStore.getNextId,
+    ...form.value,
+  }
+  productionLinesStore.addProductionLine(newLine)
+  resetForm()
+  showAddProductionLinesPopup.value = false
+}
+
+const handleEditProductionLine = () => {
+  if (editingLineId.value) {
+    productionLinesStore.editProductionLine(editingLineId.value, form.value)
+    resetForm()
+    showEditProductionLinesPopup.value = false
+    editingLineId.value = null
+  }
+}
+
+const openEditPopup = (lineId: string) => {
+  const line = productionLinesStore.getProductionLineById(lineId)
+  if (line) {
+    form.value = { ...line }
+    editingLineId.value = lineId
+    showEditProductionLinesPopup.value = true
+  }
+}
 </script>
 
 <style>

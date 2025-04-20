@@ -57,10 +57,20 @@
                 </span>
               </td>
               <td class="border px-4 py-2">
-                <input type="date" v-model="order.startDate" class="w-full rounded border p-1" />
+                <input
+                  type="date"
+                  :value="order.startDate"
+                  disabled
+                  class="w-full rounded border p-1"
+                />
               </td>
               <td class="border px-4 py-2">
-                <input type="date" v-model="order.endDate" class="w-full rounded border p-1" />
+                <input
+                  type="date"
+                  :value="order.endDate"
+                  disabled
+                  class="w-full rounded border p-1"
+                />
               </td>
               <td class="border px-4 py-2">{{ order.productionLine }}</td>
               <td class="border px-4 py-2">
@@ -68,7 +78,12 @@
               </td>
               <td class="space-x-1 border px-4 py-2">
                 <button
-                  @click="showReschedulePopup = true"
+                  @click="
+                    () => {
+                      currentProduction = order
+                      showReschedulePopup = true
+                    }
+                  "
                   class="rounded bg-blue-600 px-2 py-1 text-white"
                 >
                   Reschedule
@@ -84,19 +99,20 @@
     <Popup :visible="showReschedulePopup" @update:visible="showReschedulePopup = $event">
       <div>
         <h2 class="mb-1 text-xl font-bold">
-          Reschedule Order: <span class="font-bold">{{ props.orderId }}</span>
+          Reschedule Order: <span class="font-bold">{{ currentProduction?.id }}</span>
           <p class="mt-2 mb-1 text-sm text-gray-600">
-            Current Schedule: <span class="font-medium">{{ props.schedule }}</span>
+            Current Schedule: <span class="font-medium">{{ currentProduction?.endDate }}</span>
           </p>
           <p class="mb-4 text-sm text-gray-600">
-            Production Line: <span class="font-medium">{{ props.line }}</span>
+            Production Line:
+            <span class="font-medium">{{ currentProduction?.productionLine }}</span>
           </p>
         </h2>
         <div>
           <label class="mb-1 block text-sm">New Start Time</label>
-          <input v-model="newStartTime" type="datetime-local" class="rounded border p-2" />
+          <input v-model="newStartTime" type="date" class="rounded border p-2" />
           <label class="mt-2 mb-1 block text-sm">New End Time</label>
-          <input v-model="newEndTime" type="datetime-local" class="rounded border p-2" />
+          <input v-model="newEndTime" type="date" class="rounded border p-2" />
         </div>
         <div class="mt-2 mb-4">
           <label class="mb-1 text-sm">Reason for Reschedule</label>
@@ -110,7 +126,7 @@
           <input v-model="note" type="text" class="w-full rounded border p-2" />
         </div>
         <button
-          @click="submitReschedule"
+          @click="() => submitReschedule(currentProduction.id)"
           class="mt-4 w-full rounded-lg bg-blue-600 p-1.5 text-white"
         >
           Reschedule
@@ -152,11 +168,12 @@
 </template>
 
 <script setup lang="ts">
-import useOrders from '@/composables/useOrders.ts'
+import { useOrdersStore } from '@/stores/useOrders'
 import { computed, ref } from 'vue'
 import Popup from '@/components/popup.vue'
 
-const { orders, deleteOrder, updateOrderDates } = useOrders()
+// const { orders, deleteOrder, updateOrderDates }
+const ordersStore = useOrdersStore()
 
 const showReschedulePopup = ref(false)
 const showProductInfoPopup = ref(false)
@@ -164,9 +181,10 @@ const showProductInfoPopup = ref(false)
 const selectedStatus = ref('All Statuses')
 const selectedLine = ref('All Lines')
 const searchQuery = ref('')
+const currentProduction = {}
 
 const filteredOrders = computed(() => {
-  return orders.value.filter((order) => {
+  return ordersStore.orders.filter((order) => {
     return (
       (selectedStatus.value === 'All Statuses' || order.status === selectedStatus.value) &&
       (selectedLine.value === 'All Lines' || order.productionLine === selectedLine.value) &&
@@ -218,26 +236,10 @@ const reasons = [
   'Other',
 ]
 
-const submitReschedule = () => {
-  const success = updateOrderDates(props.orderId, newStartTime.value, newEndTime.value)
+const submitReschedule = (id) => {
+  console.log({ id })
 
-  if (success) {
-    const orderIndex = orders.value.findIndex((order) => order.id === props.orderId)
-    if (orderIndex !== -1) {
-      orders.value[orderIndex].startDate = newStartTime.value
-      orders.value[orderIndex].endDate = newEndTime.value
-    }
-
-    const payload = {
-      orderId: props.orderId,
-      newStartTime: newStartTime.value,
-      newEndTime: newEndTime.value,
-    }
-    emitEvent('submit', payload)
-    emitEvent('update-dates', payload)
-  } else {
-    console.error(`Failed to update order with ID ${props.orderId}.`)
-  }
+  const success = ordersStore.updateOrderDates(id, newStartTime.value, newEndTime.value)
 }
 
 const stages = ref([

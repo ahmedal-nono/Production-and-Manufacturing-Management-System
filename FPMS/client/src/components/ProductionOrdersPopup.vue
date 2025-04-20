@@ -30,7 +30,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="order in orders" :key="order.id" class="border border-gray-700 px-4 py-2">
+              <tr
+                v-for="order in ordersStore.orders"
+                :key="order.id"
+                class="border border-gray-700 px-4 py-2"
+              >
                 <td class="border border-gray-700 px-4 py-2">{{ order.id }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ order.product }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ order.quantity }}</td>
@@ -51,7 +55,7 @@
                     Edit
                   </button>
                   <button
-                    @click="() => deleteOrder(order.id)"
+                    @click="() => ordersStore.deleteOrder(order.id)"
                     class="cursor-pointer rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
                   >
                     Delete
@@ -129,6 +133,15 @@
                     >
                       +
                     </button>
+                    <div class="-mt-6 flex">
+                      <label>
+                        Selected Variant
+                        <select v-model="selectedStatus" class="w-full rounded border p-2">
+                          <option>On Track</option>
+                          <option>Delayed</option>
+                        </select>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -229,6 +242,15 @@
                     >
                       +
                     </button>
+                    <div class="-mt-6 flex">
+                      <label>
+                        Selected Variant
+                        <select v-model="selectedStatus" class="w-full rounded border p-2">
+                          <option>On Track</option>
+                          <option>Delayed</option>
+                        </select>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -272,11 +294,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import Popup from '@/components/popup.vue'
-import useOrders from '@/composables/useOrders'
+import { useOrdersStore } from '@/stores/useOrders'
 
-const { orders, deleteOrder, updateOrderDates } = useOrders()
+const ordersStore = useOrdersStore()
 
 const showCreateProductionOrdersPopup = ref(false)
 const showEditProductionOrdersPopup = ref(false)
@@ -311,6 +333,7 @@ const emitEvent = defineEmits(['close', 'submit', 'update:showProductionOrdersPo
 const orderName = ref('')
 const priority = ref('Normal')
 const selectedVariant = ref('Blue - Medium')
+const selectedStatus = ref('On Track')
 const quantity = ref(1)
 const startDate = ref('')
 const deadline = ref('')
@@ -335,34 +358,20 @@ const resetCreateForm = () => {
   priority.value = 'Normal'
 }
 
-// Load orders from local storage on component mount
-onMounted(() => {
-  const storedOrders = localStorage.getItem('productionOrders')
-  if (storedOrders) {
-    orders.value = JSON.parse(storedOrders)
-  }
-})
-
-// Save orders to local storage
-const saveOrdersToLocalStorage = () => {
-  localStorage.setItem('productionOrders', JSON.stringify(orders.value))
-}
-
 // Add a new order
 const submitOrder = () => {
   const newOrder: Order = {
-    id: `#${Math.floor(Math.random() * 10000)}`,
+    id: ordersStore.getLastAndUniqeId,
     product: orderName.value,
     quantity: quantity.value,
-    status: 'On Track',
+    status: selectedStatus.value as 'On Track' | 'Delayed',
     startDate: startDate.value,
     endDate: deadline.value,
     productionLine: productionLine.value,
     priority: priority.value as 'High' | 'Low',
     dueDate: deadline.value,
   }
-  orders.value.push(newOrder)
-  saveOrdersToLocalStorage()
+  ordersStore.createOrder(newOrder)
   showCreateProductionOrdersPopup.value = false
   resetCreateForm() // Reset form fields after creating an order
 }
@@ -370,10 +379,10 @@ const submitOrder = () => {
 // Edit an existing order
 const editOrder = () => {
   if (selectedOrderId.value) {
-    const orderIndex = orders.value.findIndex((order) => order.id === selectedOrderId.value)
+    const orderIndex = ordersStore.orders.findIndex((order) => order.id === selectedOrderId.value)
     if (orderIndex !== -1) {
-      orders.value[orderIndex] = {
-        ...orders.value[orderIndex],
+      ordersStore.orders[orderIndex] = {
+        ...ordersStore.orders[orderIndex],
         product: orderName.value,
         quantity: quantity.value,
         startDate: startDate.value,
@@ -381,8 +390,8 @@ const editOrder = () => {
         productionLine: productionLine.value,
         priority: priority.value as 'High' | 'Low',
         dueDate: deadline.value,
+        status: selectedStatus.value as 'On Track' | 'Delayed',
       }
-      saveOrdersToLocalStorage()
       showEditProductionOrdersPopup.value = false
       resetCreateForm() // Reset form fields after editing an order
     }

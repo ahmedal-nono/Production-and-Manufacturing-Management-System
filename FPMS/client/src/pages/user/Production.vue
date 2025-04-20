@@ -65,19 +65,8 @@
   <ProductionSchedulePopup
     @update:showProductionSchedulePopup="(v) => (showProductionSchedulePopup = v)"
     :showProductionSchedulePopup
-    orderId="1234"
-    schedule="2024-03-15 to 2024-03-20"
-    line="Line 1"
-    :quantity="500"
-    status="On Track"
-    :progress="75"
-    :stages="[
-      { name: 'Material Preparation', status: 'Queued', team: 'Team A' },
-      { name: 'Assembly Process', status: 'In Progress', team: 'Team B' },
-    ]"
-    @close="showProductionSchedulePopup = false"
-    @submit="submitOrder"
   ></ProductionSchedulePopup>
+
   <ProductionOrdersPopup
     @update:showProductionOrdersPopup="(v) => (showProductionOrdersPopup = v)"
     :showProductionOrdersPopup
