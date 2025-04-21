@@ -50,7 +50,7 @@
             <tr>
               <th class="border border-gray-700 px-4 py-2">Title</th>
               <th class="border border-gray-700 px-4 py-2">Tools Required</th>
-              <th class="border border-gray-700 px-4 py-2">Last Updated</th>
+              <th class="border border-gray-700 px-4 py-2">Task Steps</th>
               <th class="border border-gray-700 px-4 py-2">Status</th>
               <th class="border border-gray-700 px-4 py-2">Actions</th>
             </tr>
@@ -63,7 +63,7 @@
             >
               <td class="border border-gray-700 px-4 py-2">{{ item.title }}</td>
               <td class="border border-gray-700 px-4 py-2">{{ item.tools_required }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ formatDate(item.updated_at) }}</td>
+              <td class="border border-gray-700 px-4 py-2">{{ item.task_steps }}</td>
               <td class="border border-gray-700 px-4 py-2">
                 <span :class="statusClass(item.status)" class="rounded-full px-2 py-1 text-xs">
                   {{ item.status }}
@@ -268,9 +268,7 @@
           <div>
             <h2 class="text-md font-semibold text-gray-800">Details</h2>
             <p><strong>Status:</strong> {{ currentWorkInstruction.status }}</p>
-            <p>
-              <strong>Last Updated:</strong> {{ formatDate(currentWorkInstruction.updated_at) }}
-            </p>
+            <p><strong>task_steps</strong> {{ currentWorkInstruction.task_steps }}</p>
           </div>
         </div>
       </div>
@@ -421,7 +419,7 @@ const form = reactive({
   tools_required: '',
   materials_required: '',
   status: 'Not Started',
-  step_description: ''
+  step_description: '',
 })
 
 defineProps<{
@@ -468,7 +466,7 @@ const viewWorkInstruction = async (id: number) => {
     const response = await axios.get(`${BASE_URL}/work_instructions/${id}/`)
     currentWorkInstruction.value = {
       ...response.data,
-      task_steps_array: response.data.task_steps.split('\n').filter(step => step.trim())
+      task_steps_array: response.data.task_steps.split('\n').filter((step) => step.trim()),
     }
     showViewWorkinstructionPopup.value = true
   } catch (error) {
@@ -482,7 +480,7 @@ const editWorkInstruction = async (id: number) => {
     const response = await axios.get(`${BASE_URL}/work_instructions/${id}/`)
     currentWorkInstruction.value = {
       ...response.data,
-      task_steps_array: response.data.task_steps.split('\n').filter(step => step.trim())
+      task_steps_array: response.data.task_steps.split('\n').filter((step) => step.trim()),
     }
     showEditWorkinstructionPopup.value = true
     showViewWorkinstructionPopup.value = false
@@ -506,7 +504,7 @@ const createWorkInstruction = async () => {
     }
 
     // Filter out empty steps
-    const nonEmptySteps = form.task_steps.filter(step => step.trim())
+    const nonEmptySteps = form.task_steps.filter((step) => step.trim())
     if (nonEmptySteps.length === 0) {
       alert('Please add at least one step with content')
       return
@@ -528,7 +526,7 @@ const createWorkInstruction = async () => {
       tools_required: form.tools_required,
       materials_required: form.materials_required,
       status: form.status,
-      step_description: form.step_description
+      step_description: form.step_description,
     }
 
     await axios.post(`${BASE_URL}/work_instructions/`, payload)
@@ -558,7 +556,9 @@ const updateWorkInstruction = async () => {
     }
 
     // Filter out empty steps
-    const nonEmptySteps = currentWorkInstruction.value.task_steps_array.filter(step => step.trim())
+    const nonEmptySteps = currentWorkInstruction.value.task_steps_array.filter((step) =>
+      step.trim(),
+    )
     if (nonEmptySteps.length === 0) {
       alert('Please add at least one step with content')
       return
@@ -580,7 +580,7 @@ const updateWorkInstruction = async () => {
       tools_required: currentWorkInstruction.value.tools_required,
       materials_required: currentWorkInstruction.value.materials_required,
       status: currentWorkInstruction.value.status,
-      step_description: currentWorkInstruction.value.step_description
+      step_description: currentWorkInstruction.value.step_description,
     }
 
     await axios.put(`${BASE_URL}/work_instructions/${currentWorkInstruction.value.id}/`, payload)
