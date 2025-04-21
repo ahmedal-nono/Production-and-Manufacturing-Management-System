@@ -113,6 +113,7 @@
                 placeholder="Enter line name"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
+                minlength="5"
               />
             </div>
 
@@ -136,6 +137,7 @@
                 placeholder="Enter current output"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
+                min="1"
               />
             </div>
 
@@ -147,6 +149,7 @@
                 placeholder="Enter capacity"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
+                min="1"
               />
             </div>
 
@@ -158,6 +161,7 @@
                 placeholder="Enter utilization"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
+                min="0"
               />
             </div>
 
@@ -168,6 +172,7 @@
                 type="number"
                 placeholder="Enter OEE"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                min="0"
               />
             </div>
 
@@ -179,6 +184,7 @@
                 placeholder="Enter number of workcenters"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
+                min="1"
               />
             </div>
 
@@ -189,6 +195,9 @@
                 type="text"
                 placeholder="Enter workflows (comma-separated)"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+                pattern="^[a-zA-Z0-9, ]+$"
+                minlength="5"
               />
             </div>
           </div>
@@ -221,6 +230,7 @@
                 placeholder="Enter line name"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
+                minlength="5"
               />
             </div>
 
@@ -244,6 +254,7 @@
                 placeholder="Enter current output"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
+                min="1"
               />
             </div>
 
@@ -255,6 +266,7 @@
                 placeholder="Enter capacity"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
+                min="1"
               />
             </div>
 
@@ -266,6 +278,7 @@
                 placeholder="Enter utilization"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
+                min="0"
               />
             </div>
 
@@ -276,6 +289,7 @@
                 type="number"
                 placeholder="Enter OEE"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                min="0"
               />
             </div>
 
@@ -287,6 +301,7 @@
                 placeholder="Enter number of workcenters"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
+                min="1"
               />
             </div>
 
@@ -297,6 +312,9 @@
                 type="text"
                 placeholder="Enter workflows (comma-separated)"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+                pattern="^[a-zA-Z0-9, ]+$"
+                minlength="5"
               />
             </div>
           </div>
@@ -370,30 +388,63 @@ const resetForm = () => {
 
 const handleAddProductionLine = () => {
   const newLine = {
-    id: productionLinesStore.getNextId(),
-    ...form.value,
-    workflows: form.value.workflows.split(',').map((workflow) => workflow.trim()), // Ensure workflows are stored as an array
+    id: productionLinesStore.getNextId, // Correctly call getNextId as a function
+    name: form.value.name,
+    status: form.value.status,
+    currentOutput: form.value.currentOutput || 0,
+    capacity: form.value.capacity,
+    utilization: form.value.utilization || 0,
+    oee: form.value.oee || null,
+    workcenters: form.value.workcenters,
+    workflows: form.value.workflows
+      ? form.value.workflows.split(',').map((workflow) => workflow.trim())
+      : [], // Handle empty workflows gracefully
   }
-  productionLinesStore.addProductionLine(newLine)
-  resetForm()
-  showAddProductionLinesPopup.value = false
+
+  productionLinesStore.addProductionLine(newLine) // Add the new production line to the store
+  resetForm() // Reset the form after adding
+  showAddProductionLinesPopup.value = false // Close the popup
+  alert('Production Line added successfully!')
 }
 
 const handleEditProductionLine = () => {
-  if (editingLineId.value) {
-    const updatedLine = {
-      ...form.value,
-      workflows: form.value.workflows.split(',').map((workflow) => workflow.trim()), // Ensure workflows are stored as an array
-    }
-    productionLinesStore.editProductionLine(editingLineId.value, updatedLine)
-    resetForm()
-    showEditProductionLinesPopup.value = false
-    editingLineId.value = null
+  if (!editingLineId.value) {
+    alert('No production line selected for editing.')
+    return
+  }
+
+  if (!form.value.name || form.value.name.length < 3) {
+    alert('Line Name is required and must be at least 3 characters long.')
+    return
+  }
+
+  const updatedLine = {
+    name: form.value.name,
+    status: form.value.status,
+    currentOutput: form.value.currentOutput,
+    capacity: form.value.capacity,
+    utilization: form.value.utilization,
+    oee: form.value.oee,
+    workcenters: form.value.workcenters,
+    workflows: form.value.workflows.split(',').map((workflow) => workflow.trim()),
+  }
+
+  productionLinesStore.editProductionLine(editingLineId.value, updatedLine)
+  resetForm()
+  showEditProductionLinesPopup.value = false
+  editingLineId.value = null
+  alert('Production Line updated successfully!')
+}
+
+const deleteProductionLine = (lineId: string) => {
+  if (confirm('Are you sure you want to delete this production line?')) {
+    productionLinesStore.deleteProductionLine(lineId)
+    //alert('Production Line deleted successfully!')
   }
 }
 
 const openAddPopup = () => {
-  resetForm() // Reset the form before opening the "Create Production Line" popup
+  resetForm()
   showAddProductionLinesPopup.value = true
 }
 
@@ -402,16 +453,10 @@ const openEditPopup = (lineId: string) => {
   if (line) {
     form.value = {
       ...line,
-      workflows: Array.isArray(line.workflows) ? line.workflows.join(', ') : '', // Convert workflows array to a comma-separated string for editing
+      workflows: Array.isArray(line.workflows) ? line.workflows.join(', ') : '',
     }
     editingLineId.value = lineId
     showEditProductionLinesPopup.value = true
-  }
-}
-
-const deleteProductionLine = (lineId: string) => {
-  if (confirm('Are you sure you want to delete this production line?')) {
-    productionLinesStore.deleteProductionLine(lineId)
   }
 }
 </script>

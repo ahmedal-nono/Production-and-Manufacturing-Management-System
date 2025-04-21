@@ -620,6 +620,13 @@ function adjustQuantity(index: number, amount: number) {
   component.quantity = Math.max(0, component.quantity + amount)
 }
 
+function deleteBOM(id: string) {
+  if (confirm('Are you sure you want to delete this BOM?')) {
+    bomsStore.deleteBOM(id) // Call the deleteBOM action from the store
+    //alert('BOM deleted successfully!')
+  }
+}
+
 const totalCost = computed(() => {
   return bomForm.value.components.reduce((total, component) => {
     return total + component.quantity * component.unitCost

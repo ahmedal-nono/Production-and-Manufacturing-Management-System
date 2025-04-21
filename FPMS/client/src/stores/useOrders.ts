@@ -17,32 +17,35 @@ interface OrderState {
   orders: Order[]
 }
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 // @ts-ignore
 export const useOrdersStore = defineStore('orders', {
   state: (): OrderState => ({
     orders: [],
   }),
   actions: {
-    createOrder(order: Order) {
+    async createOrder(order: Order) {
+      await delay(1000) // Simulate API delay
       this.orders.push(order)
     },
-    deleteOrder(id: string) {
+    async deleteOrder(id: string) {
+      await delay(1000) // Simulate API delay
       this.orders = this.orders.filter((order) => order.id !== id)
     },
-    editOrder(orderId: string, order: Order) {
+    async editOrder(orderId: string, order: Order) {
+      await delay(1000) // Simulate API delay
       const index = this.orders.findIndex((order) => order.id === orderId)
       if (index >= 0) {
         this.orders[index] = order
       }
     },
-    updateOrderDates(orderId: string, newStartDate: string, newEndDate: string): boolean {
-      console.log({
-        orderId,
-        newStartDate,
-        newEndDate,
-        orders: this.orders,
-      })
-
+    async updateOrderDates(
+      orderId: string,
+      newStartDate: string,
+      newEndDate: string,
+    ): Promise<boolean> {
+      await delay(1000) // Simulate API delay
       const index = this.orders.findIndex((order) => order.id === orderId)
       if (index !== -1) {
         this.orders[index].startDate = newStartDate

@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 interface Component {
   name: string
   partNumber: string
@@ -41,13 +43,16 @@ export const useBOMsStore = defineStore('boms', {
     ],
   }),
   actions: {
-    createBOM(bom: BOM) {
+    async createBOM(bom: BOM) {
+      await delay(1000) // Simulate API delay
       this.boms.push(bom)
     },
-    deleteBOM(id: string) {
+    async deleteBOM(id: string) {
+      await delay(1000) // Simulate API delay
       this.boms = this.boms.filter((bom) => bom.id !== id)
     },
-    editBOM(bomId: string, updatedBOM: Partial<BOM>) {
+    async editBOM(bomId: string, updatedBOM: Partial<BOM>) {
+      await delay(1000) // Simulate API delay
       const index = this.boms.findIndex((bom) => bom.id === bomId)
       if (index >= 0) {
         this.boms[index] = { ...this.boms[index], ...updatedBOM }

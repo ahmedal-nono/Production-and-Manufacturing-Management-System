@@ -15,22 +15,28 @@ interface ProductionLine {
 interface ProductionLineState {
   productionLines: ProductionLine[]
 }
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 // @ts-ignore
 export const useProductionLinesStore = defineStore('productionLines', {
   state: (): ProductionLineState => ({
     productionLines: [],
   }),
   actions: {
-    addProductionLine(line: ProductionLine) {
+    async addProductionLine(line: ProductionLine) {
+      await delay(1000) // Simulate API delay
       this.productionLines.push(line)
     },
-    editProductionLine(id: string, updatedLine: Partial<ProductionLine>) {
+    async editProductionLine(id: string, updatedLine: Partial<ProductionLine>) {
+      await delay(1000) // Simulate API delay
       const index = this.productionLines.findIndex((line) => line.id === id)
       if (index !== -1) {
         this.productionLines[index] = { ...this.productionLines[index], ...updatedLine }
       }
     },
-    deleteProductionLine(id: string) {
+    async deleteProductionLine(id: string) {
+      await delay(1000) // Simulate API delay
       this.productionLines = this.productionLines.filter((line) => line.id !== id)
     },
   },

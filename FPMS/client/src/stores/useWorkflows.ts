@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { useOrdersStore } from './useOrders'
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 interface Stage {
   name: string
   description: string
@@ -44,22 +46,23 @@ export const useWorkflowsStore = defineStore('workflows', {
     products: [], // Initialize products array
   }),
   actions: {
-    createWorkflow(workflow: Workflow) {
+    async createWorkflow(workflow: Workflow) {
+      await delay(1000) // Simulate API delay
       this.workflows.push(workflow)
     },
-    deleteWorkflow(id: string) {
+    async deleteWorkflow(id: string) {
+      await delay(1000) // Simulate API delay
       this.workflows = this.workflows.filter((workflow) => workflow.id !== id)
     },
-    editWorkflow(workflowId: string, updatedWorkflow: Partial<Workflow>) {
+    async editWorkflow(workflowId: string, updatedWorkflow: Partial<Workflow>) {
+      await delay(1000) // Simulate API delay
       const index = this.workflows.findIndex((workflow) => workflow.id === workflowId)
       if (index >= 0) {
         this.workflows[index] = { ...this.workflows[index], ...updatedWorkflow }
       }
     },
-    getWorkflowById(id: string): Workflow | undefined {
-      return this.workflows.find((workflow) => workflow.id === id)
-    },
-    loadProductsFromOrders() {
+    async loadProductsFromOrders() {
+      await delay(1000) // Simulate API delay
       const ordersStore = useOrdersStore()
       this.products = Array.from(new Set(ordersStore.orders.map((order) => order.product)))
     },
