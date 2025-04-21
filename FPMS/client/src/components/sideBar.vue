@@ -18,7 +18,6 @@
 import systemImg from '@/assets/system_admin.png'
 import wrkcntr from '@/assets/wokrcenters.png'
 import production from '@/assets/production.png'
-import bom from '@/assets/bom.png'
 import workorder from '@/assets/workorder.png'
 import quality from '@/assets/quality.png'
 import reports from '@/assets/reports.png'

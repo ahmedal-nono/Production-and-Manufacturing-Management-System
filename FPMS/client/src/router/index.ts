@@ -42,12 +42,14 @@ const router = createRouter({
   ],
 })
 
-// router.beforeEach((to, from, next) => {
-//   const userStore = useUserStore() // Move inside beforeEach
-//   if (!userStore.isAuthenticated && to.path !== '/login') {
-//     return next('/login')
-//   }
-//   next()
-// })
+router.beforeEach((to, from, next) => {
+  const userStore = useUserStore() // Move inside beforeEach
+  if (to.name === 'login' && userStore.isAuthenticated) {
+    router.push({ name: 'home' })
+  } else if (to.name !== 'login' && !userStore.isAuthenticated) {
+    router.push({ name: 'login' })
+  }
+  next()
+})
 
 export default router

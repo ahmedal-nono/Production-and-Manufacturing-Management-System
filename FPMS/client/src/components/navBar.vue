@@ -24,7 +24,9 @@
         </Popup>
       </div>
       <div class="flex flex-row space-x-6">
-        <button class="mt-2 h-fit rounded-xl bg-red-500 px-6 py-1 text-white">Logout</button>
+        <button class="mt-2 h-fit rounded-xl bg-red-500 px-6 py-1 text-white" @click="logout">
+          Logout
+        </button>
         <img
           src="../assets/avatar.png"
           alt=""
@@ -130,6 +132,8 @@
 import { ref } from 'vue'
 import Popup from '@/components/popup.vue'
 import NotificationCard from '@/components/NotificationCard.vue'
+import { useUserStore } from '@/stores/user'
+import router from '@/router'
 
 const currentPassword = defineModel('currentPassword')
 const newPassword = defineModel('newPassword')
@@ -157,6 +161,11 @@ function handleImageUpload(event: Event) {
     }
     reader.readAsDataURL(file)
   }
+}
+
+function logout() {
+  useUserStore().logout()
+  router.push({ name: 'login' })
 }
 </script>
 
