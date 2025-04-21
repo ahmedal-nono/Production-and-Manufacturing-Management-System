@@ -246,12 +246,14 @@
               placeholder="Enter email"
               class="rounded-md border p-2"
               required
+              pattern="^[a-zA-Z][\w.-]*@[a-zA-Z]+\.[a-zA-Z]{2,}$
+"
             />
           </div>
           <div class="flex flex-col">
             <label for="contact" class="text-sm font-bold">Contact Number</label>
             <input
-              type="text"
+              type="number"
               id="contact"
               v-model="userForm.contact_number"
               placeholder="Enter contact number"
@@ -296,14 +298,23 @@
           </div>
           <div class="flex flex-col">
             <label for="password" class="text-sm font-bold">Password</label>
-            <input
-              type="password"
-              id="password"
-              v-model="userForm.password"
-              placeholder="Enter password"
-              class="rounded-md border p-2"
-              :required="!editingUserId"
-            />
+            <div class="relative">
+              <input
+                :type="showPassword ? 'text' : 'password'"
+                id="password"
+                v-model="userForm.password"
+                placeholder="Enter password"
+                class="rounded-md border p-2 w-full"
+                :required="!editingUserId"
+              />
+              <button
+                type="button"
+                @click="togglePasswordVisibility"
+                class="absolute right-2 top-2 text-sm text-blue-600 hover:underline"
+              >
+                {{ showPassword ? 'Hide' : 'Show' }}
+              </button>
+            </div>
           </div>
           <div class="flex justify-end gap-4">
             <button type="submit" class="cursor-pointer rounded-lg bg-blue-600 p-2 text-white">
@@ -447,6 +458,12 @@ const userForm = ref({
   role: '',
   password: '',
 })
+
+const showPassword = ref(false)
+
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value
+}
 
 // API Configuration
 const baseURL = 'http://localhost:8000/api/admin'

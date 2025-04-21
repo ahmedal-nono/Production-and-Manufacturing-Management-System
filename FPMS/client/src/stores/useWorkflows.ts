@@ -47,22 +47,22 @@ export const useWorkflowsStore = defineStore('workflows', {
   }),
   actions: {
     async createWorkflow(workflow: Workflow) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       this.workflows.push(workflow)
     },
     async deleteWorkflow(id: string) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       this.workflows = this.workflows.filter((workflow) => workflow.id !== id)
     },
     async editWorkflow(workflowId: string, updatedWorkflow: Partial<Workflow>) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       const index = this.workflows.findIndex((workflow) => workflow.id === workflowId)
       if (index >= 0) {
         this.workflows[index] = { ...this.workflows[index], ...updatedWorkflow }
       }
     },
     async loadProductsFromOrders() {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       const ordersStore = useOrdersStore()
       this.products = Array.from(new Set(ordersStore.orders.map((order) => order.product)))
     },

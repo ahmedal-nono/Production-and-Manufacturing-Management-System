@@ -26,15 +26,15 @@ export const useOrdersStore = defineStore('orders', {
   }),
   actions: {
     async createOrder(order: Order) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       this.orders.push(order)
     },
     async deleteOrder(id: string) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       this.orders = this.orders.filter((order) => order.id !== id)
     },
     async editOrder(orderId: string, order: Order) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       const index = this.orders.findIndex((order) => order.id === orderId)
       if (index >= 0) {
         this.orders[index] = order
@@ -45,7 +45,7 @@ export const useOrdersStore = defineStore('orders', {
       newStartDate: string,
       newEndDate: string,
     ): Promise<boolean> {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       const index = this.orders.findIndex((order) => order.id === orderId)
       if (index !== -1) {
         this.orders[index].startDate = newStartDate

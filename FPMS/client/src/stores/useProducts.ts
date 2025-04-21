@@ -43,15 +43,15 @@ export const useProductsStore = defineStore('products', {
   }),
   actions: {
     async createProduct(product: Product) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       this.products.push(product)
     },
     async deleteProduct(id: string) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       this.products = this.products.filter((product) => product.id !== id)
     },
     async editProduct(productId: string, updatedProduct: Partial<Product>) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       const index = this.products.findIndex((product) => product.id === productId)
       if (index >= 0) {
         this.products[index] = { ...this.products[index], ...updatedProduct }

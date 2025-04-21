@@ -404,7 +404,7 @@ const handleAddProductionLine = () => {
   productionLinesStore.addProductionLine(newLine) // Add the new production line to the store
   resetForm() // Reset the form after adding
   showAddProductionLinesPopup.value = false // Close the popup
-  alert('Production Line added successfully!')
+  //alert('Production Line added successfully!')
 }
 
 const handleEditProductionLine = () => {

@@ -25,18 +25,18 @@ export const useProductionLinesStore = defineStore('productionLines', {
   }),
   actions: {
     async addProductionLine(line: ProductionLine) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       this.productionLines.push(line)
     },
     async editProductionLine(id: string, updatedLine: Partial<ProductionLine>) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       const index = this.productionLines.findIndex((line) => line.id === id)
       if (index !== -1) {
         this.productionLines[index] = { ...this.productionLines[index], ...updatedLine }
       }
     },
     async deleteProductionLine(id: string) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       this.productionLines = this.productionLines.filter((line) => line.id !== id)
     },
   },

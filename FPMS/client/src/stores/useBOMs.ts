@@ -44,15 +44,15 @@ export const useBOMsStore = defineStore('boms', {
   }),
   actions: {
     async createBOM(bom: BOM) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       this.boms.push(bom)
     },
     async deleteBOM(id: string) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       this.boms = this.boms.filter((bom) => bom.id !== id)
     },
     async editBOM(bomId: string, updatedBOM: Partial<BOM>) {
-      await delay(1000) // Simulate API delay
+      await delay(1500) // Simulate API delay
       const index = this.boms.findIndex((bom) => bom.id === bomId)
       if (index >= 0) {
         this.boms[index] = { ...this.boms[index], ...updatedBOM }
