@@ -87,19 +87,7 @@ const handleLogin = async () => {
   const userStore = useUserStore()
   if (data.value) {
     userStore.setUser(data.value.user, data.value.access, data.value.refresh)
-
-    // Role-based route mapping
-    const roleRoutes = {
-      'Quality Control Manager': { name: 'quality' },
-      'Quality Control Inspector': { name: 'reports' },
-      'Admin': { name: 'home' },
-      'Production Planner': { name: 'production' },
-      'Production Manager': { name: 'workcenters' },
-      '404': { name: 'not-found' },
-    }
-    const role = (userStore?.user?.role || '404') as keyof typeof roleRoutes
-    const route = roleRoutes[role]
-    if (route) router.push({ name: route.name }) // Use the router instance to navigate
+    router.push({ name: 'home' })
   }
 }
 </script>
