@@ -10,7 +10,7 @@ type Notification = {
   isRead: boolean // Track read status
 }
 
-export function useNotificationStore() {
+export default function useNotificationStore() {
   const notifications = ref<Notification[]>([]) // Reactive array to store notifications
 
   // Add a notification

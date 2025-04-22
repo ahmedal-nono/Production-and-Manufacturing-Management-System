@@ -1,6 +1,6 @@
 # administration/serializers.py
 from rest_framework import serializers
-from .models import User, Department, Role, HealthMetric, BackupConfig, BackupRecord, SystemSetting, ActivityLog
+from .models import User, Department, Role, HealthMetric, BackupConfig, BackupRecord, SystemSetting, ActivityLog, UserProfile
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 
@@ -112,3 +112,14 @@ class ActivityLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityLog
         fields = '__all__'
+
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['profile_pic', 'security_question', 'security_answer']
+
+class PasswordChangeSerializer(serializers.Serializer):
+    old_password = serializers.CharField()
+    new_password = serializers.CharField(min_length=8)

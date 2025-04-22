@@ -61,7 +61,7 @@
           </button>
           <p>Last Login Information</p>
           <span v-if="activityLogs.length"
-            >Last Login: {{ formatDateTime(activityLogs[activityLogs.length - 1].timestamp) }}</span
+            >Last Login: {{ formatDateTime(activityLogs[0 ].timestamp) }}</span
           >
           <span v-else>Last Login: N/A</span>
         </div>

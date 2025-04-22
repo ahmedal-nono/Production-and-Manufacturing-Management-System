@@ -1,15 +1,16 @@
 # administration/views.py
 import psutil
 import time
+from django.shortcuts import get_object_or_404
 from .utils import log_activity
 from datetime import timedelta
 from django.db.models import Avg
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework import permissions
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.http import FileResponse
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -21,9 +22,9 @@ from pathlib import Path
 from .permissions import IsProductionManager, IsSameUserOrManager
 from datetime import datetime
 import subprocess
-from .models import BackupConfig, BackupRecord, Department, SystemSetting, HealthMetric, Role
+from .models import BackupConfig, BackupRecord, Department, SystemSetting, HealthMetric, Role, UserProfile
 from django.contrib.auth.models import User
-from .serializers import BackupConfigSerializer, BackupRecordSerializer, DepartmentSerializer, SystemSettingSerializer, HealthMetricSerializer, RoleSerializer, UserSerializer, LoginSerializer
+from .serializers import BackupConfigSerializer, BackupRecordSerializer, DepartmentSerializer, SystemSettingSerializer, HealthMetricSerializer, RoleSerializer, UserSerializer, LoginSerializer, UserProfileSerializer, PasswordChangeSerializer
 
 class BackupConfigViewSet(viewsets.ModelViewSet):
     queryset = BackupConfig.objects.all()
@@ -446,3 +447,31 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.user.is_authenticated:
             return Response(UserSerializer(request.user).data)
         return Response({'error': 'Not authenticated'}, status=401)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([])
+def profile_view(request, user_id):
+    user = get_object_or_404(User, id=user_id)  # Get user by ID
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    
+    if request.method == 'GET':
+        serializer = UserProfileSerializer(profile)
+        return Response(serializer.data)
+    
+    elif request.method == 'PUT':
+        serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([])
+def change_password(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    serializer = PasswordChangeSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    
+    user.set_password(serializer.validated_data['new_password'])
+    user.save()
+    return Response({"status": "password changed"})

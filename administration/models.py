@@ -80,6 +80,12 @@ class User(AbstractUser):
         verbose_name = 'User'
         verbose_name_plural = 'Users'
 
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    security_question = models.CharField(max_length=200, blank=True)
+    security_answer = models.CharField(max_length=200, blank=True)
+
 # administration/models.py
 class BackupConfig(models.Model):
     SCHEDULE_CHOICES = [
