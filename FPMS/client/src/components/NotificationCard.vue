@@ -24,20 +24,26 @@
 </template>
 
 <script setup lang="ts">
+import { defineProps } from 'vue'
+import notificationStore from '@/stores/notificationStore'
+
 let {
   isRead = false,
   time = '',
   title = '',
   body = '',
+  id = '',
 } = defineProps<{
   isRead: boolean
   time: string
   title: string
   body: string
+  id: string // Added id for identifying notifications
 }>()
 
 const markAsRead = () => {
-  //   emit here
+  isRead = true
+  notificationStore.markNotificationAsRead(id) // Update the notification store
 }
 </script>
 

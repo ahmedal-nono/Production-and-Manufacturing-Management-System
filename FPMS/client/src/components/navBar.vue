@@ -13,12 +13,13 @@
           @update:visible="showNotificationPopup = $event"
           title="Notification Received"
         >
-          <template v-for="noti of notifications">
+          <template v-for="noti in notifications" :key="noti.id">
             <NotificationCard
               :isRead="noti.isRead"
               :time="noti.time"
-              :title="noti.title"
-              :body="noti.body"
+              :title="noti.message"
+              :body="noti.type"
+              @mark-as-read="notificationStore.markNotificationAsRead(noti.id)"
             ></NotificationCard>
           </template>
         </Popup>
@@ -129,28 +130,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import Popup from '@/components/popup.vue'
 import NotificationCard from '@/components/NotificationCard.vue'
 import { useUserStore } from '@/stores/user'
+import notificationStore from '@/stores/notificationStore'
 import router from '@/router'
 
 const currentPassword = defineModel('currentPassword')
 const newPassword = defineModel('newPassword')
 const confirmPassword = defineModel('confirmPassword')
 
-const notifications = [
-  {
-    isRead: false,
-    time: '2 hours ago',
-    title: 'New Message',
-    body: 'You have a new message from John Doe.',
-  },
-]
-
 const showNotificationPopup = ref(false)
 const showAvatarPopup = ref(false)
 const uploadedImage = ref<string | null>(null)
+
+// Fetch notifications for the current user's role
+const userRole = useUserStore().role
+const notifications = computed(() => notificationStore.getNotificationsForRole(userRole))
 
 function handleImageUpload(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
