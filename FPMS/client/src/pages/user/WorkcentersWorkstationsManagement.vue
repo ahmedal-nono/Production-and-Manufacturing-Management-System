@@ -169,6 +169,8 @@
           placeholder="Enter Workstation Name"
           v-model="newWorkstation.name"
           @change="(e) => (newWorkstation.name = e.target.value)"
+          required
+          minlength="5"
         />
       </div>
       <div class="flex flex-col gap-2">
@@ -177,6 +179,7 @@
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           v-model="newWorkstation.status"
           @change="(e) => (newWorkstation.status = e.target.value)"
+          required
         >
           <optgroup>
             <option value="1">Active</option>
@@ -192,6 +195,7 @@
           placeholder="Enter Capacity"
           v-model="newWorkstation.capacity"
           @change="(e) => (newWorkstation.capacity = e.target.value)"
+          required
         />
       </div>
       <div class="flex flex-col gap-2">
@@ -203,6 +207,8 @@
           placeholder="Enter Workstation Description"
           v-model="newWorkstation.description"
           @change="(e) => (newWorkstation.description = e.target.value)"
+          required
+          minlength="10"
         ></textarea>
       </div>
       <div class="flex flex-col gap-2">
@@ -212,8 +218,8 @@
           v-model="newWorkstation.machines"
           @change="(e) => (newWorkstation.machines = e.target.value)"
         >
-          <optgroup>
-            <option>Select</option>
+          <optgroup v-for="(machine, index) in allWorkstations">
+            <option>{{ machine.machine }}</option>
           </optgroup>
         </select>
       </div>
@@ -224,8 +230,8 @@
           v-model="newWorkstation.tools"
           @change="(e) => (newWorkstation.tools = (e.target as HTMLSelectElement).value)"
         >
-          <optgroup>
-            <option>Select</option>
+          <optgroup v-for="(tool, index) in allWorkstations">
+            <option>{{ tool.tool }}</option>
           </optgroup>
         </select>
       </div>
@@ -255,7 +261,7 @@
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Status</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" disabled>
           <optgroup>
             <option>Active</option>
             <option>Inactive</option>
@@ -285,7 +291,7 @@
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Assign Machines</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" disabled>
           <optgroup v-for="(machine, index) in allWorkstations">
             <option>{{ machine.machine }}</option>
           </optgroup>
@@ -293,7 +299,7 @@
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Assign Tools</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" disabled>
           <optgroup v-for="(tool, index) in allWorkstations">
             <option>{{ tool.tool }}</option>
           </optgroup>
@@ -314,6 +320,7 @@
           placeholder="Enter Workstation Id"
           v-model="showWorkStationObject.name"
           @change="(e) => (showWorkStationObject.name = e.target.value)"
+          required
         />
       </div>
       <div class="flex flex-col gap-2">
@@ -324,11 +331,12 @@
           placeholder="Enter Workstation Name"
           v-model="showWorkStationObject.name"
           @change="(e) => (showWorkStationObject.name = e.target.value)"
+          required
         />
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Associated Workcenter</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" required>
           <optgroup v-for="(workcenter, index) in workCenters">
             <option value="">{{ workcenter.name }}</option>
           </optgroup>
@@ -336,7 +344,7 @@
       </div>
       <div class="flex flex-col gap-2">
         <label for=""> Status</label>
-        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5">
+        <select class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5" required>
           <optgroup>
             <option>Active</option>
             <option value="">Inactive</option>
@@ -351,6 +359,7 @@
           placeholder="Enter Capacity"
           v-model="showWorkStationObject.capacity"
           @change="(e) => (showWorkStationObject.capacity = e.target.value)"
+          required
         />
       </div>
       <div class="flex flex-col gap-2">
@@ -362,6 +371,8 @@
           placeholder="Enter Workstation Description"
           v-model="showWorkStationObject.description"
           @change="(e) => (showWorkStationObject.description = e.target.value)"
+          required
+          minlength="10"
         ></textarea>
       </div>
       <div class="flex flex-col gap-2">
@@ -453,7 +464,7 @@
       </h2>
 
       <div class="flex flex-col">
-        <h3 class="flex justify-start py-2 text-lg font-bold">Real-Time Workcenter Performance</h3>
+        <h3 class="flex justify-start py-2 text-lg font-bold">Workcenter Performance</h3>
         <label class="py-1 text-gray-500" for="workcenter">Select Workcenter:</label>
         <select
           v-model="currentWorkCentersNames"
@@ -483,9 +494,7 @@
       </div>
 
       <div class="mt-2">
-        <h3 class="flex justify-start py-1 text-lg font-bold">
-          Real-Time Workstation Availability
-        </h3>
+        <h3 class="flex justify-start py-1 text-lg font-bold">Workstation Availability</h3>
         <h3 class="flex justify-start py-1 text-gray-500">Filter by Workstation or Location:</h3>
         <input
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
@@ -530,6 +539,8 @@
         placeholder="Enter Workcenter Name"
         v-model="newWorkCenter.name"
         @change="(e) => (newWorkCenter.name = e.target.value)"
+        required
+        minlength="5"
       />
     </div>
     <div class="flex flex-col gap-2">
@@ -540,6 +551,8 @@
         placeholder="Enter Workcenter Code"
         v-model="newWorkCenter.code"
         @change="(e) => (newWorkCenter.code = e.target.value)"
+        required
+        minlength="1"
       />
     </div>
     <div class="flex flex-col gap-2">
@@ -551,14 +564,17 @@
         placeholder="Enter Workcenter Location"
         v-model="newWorkCenter.location"
         @change="(e) => (newWorkCenter.location = e.target.value)"
+        required
+        minlength="5"
       ></textarea>
     </div>
     <div class="flex flex-col gap-2">
-      <label for=""> Status</label>
+      <label for="">Status</label>
       <select
         class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
         v-model="newWorkCenter.status"
         @change="(e) => (newWorkCenter.status = e.target.value)"
+        required
       >
         <optgroup>
           <option>Active</option>
@@ -575,6 +591,8 @@
         placeholder="Enter Additional Details (Optional)"
         v-model="newWorkCenter.remarks"
         @change="(e) => (newWorkCenter.remarks = e.target.value)"
+        required
+        minlength="5"
       ></textarea>
     </div>
     <button
@@ -595,7 +613,6 @@
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
           placeholder="Enter Machine Id"
-          disabled
         />
       </div>
 
@@ -632,7 +649,6 @@
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
           placeholder="Enter Machine Id"
-          disabled
         />
       </div>
 
@@ -669,7 +685,6 @@
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
           placeholder="Enter Tool Id"
-          disabled
         />
       </div>
 
@@ -706,7 +721,6 @@
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           type="text"
           placeholder="Enter Tool Id"
-          disabled
         />
       </div>
 
@@ -794,6 +808,7 @@
         class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
         v-model="newSchedule.workstation"
         @change="(e) => (newSchedule.workstation = e.target.value)"
+        required
       >
         <optgroup v-for="(workstation, index) in allWorkstations">
           <option>{{ workstation.id }}</option>
@@ -809,6 +824,7 @@
         id=""
         v-model="newSchedule.maintenance_date"
         @change="(e) => (newSchedule.maintenance_date = e.target.value)"
+        required
       />
     </div>
     <div class="flex flex-col gap-2">
@@ -820,6 +836,7 @@
         id=""
         v-model="newSchedule.maintenance_time"
         @change="(e) => (newSchedule.maintenance_time = e.target.value)"
+        required
       />
     </div>
     <div class="flex flex-col gap-2">
@@ -828,6 +845,7 @@
         class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
         v-model="newSchedule.recurrence"
         @change="(e) => (newSchedule.recurrence = e.target.value)"
+        required
       >
         <optgroup>
           <option>None</option>
@@ -843,6 +861,7 @@
         placeholder="Provide details about the maintenance task"
         v-model="newSchedule.description"
         @change="(e) => (newSchedule.description = e.target.value)"
+        required
       ></textarea>
     </div>
     <div class="flex flex-col gap-2">
@@ -853,6 +872,7 @@
         placeholder="Enter staff names or roles"
         v-model="newSchedule.staff_notes"
         @change="(e) => (newSchedule.staff_notes = e.target.value)"
+        required
       />
     </div>
     <button
