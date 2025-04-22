@@ -1,7 +1,7 @@
 <template>
   <div
     class="flex flex-col space-y-4 rounded-lg border-l-8 p-4"
-    :class="isRead ? 'border-gray-500 bg-gray-100' : 'border-blue-500 bg-blue-50'"
+    :class="localIsRead ? 'border-gray-500 bg-gray-100' : 'border-blue-500 bg-blue-50'"
   >
     <div class="flex justify-between">
       <p class="text-lg font-bold">{{ title }}</p>
@@ -12,9 +12,9 @@
     </div>
     <div class="flex justify-around gap-5">
       <button
-        v-if="!isRead"
+        v-if="!localIsRead"
         class="w-full rounded-lg bg-green-600 p-2 text-white"
-        @click.stop="markAsRead()"
+        @click.stop="markAsRead"
       >
         Mark As Read
       </button>
@@ -24,26 +24,24 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
-import notificationStore from '@/stores/notificationStore'
+import { defineProps, defineEmits, ref } from 'vue'
 
-let {
-  isRead = false,
-  time = '',
-  title = '',
-  body = '',
-  id = '',
-} = defineProps<{
+const props = defineProps<{
   isRead: boolean
   time: string
   title: string
   body: string
-  id: string // Added id for identifying notifications
+  id: string
 }>()
 
+const emit = defineEmits(['mark-as-read'])
+
+// Local state for `isRead`
+const localIsRead = ref(props.isRead)
+
 const markAsRead = () => {
-  isRead = true
-  notificationStore.markNotificationAsRead(id) // Update the notification store
+  localIsRead.value = true
+  emit('mark-as-read', props.id) // Notify parent component
 }
 </script>
 

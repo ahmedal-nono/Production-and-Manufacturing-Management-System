@@ -7,7 +7,7 @@ type Notification = {
 }
 
 class NotificationStore {
-  private notifications: Notification[] = [] // Array to store notifications
+  public notifications: Notification[] = [] // Array to store notifications
 
   // Add a notification
   addNotification(
