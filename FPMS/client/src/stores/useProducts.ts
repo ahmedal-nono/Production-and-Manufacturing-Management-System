@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { useBOMsStore } from './useBOMs'
 import { useWorkflowsStore } from './useWorkflows'
+import notificationStore from '@/stores/notificationStore'
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -43,12 +44,24 @@ export const useProductsStore = defineStore('products', {
   }),
   actions: {
     async createProduct(product: Product) {
-      await delay(1500) // Simulate API delay
-      this.products.push(product)
+      try {
+        await delay(1500) // Simulate API delay
+        this.products.push(product)
+        notificationStore.addNotification('Product created successfully!', 'success', 'admin')
+      } catch (error) {
+        notificationStore.addNotification('Failed to create product.', 'error', 'admin')
+        throw error
+      }
     },
     async deleteProduct(id: string) {
-      await delay(1500) // Simulate API delay
-      this.products = this.products.filter((product) => product.id !== id)
+      try {
+        await delay(1500) // Simulate API delay
+        this.products = this.products.filter((product) => product.id !== id)
+        notificationStore.addNotification('Product deleted successfully!', 'success', 'admin')
+      } catch (error) {
+        notificationStore.addNotification('Failed to delete product.', 'error', 'admin')
+        throw error
+      }
     },
     async editProduct(productId: string, updatedProduct: Partial<Product>) {
       await delay(1500) // Simulate API delay
