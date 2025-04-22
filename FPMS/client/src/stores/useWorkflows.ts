@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { useOrdersStore } from './useOrders'
+import notificationStore from '@/stores/notificationStore'
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -47,12 +48,44 @@ export const useWorkflowsStore = defineStore('workflows', {
   }),
   actions: {
     async createWorkflow(workflow: Workflow) {
-      await delay(1500) // Simulate API delay
-      this.workflows.push(workflow)
+      try {
+        await delay(1500) // Simulate API delay
+        this.workflows.push(workflow)
+        notificationStore.addNotification(
+          Date.now().toString(),
+          'Workflow created successfully!',
+          'success',
+          'manager',
+        )
+      } catch (error) {
+        notificationStore.addNotification(
+          Date.now().toString(),
+          'Failed to create workflow.',
+          'error',
+          'manager',
+        )
+        throw error
+      }
     },
     async deleteWorkflow(id: string) {
-      await delay(1500) // Simulate API delay
-      this.workflows = this.workflows.filter((workflow) => workflow.id !== id)
+      try {
+        await delay(1500) // Simulate API delay
+        this.workflows = this.workflows.filter((workflow) => workflow.id !== id)
+        notificationStore.addNotification(
+          Date.now().toString(),
+          'Workflow deleted successfully!',
+          'success',
+          'manager',
+        )
+      } catch (error) {
+        notificationStore.addNotification(
+          Date.now().toString(),
+          'Failed to delete workflow.',
+          'error',
+          'manager',
+        )
+        throw error
+      }
     },
     async editWorkflow(workflowId: string, updatedWorkflow: Partial<Workflow>) {
       await delay(1500) // Simulate API delay
