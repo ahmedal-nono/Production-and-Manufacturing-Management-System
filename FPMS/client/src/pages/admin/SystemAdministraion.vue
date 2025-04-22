@@ -60,9 +60,10 @@
             View Full Activity Log
           </button>
           <p>Last Login Information</p>
-          <span>Last Login: 11/24/2024, 10:30 AM</span>
-          <p>Your Last Login</p>
-          <span>Last Login: 11/24/2024, 09:45 AM</span>
+          <span v-if="activityLogs.length"
+            >Last Login: {{ formatDateTime(activityLogs[activityLogs.length - 1].timestamp) }}</span
+          >
+          <span v-else>Last Login: N/A</span>
         </div>
       </div>
     </div>
@@ -304,13 +305,13 @@
                 id="password"
                 v-model="userForm.password"
                 placeholder="Enter password"
-                class="rounded-md border p-2 w-full"
+                class="w-full rounded-md border p-2"
                 :required="!editingUserId"
               />
               <button
                 type="button"
                 @click="togglePasswordVisibility"
-                class="absolute right-2 top-2 text-sm text-blue-600 hover:underline"
+                class="absolute top-2 right-2 text-sm text-blue-600 hover:underline"
               >
                 {{ showPassword ? 'Hide' : 'Show' }}
               </button>
