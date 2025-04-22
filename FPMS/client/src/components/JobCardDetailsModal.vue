@@ -20,7 +20,7 @@
   
             <div>
               <label class="block text-sm font-medium text-gray-700">Work Order</label>
-              <p class="mt-1 text-sm">WO-{{ jobCard.work_order }}</p>
+              <p class="mt-1 text-sm">WO-{{ jobCard.work_order.name  }}</p>
             </div>
   
             <div>
