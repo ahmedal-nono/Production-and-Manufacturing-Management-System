@@ -33,14 +33,14 @@ export const useProductionLinesStore = defineStore('productionLines', {
           Date.now().toString(),
           'Production line created successfully!',
           'success',
-          'admin',
+          'production_manager',
         )
       } catch (error) {
         notificationStore.addNotification(
           Date.now().toString(),
           'Failed to create production line.',
           'error',
-          'admin',
+          'production_manager',
         )
         throw error
       }
@@ -55,7 +55,7 @@ export const useProductionLinesStore = defineStore('productionLines', {
             Date.now().toString(),
             'Production line updated successfully!',
             'success',
-            'admin',
+            'production_manager',
           )
         }
       } catch (error) {
@@ -63,7 +63,7 @@ export const useProductionLinesStore = defineStore('productionLines', {
           Date.now().toString(),
           'Failed to update production line.',
           'error',
-          'admin',
+          'production_manager',
         )
         throw error
       }
@@ -76,14 +76,14 @@ export const useProductionLinesStore = defineStore('productionLines', {
           Date.now().toString(),
           'Production line deleted successfully!',
           'success',
-          'admin',
+          'production_manager',
         )
       } catch (error) {
         notificationStore.addNotification(
           Date.now().toString(),
           'Failed to delete production line.',
           'error',
-          'admin',
+          'production_manager',
         )
         throw error
       }

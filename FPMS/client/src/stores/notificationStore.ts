@@ -1,43 +1,52 @@
+import { ref } from 'vue'
+import { useUserStore } from '@/stores/user'
+
 type Notification = {
   id: string // Unique identifier for each notification
-  message: string
+  title: string // Title of the notification
+  body: string // Body of the notification
   type: 'success' | 'error' | 'info'
-  role: string
+  role: string // Role of the user
   isRead: boolean // Track read status
 }
 
-class NotificationStore {
-  public notifications: Notification[] = [] // Array to store notifications
+export function useNotificationStore() {
+  const notifications = ref<Notification[]>([]) // Reactive array to store notifications
 
   // Add a notification
-  addNotification(
+  const addNotification = (
     id: string,
-    message: string,
+    title: string,
+    body: string,
     type: 'success' | 'error' | 'info',
-    role: string,
-  ): void {
-    this.notifications.push({ id, message, type, role, isRead: false })
+  ) => {
+    const userRole = useUserStore().role // Fetch the role from user store
+    notifications.value.push({ id, title, body, type, role: userRole, isRead: false })
   }
 
   // Get notifications for a specific role
-  getNotificationsForRole(role: string): Notification[] {
-    return this.notifications.filter((notification) => notification.role === role)
+  const getNotificationsForRole = (role: string): Notification[] => {
+    return notifications.value.filter((notification) => notification.role === role)
   }
 
   // Mark a notification as read
-  markNotificationAsRead(id: string): void {
-    const notification = this.notifications.find((notification) => notification.id === id)
+  const markNotificationAsRead = (id: string): void => {
+    const notification = notifications.value.find((notification) => notification.id === id)
     if (notification) {
       notification.isRead = true
     }
   }
 
   // Clear notifications (optional)
-  clearNotifications(): void {
-    this.notifications = []
+  const clearNotifications = (): void => {
+    notifications.value = []
+  }
+
+  return {
+    notifications,
+    addNotification,
+    getNotificationsForRole,
+    markNotificationAsRead,
+    clearNotifications,
   }
 }
-
-// Export a singleton instance of the store
-const notificationStore = new NotificationStore()
-export default notificationStore
