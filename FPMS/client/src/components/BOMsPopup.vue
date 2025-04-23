@@ -28,7 +28,10 @@
                 <td class="border border-gray-700 px-4 py-2">{{ bom.productCode }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ bom.version }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ bom.status }}</td>
-                <td v-if="userRole === 'Production Manager'" class="border border-gray-700 px-4 py-2">
+                <td
+                  v-if="userRole === 'Production Manager'"
+                  class="border border-gray-700 px-4 py-2"
+                >
                   <button
                     v-if="userRole === 'Production Manager'"
                     @click="viewBOM(bom.id)"
@@ -128,6 +131,7 @@
                       type="text"
                       placeholder="Component name"
                       class="w-full rounded border border-gray-300 px-2 py-1"
+                      required
                     />
                   </td>
                   <td class="border border-gray-700 px-4 py-2">
@@ -136,6 +140,7 @@
                       type="text"
                       placeholder="Part number"
                       class="w-full rounded border border-gray-300 px-2 py-1"
+                      required
                     />
                   </td>
                   <td class="border border-gray-700 px-4 py-2">
@@ -143,7 +148,8 @@
                       <input
                         v-model="component.quantity"
                         type="number"
-                        min="0"
+                        min="1"
+                        required
                         class="w-full rounded border border-gray-300 px-2 py-1"
                       />
                       <button
@@ -159,6 +165,7 @@
                     <select
                       v-model="component.unit"
                       class="w-full rounded border border-gray-300 px-2 py-1"
+                      required
                     >
                       <option value="pc">pc</option>
                       <option value="kg">kg</option>
@@ -170,9 +177,10 @@
                     <input
                       v-model="component.unitCost"
                       type="number"
-                      min="0"
+                      min="0.01"
                       step="0.01"
                       class="w-full rounded border border-gray-300 px-2 py-1"
+                      required
                     />
                   </td>
                   <td class="border border-gray-700 px-4 py-2">
@@ -314,6 +322,7 @@
                 type="text"
                 placeholder="Enter component name"
                 class="w-full rounded-md border border-gray-300 px-3 py-2"
+                required
               />
             </div>
             <div>
@@ -323,6 +332,7 @@
                 type="text"
                 placeholder="Enter part number"
                 class="w-full rounded-md border border-gray-300 px-3 py-2"
+                required
               />
             </div>
             <div>
@@ -332,6 +342,7 @@
                 type="number"
                 min="1"
                 class="w-full rounded-md border border-gray-300 px-3 py-2"
+                required
               />
             </div>
             <div>
@@ -339,6 +350,7 @@
               <select
                 v-model="newComponent.unit"
                 class="w-full rounded-md border border-gray-300 px-3 py-2"
+                required
               >
                 <option value="pc">pc</option>
                 <option value="kg">kg</option>
@@ -351,9 +363,10 @@
               <input
                 v-model="newComponent.unitCost"
                 type="number"
-                min="0"
+                min="0.01"
                 step="0.01"
                 class="w-full rounded-md border border-gray-300 px-3 py-2"
+                required
               />
             </div>
           </div>

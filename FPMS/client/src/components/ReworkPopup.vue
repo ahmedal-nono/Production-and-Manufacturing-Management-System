@@ -87,6 +87,7 @@
               <button
                 v-if="rework.status === 'Open'"
                 class="rounded bg-gray-500 px-3 py-1 text-white"
+                @click="assignRework(rework.id, 'John Doe')"
               >
                 Assign to
               </button>
@@ -112,8 +113,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Popup from '@/components/popup.vue'
+import { useReworkStore } from '@/stores/useRework'
+
+const reworkStore = useReworkStore()
 
 defineProps<{
   showReworkPopup: boolean
@@ -128,36 +132,7 @@ const filters = ref({
   workOrderId: '',
 })
 
-const reworks = ref<
-  Array<{
-    id: string
-    workOrder: string
-    product: string
-    defectLevel: 'Critical' | 'Major' | 'Minor'
-    assignedTo: string
-    dueDate: string
-    status: 'Open' | 'Completed'
-  }>
->([
-  {
-    id: 'RW-2023-045',
-    workOrder: 'WO-2023-0892',
-    product: 'SKU-45B (Hydraulic Valve)',
-    defectLevel: 'Critical',
-    assignedTo: '',
-    dueDate: '2023-10-15',
-    status: 'Open',
-  },
-  {
-    id: 'RW-2023-046',
-    workOrder: 'WO-2023-0893',
-    product: 'SKU-46A (Pneumatic Valve)',
-    defectLevel: 'Minor',
-    assignedTo: 'Jane Smith',
-    dueDate: '2023-10-20',
-    status: 'Completed',
-  },
-])
+const reworks = computed(() => reworkStore.reworks)
 
 const badgeClass = (level: 'Critical' | 'Major' | 'Minor') => {
   return (
@@ -179,9 +154,31 @@ const rowClass = (level: 'Critical' | 'Major' | 'Minor') => {
   )
 }
 
-const toggleStatus = (item: { status: string }) => {
-  item.status = item.status === 'Open' ? 'Completed' : 'Open'
+const toggleStatus = async (item: { id: string; status: string }) => {
+  const newStatus = item.status === 'Open' ? 'Completed' : 'Open'
+  await reworkStore.updateRework(item.id, { status: newStatus })
 }
+
+const assignRework = async (reworkId: string, assignedTo: string) => {
+  try {
+    await reworkStore.updateRework(reworkId, { assignedTo })
+    console.log(`Rework ${reworkId} assigned to ${assignedTo}`)
+  } catch (error) {
+    console.error('Failed to assign rework:', error)
+  }
+}
+
+const fetchReworks = async () => {
+  try {
+    await reworkStore.fetchReworks()
+  } catch (error) {
+    console.error('Failed to fetch reworks:', error)
+  }
+}
+
+onMounted(() => {
+  fetchReworks()
+})
 
 const filteredReworks = computed(() => {
   return reworks.value.filter((r) => {

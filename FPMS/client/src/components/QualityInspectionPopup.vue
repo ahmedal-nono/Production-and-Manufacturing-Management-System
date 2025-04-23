@@ -58,7 +58,7 @@
               </td>
               <td class="space-x-2 border border-gray-700 px-4 py-2">
                 <button
-                  @click="showStartInspectionPopup = true"
+                  @click="startInspection(item.id)"
                   class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
                 >
                   Start Inspection
@@ -201,13 +201,22 @@
       <div class="mb-4">
         <h3 class="mb-2 text-lg font-semibold">Final Decision</h3>
         <div class="space-x-3">
-          <button class="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600">
+          <button
+            @click="handleApprove"
+            class="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+          >
             ✅ Approve
           </button>
-          <button class="rounded bg-yellow-400 px-4 py-2 text-white hover:bg-yellow-500">
+          <button
+            @click="handleRework"
+            class="rounded bg-yellow-400 px-4 py-2 text-white hover:bg-yellow-500"
+          >
             🛠 Rework
           </button>
-          <button class="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600">
+          <button
+            @click="handleReject"
+            class="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+          >
             ❌ Reject
           </button>
         </div>
@@ -226,27 +235,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Popup from '@/components/popup.vue'
+import { useQualityInspectionsStore } from '@/stores/useQualityInspections'
+
+const qualityInspectionsStore = useQualityInspectionsStore()
 
 const showStartInspectionPopup = ref(false)
 
-const instructions = ref([
-  {
-    id: 'WO-1234',
-    product: 'Product A',
-    quantity: 100,
-    dueDate: '2023-10-01',
-    status: 'Active',
-  },
-  {
-    id: 'WO-1235',
-    product: 'Product B',
-    quantity: 200,
-    dueDate: '2023-10-02',
-    status: 'Inactive',
-  },
-])
+const instructions = computed(() => qualityInspectionsStore.inspections)
 
 defineProps<{
   showQualityInspectionPopup: boolean
@@ -280,6 +277,37 @@ const handleChecklistUpload = (index: number, event: Event) => {
     }
   }
 }
+
+const startInspection = async (inspectionId: string) => {
+  await qualityInspectionsStore.updateInspection(inspectionId, { status: 'Active' })
+}
+
+const handleApprove = () => {
+  console.log('Inspection Approved')
+  // Add logic to handle approval
+}
+
+const handleRework = () => {
+  console.log('Inspection marked for Rework')
+  // Add logic to handle rework
+}
+
+const handleReject = () => {
+  console.log('Inspection Rejected')
+  // Add logic to handle rejection
+}
+
+const fetchInspections = async () => {
+  try {
+    await qualityInspectionsStore.fetchInspections()
+  } catch (error) {
+    console.error('Failed to fetch inspections:', error)
+  }
+}
+
+onMounted(() => {
+  fetchInspections()
+})
 </script>
 
 <style>

@@ -74,7 +74,10 @@
                   </span>
                   <span v-else class="text-gray-400">-</span>
                 </td>
-                <td v-if="userRole === 'Production Manager'" class="border border-gray-700 px-4 py-2">
+                <td
+                  v-if="userRole === 'Production Manager'"
+                  class="border border-gray-700 px-4 py-2"
+                >
                   <button
                     v-if="userRole === 'Production Manager'"
                     @click="openEditPopup(line.id)"
@@ -130,6 +133,7 @@
               <select
                 v-model="form.status"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
               >
                 <option value="Active">Active</option>
                 <option value="Maintenance">Maintenance</option>

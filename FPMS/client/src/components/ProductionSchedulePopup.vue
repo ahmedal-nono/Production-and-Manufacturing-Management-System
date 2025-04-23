@@ -118,7 +118,7 @@
         <div class="mt-2 mb-4">
           <label class="mb-1 text-sm">Reason for Reschedule</label>
           <select v-model="reason" class="w-full rounded border p-2">
-            <option value="" disabled>Select a reason</option>
+            <option value="" >Select a reason</option>
             <option v-for="r in reasons" :key="r" :value="r">{{ r }}</option>
           </select>
         </div>

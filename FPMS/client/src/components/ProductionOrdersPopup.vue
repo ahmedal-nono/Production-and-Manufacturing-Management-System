@@ -9,7 +9,7 @@
         <div class="mb-4 flex items-center justify-between">
           <h2 class="rounded-t px-4 py-2 text-xl font-semibold">Production Order Management</h2>
           <button
-          v-if="userRole === 'Production Manager'"
+            v-if="userRole === 'Production Manager'"
             @click="showCreateProductionOrdersPopup = true"
             class="cursor-pointer rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
           >
@@ -100,11 +100,12 @@
                   type="text"
                   placeholder="Order Name"
                   class="w-full rounded border p-2"
+                  required
                 />
               </label>
               <label>
                 Priority
-                <select v-model="priority" class="w-full rounded border p-2">
+                <select v-model="priority" class="w-full rounded border p-2" required>
                   <option>High</option>
                   <option>Low</option>
                 </select>
@@ -119,10 +120,10 @@
               <div class="grid grid-cols-2 gap-4">
                 <label>
                   Selected Variant
-                  <select v-model="selectedVariant" class="w-full rounded border p-2">
-                    <option>Blue - Medium</option>
-                    <option>Red - Large</option>
-                    <option>Green - Small</option>
+                  <select v-model="selectedVariant" class="w-full rounded border p-2" required>
+                    <option>Medium</option>
+                    <option>Large</option>
+                    <option>Small</option>
                   </select>
                 </label>
                 <div>
@@ -144,7 +145,7 @@
                     <div class="-mt-6 flex">
                       <label>
                         Selected Variant
-                        <select v-model="selectedStatus" class="w-full rounded border p-2">
+                        <select v-model="selectedStatus" class="w-full rounded border p-2" required>
                           <option>On Track</option>
                           <option>Delayed</option>
                         </select>
@@ -162,18 +163,22 @@
             <div class="grid grid-cols-3 gap-4">
               <label>
                 Start Date
-                <input v-model="startDate" type="date" class="w-full rounded border p-2" />
+                <input v-model="startDate" type="date" class="w-full rounded border p-2" required />
               </label>
               <label>
                 Deadline
-                <input v-model="deadline" type="date" class="w-full rounded border p-2" />
+                <input v-model="deadline" type="date" class="w-full rounded border p-2" required />
               </label>
               <label>
                 Production Line
                 <select v-model="productionLine" class="w-full rounded border p-2">
-                  <option>Line 1</option>
-                  <option>Line 2</option>
-                  <option>Line 3</option>
+                  <option
+                    v-for="line in productionLinesStore.productionLines"
+                    :key="line.id"
+                    :value="line.name"
+                  >
+                    {{ line.name }}
+                  </option>
                 </select>
               </label>
             </div>
@@ -209,11 +214,12 @@
                   type="text"
                   placeholder="Order Name"
                   class="w-full rounded border p-2"
+                  required
                 />
               </label>
               <label>
                 Priority
-                <select v-model="priority" class="w-full rounded border p-2">
+                <select v-model="priority" class="w-full rounded border p-2" required>
                   <option>High</option>
                   <option>Low</option>
                 </select>
@@ -228,10 +234,10 @@
               <div class="grid grid-cols-2 gap-4">
                 <label>
                   Selected Variant
-                  <select v-model="selectedVariant" class="w-full rounded border p-2">
-                    <option>Blue - Medium</option>
-                    <option>Red - Large</option>
-                    <option>Green - Small</option>
+                  <select v-model="selectedVariant" class="w-full rounded border p-2" required>
+                    <option>Medium</option>
+                    <option>Large</option>
+                    <option>Small</option>
                   </select>
                 </label>
                 <div>
@@ -253,7 +259,7 @@
                     <div class="-mt-6 flex">
                       <label>
                         Selected Variant
-                        <select v-model="selectedStatus" class="w-full rounded border p-2">
+                        <select v-model="selectedStatus" class="w-full rounded border p-2" required>
                           <option>On Track</option>
                           <option>Delayed</option>
                         </select>
@@ -271,18 +277,22 @@
             <div class="grid grid-cols-3 gap-4">
               <label>
                 Start Date
-                <input v-model="startDate" type="date" class="w-full rounded border p-2" />
+                <input v-model="startDate" type="date" class="w-full rounded border p-2" required />
               </label>
               <label>
                 Deadline
-                <input v-model="deadline" type="date" class="w-full rounded border p-2" />
+                <input v-model="deadline" type="date" class="w-full rounded border p-2" required />
               </label>
               <label>
                 Production Line
                 <select v-model="productionLine" class="w-full rounded border p-2">
-                  <option>Line 1</option>
-                  <option>Line 2</option>
-                  <option>Line 3</option>
+                  <option
+                    v-for="line in productionLinesStore.productionLines"
+                    :key="line.id"
+                    :value="line.name"
+                  >
+                    {{ line.name }}
+                  </option>
                 </select>
               </label>
             </div>
@@ -306,9 +316,11 @@ import { ref } from 'vue'
 import Popup from '@/components/popup.vue'
 import { useOrdersStore } from '@/stores/useOrders'
 import { useUserStore } from '@/stores/user'
+import { useProductionLinesStore } from '@/stores/useProductionLines'
 
 const ordersStore = useOrdersStore()
 const userStore = useUserStore()
+const productionLinesStore = useProductionLinesStore()
 const userRole = userStore.user?.role
 
 const showCreateProductionOrdersPopup = ref(false)
