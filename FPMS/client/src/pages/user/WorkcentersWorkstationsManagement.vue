@@ -33,7 +33,7 @@
         <div
           v-for="(workcenter, index) in workCenters"
           :key="index"
-          class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
+          class="flex w-full cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         >
           <div
             @click="
