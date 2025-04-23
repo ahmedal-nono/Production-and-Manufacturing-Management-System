@@ -9,6 +9,7 @@
         <div class="mb-4 flex items-center justify-between">
           <h2 class="rounded-t px-4 py-2 text-xl font-semibold">Production Order Management</h2>
           <button
+          v-if="userRole === 'Production Manager'"
             @click="showCreateProductionOrdersPopup = true"
             class="cursor-pointer rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
           >
@@ -26,7 +27,12 @@
                 <th class="border border-gray-700 px-4 py-2">Quantity</th>
                 <th class="border border-gray-700 px-4 py-2">Due Date</th>
                 <th class="border border-gray-700 px-4 py-2">Status</th>
-                <th class="border border-gray-700 px-4 py-2">Actions</th>
+                <th
+                  v-if="userRole === 'Production Manager'"
+                  class="border border-gray-700 px-4 py-2"
+                >
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -47,14 +53,16 @@
                     {{ order.status }}
                   </span>
                 </td>
-                <td class="space-x-2 px-4 py-2">
+                <td v-if="userRole === 'Production Manager'" class="space-x-2 px-4 py-2">
                   <button
+                    v-if="userRole === 'Production Manager'"
                     @click="openEditPopup(order)"
                     class="cursor-pointer rounded bg-gray-200 px-3 py-1 hover:bg-gray-300"
                   >
                     Edit
                   </button>
                   <button
+                    v-if="userRole === 'Production Manager'"
                     @click="() => ordersStore.deleteOrder(order.id)"
                     class="cursor-pointer rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
                   >
@@ -297,8 +305,11 @@
 import { ref } from 'vue'
 import Popup from '@/components/popup.vue'
 import { useOrdersStore } from '@/stores/useOrders'
+import { useUserStore } from '@/stores/user'
 
 const ordersStore = useOrdersStore()
+const userStore = useUserStore()
+const userRole = userStore.user?.role
 
 const showCreateProductionOrdersPopup = ref(false)
 const showEditProductionOrdersPopup = ref(false)

@@ -109,6 +109,9 @@ export const useWorkflowsStore = defineStore('workflows', {
       }
       return '1'
     },
+    getWorkflowById: (state) => (id: string) => {
+      return state.workflows.find((workflow) => workflow.id === id)
+    },
   },
   persist: true,
 })

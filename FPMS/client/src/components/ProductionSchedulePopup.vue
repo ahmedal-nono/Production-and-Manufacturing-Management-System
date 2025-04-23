@@ -37,7 +37,7 @@
               <th class="border px-4 py-2">End Date</th>
               <th class="border px-4 py-2">Line</th>
               <th class="border px-4 py-2">Priority</th>
-              <th class="border px-4 py-2">Actions</th>
+              <th v-if="userRole === 'Production Manager'" class="border px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -76,8 +76,9 @@
               <td class="border px-4 py-2">
                 <span :class="getPriorityClass(order.priority)"> ● {{ order.priority }} </span>
               </td>
-              <td class="space-x-1 border px-4 py-2">
+              <td v-if="userRole === 'Production Manager'" class="space-x-1 border px-4 py-2">
                 <button
+                  v-if="userRole === 'Production Manager'"
                   @click="
                     () => {
                       currentProduction = order
@@ -171,9 +172,12 @@
 import { useOrdersStore } from '@/stores/useOrders'
 import { computed, ref } from 'vue'
 import Popup from '@/components/popup.vue'
+import { useUserStore } from '@/stores/user.ts'
 
 // const { orders, deleteOrder, updateOrderDates }
 const ordersStore = useOrdersStore()
+const userStore = useUserStore()
+const userRole = userStore.user?.role
 
 const showReschedulePopup = ref(false)
 const showProductInfoPopup = ref(false)

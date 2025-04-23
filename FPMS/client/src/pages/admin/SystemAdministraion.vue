@@ -61,7 +61,7 @@
           </button>
           <p>Last Login Information</p>
           <span v-if="activityLogs.length"
-            >Last Login: {{ formatDateTime(activityLogs[0 ].timestamp) }}</span
+            >Last Login: {{ formatDateTime(activityLogs[0].timestamp) }}</span
           >
           <span v-else>Last Login: N/A</span>
         </div>
@@ -276,13 +276,9 @@
           <div class="flex flex-col">
             <label for="role" class="text-sm font-bold">Role</label>
             <select id="role" v-model="userForm.role" class="rounded-md border p-2" required>
-              <option value="">Select a role</option>
-              <option value="quality_control_manager">Quality Control Manager</option>
-              <option value="quality_control_inspector">Quality Control Inspector</option>
-              <option value="supervisor">Supervisor</option>
-              <option value="operator">Operator</option>
+              <option value="admin">Admin</option>
               <option value="production_planner">Production Planner</option>
-              <option value="production_manager">Production Manager</option>
+              <option value="production_manager" selected>Production Manager</option>
             </select>
           </div>
           <div class="flex flex-col">

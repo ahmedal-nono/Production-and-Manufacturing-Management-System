@@ -14,7 +14,12 @@
                 <th class="border border-gray-700 px-4 py-2">Product Code</th>
                 <th class="border border-gray-700 px-4 py-2">Version</th>
                 <th class="border border-gray-700 px-4 py-2">Status</th>
-                <th class="border border-gray-700 px-4 py-2">Actions</th>
+                <th
+                  v-if="userRole === 'Production Manager'"
+                  class="border border-gray-700 px-4 py-2"
+                >
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -23,20 +28,23 @@
                 <td class="border border-gray-700 px-4 py-2">{{ bom.productCode }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ bom.version }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ bom.status }}</td>
-                <td class="border border-gray-700 px-4 py-2">
+                <td v-if="userRole === 'Production Manager'" class="border border-gray-700 px-4 py-2">
                   <button
+                    v-if="userRole === 'Production Manager'"
                     @click="viewBOM(bom.id)"
                     class="mr-2 rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-500"
                   >
                     View
                   </button>
                   <button
+                    v-if="userRole === 'Production Manager'"
                     @click="editBOM(bom.id)"
                     class="mr-2 rounded bg-green-600 px-3 py-1 text-white hover:bg-green-500"
                   >
                     Edit
                   </button>
                   <button
+                    v-if="userRole === 'Production Manager'"
                     @click="deleteBOM(bom.id)"
                     class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
                   >
@@ -49,6 +57,7 @@
         </div>
       </div>
       <button
+        v-if="userRole === 'Production Manager'"
         @click="createBOM()"
         class="mt-4 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
       >
@@ -476,9 +485,13 @@ import { ref, computed } from 'vue'
 import Popup from '@/components/popup.vue'
 import { useBOMsStore } from '@/stores/useBOMs'
 import { useOrdersStore } from '@/stores/useOrders'
+import { useUserStore } from '@/stores/user'
+
+const ordersStore = useOrdersStore()
+const userStore = useUserStore()
+const userRole = userStore.user?.role
 
 const bomsStore = useBOMsStore()
-const ordersStore = useOrdersStore()
 
 const showEditBOMsPopup = ref(false)
 const showAddBOMsPopup = ref(false)

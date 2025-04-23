@@ -37,7 +37,12 @@
                 <th class="border border-gray-700 px-4 py-2">OEE</th>
                 <th class="border border-gray-700 px-4 py-2">Workcenters</th>
                 <th class="border border-gray-700 px-4 py-2">Assigned Workflows</th>
-                <th class="border border-gray-700 px-4 py-2">Actions</th>
+                <th
+                  v-if="userRole === 'Production Manager'"
+                  class="border border-gray-700 px-4 py-2"
+                >
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -69,14 +74,16 @@
                   </span>
                   <span v-else class="text-gray-400">-</span>
                 </td>
-                <td class="border border-gray-700 px-4 py-2">
+                <td v-if="userRole === 'Production Manager'" class="border border-gray-700 px-4 py-2">
                   <button
+                    v-if="userRole === 'Production Manager'"
                     @click="openEditPopup(line.id)"
                     class="cursor-pointer rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-500"
                   >
                     Edit
                   </button>
                   <button
+                    v-if="userRole === 'Production Manager'"
                     @click="deleteProductionLine(line.id)"
                     class="ml-2 cursor-pointer rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
                   >
@@ -89,6 +96,7 @@
         </div>
 
         <button
+          v-if="userRole === 'Production Manager'"
           @click="openAddPopup"
           class="mt-4 inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
         >
@@ -337,6 +345,12 @@
 import { ref, computed } from 'vue'
 import { useProductionLinesStore } from '@/stores/useProductionLines'
 import Popup from '@/components/popup.vue'
+import { useOrdersStore } from '@/stores/useOrders'
+import { useUserStore } from '@/stores/user'
+
+const ordersStore = useOrdersStore()
+const userStore = useUserStore()
+const userRole = userStore.user?.role
 
 const showAddProductionLinesPopup = ref(false)
 const showEditProductionLinesPopup = ref(false)

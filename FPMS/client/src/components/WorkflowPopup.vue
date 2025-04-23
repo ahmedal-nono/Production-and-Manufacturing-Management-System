@@ -11,7 +11,12 @@
             <thead>
               <tr class="bg-blue-500 text-white">
                 <th class="border border-gray-700 px-4 py-2">Workflow Name</th>
-                <th class="border border-gray-700 px-4 py-2">Actions</th>
+                <th
+                  v-if="userRole === 'Production Manager'"
+                  class="border border-gray-700 px-4 py-2"
+                >
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -21,14 +26,16 @@
                 class="border-t hover:bg-gray-100"
               >
                 <td class="border border-gray-700 px-4 py-2">{{ workflow.name }}</td>
-                <td class="border border-gray-700 px-4 py-2">
+                <td v-if="userRole === 'Production Manager'" class="border border-gray-700 px-4 py-2">
                   <button
+                    v-if="userRole === 'Production Manager'"
                     @click="editWorkflow(workflow.id)"
                     class="mr-2 rounded bg-green-600 px-3 py-1 text-white hover:bg-green-500"
                   >
                     Edit
                   </button>
                   <button
+                    v-if="userRole === 'Production Manager'"
                     @click="deleteWorkflow(workflow.id)"
                     class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
                   >
@@ -41,6 +48,7 @@
         </div>
       </div>
       <button
+        v-if="userRole === 'Production Manager'"
         @click="showCreateWorkflowPopup = true"
         class="mr-2 rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-500"
       >
@@ -221,10 +229,10 @@
                 />
               </td>
               <td class="border border-gray-700 px-4 py-2">
-                <select v-model="stage.workcenter" class="rounded border p-2">
-                  <option value="">Select Workcenter</option>
-                  <option>Category 1</option>
-                  <option>Category 2</option>
+                <select class="rounded border p-2">
+                  <optgroup v-for="(workcenter, index) in workCenters">
+                    <option>{{ workcenter.name }}</option>
+                  </optgroup>
                 </select>
               </td>
               <td class="border border-gray-700 px-4 py-2">
@@ -236,10 +244,10 @@
                 />
               </td>
               <td class="border border-gray-700 px-4 py-2">
-                <select v-model="stage.workorder" class="rounded border p-2">
+                <select class="rounded border p-2">
                   <option value="">Select Workorder</option>
-                  <option>Category 1</option>
-                  <option>Category 2</option>
+                  <option>WO-ELEC-101</option>
+                  <option>WO-QUAL-303</option>
                 </select>
               </td>
               <td class="border border-gray-700 px-4 py-2">
@@ -357,9 +365,9 @@
               </td>
               <td class="border border-gray-700 px-4 py-2">
                 <select v-model="stage.workcenter" class="rounded border p-2">
-                  <option value="">Select Workcenter</option>
-                  <option>Category 1</option>
-                  <option>Category 2</option>
+                  <optgroup v-for="(workcenter, index) in workCenters">
+                    <option>{{ workcenter.name }}</option>
+                  </optgroup>
                 </select>
               </td>
               <td class="border border-gray-700 px-4 py-2">
@@ -373,8 +381,8 @@
               <td class="border border-gray-700 px-4 py-2">
                 <select v-model="stage.workorder" class="rounded border p-2">
                   <option value="">Select Workorder</option>
-                  <option>Category 1</option>
-                  <option>Category 2</option>
+                  <option>WO-ELEC-101</option>
+                  <option>WO-QUAL-303</option>
                 </select>
               </td>
               <td class="border border-gray-700 px-4 py-2">
@@ -464,6 +472,14 @@
 import { ref, computed, onMounted } from 'vue'
 import Popup from '@/components/popup.vue'
 import { useWorkflowsStore } from '@/stores/useWorkflows'
+import { useAxios } from '@vueuse/integrations/useAxios'
+import { baseApiUrl } from '@/api.ts'
+import { useOrdersStore } from '@/stores/useOrders'
+import { useUserStore } from '@/stores/user'
+
+const ordersStore = useOrdersStore()
+const userStore = useUserStore()
+const userRole = userStore.user?.role
 
 const workflowsStore = useWorkflowsStore()
 
@@ -521,6 +537,7 @@ function saveWorkflow() {
     workflowsStore.editWorkflow(editingWorkflowId.value, data)
   } else {
     workflowsStore.createWorkflow(data)
+    resetForm()
   }
 
   resetForm()
@@ -551,6 +568,7 @@ function resetForm() {
   showCreateWorkflowPopup.value = false
   showEditWorkflowPopup.value = false
 }
+const { data: workCenters } = useAxios(`${baseApiUrl}/workcentre/workcenters/`, { method: 'GET' })
 </script>
 
 <style>

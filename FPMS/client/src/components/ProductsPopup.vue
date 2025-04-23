@@ -14,6 +14,7 @@
         <div class="px-4 pt-4">
           <div class="mb-4 flex items-center justify-between">
             <button
+            v-if="userRole === 'Production Manager'"
               @click="showCreateProductsPopup = true"
               class="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-600"
             >
@@ -51,7 +52,7 @@
                   <th class="border border-gray-700 px-4 py-2">Category</th>
                   <th class="border border-gray-700 px-4 py-2">BOM</th>
                   <th class="border border-gray-700 px-4 py-2">Workflow</th>
-                  <th class="border border-gray-700 px-4 py-2">Actions</th>
+                  <th v-if="userRole === 'Production Manager'" class="border border-gray-700 px-4 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -65,14 +66,16 @@
                   <td class="border border-gray-700 px-4 py-2">{{ product.category }}</td>
                   <td class="border border-gray-700 px-4 py-2">{{ product.bom }}</td>
                   <td class="border border-gray-700 px-4 py-2">{{ product.workflow }}</td>
-                  <td class="border border-gray-700 px-4 py-2">
+                  <td v-if="userRole === 'Production Manager'" class="border border-gray-700 px-4 py-2">
                     <button
+                    v-if="userRole === 'Production Manager'"
                       @click="openEditPopup(product)"
                       class="mr-2 rounded bg-green-600 px-3 py-1 text-white hover:bg-green-600"
                     >
                       Edit
                     </button>
                     <button
+                    v-if="userRole === 'Production Manager'"
                       @click="deleteProduct(product.id)"
                       class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700"
                     >
@@ -249,6 +252,12 @@ import Popup from '@/components/popup.vue'
 import { useProductsStore } from '@/stores/useProducts'
 import { useWorkflowsStore } from '@/stores/useWorkflows'
 import { useBOMsStore } from '@/stores/useBOMs'
+import { useOrdersStore } from '@/stores/useOrders'
+import { useUserStore } from '@/stores/user'
+
+const ordersStore = useOrdersStore()
+const userStore = useUserStore()
+const userRole = userStore.user?.role
 
 const showCreateProductsPopup = ref(false)
 const showEditProductsPopup = ref(false)
