@@ -185,6 +185,7 @@ import { useUserStore } from '@/stores/user'
 import notificationStore from '@/stores/notificationStore'
 import router from '@/router'
 import type { UserType } from '@/stores/user'
+import useNotificationStore from '@/stores/notificationStore'
 
 interface ProfileData {
   profile_pic: string | null
@@ -361,43 +362,40 @@ const changePassword = async () => {
       `http://localhost:8000/change-password/${userId.value}/`,
       {
         old_password: currentPassword.value,
-        new_password: newPassword.value
+        new_password: newPassword.value,
       },
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userStore.access}`
-        }
-      }
+          Authorization: `Bearer ${userStore.access}`,
+        },
+      },
     )
 
     // Handle successful password change
     successMessage.value = 'Password changed successfully!'
-    
+
     // Clear form fields
     currentPassword.value = ''
     newPassword.value = ''
     confirmPassword.value = ''
-    
+
     // Clear success message after 3 seconds
     setTimeout(() => {
       successMessage.value = ''
     }, 3000)
-
   } catch (error: any) {
     console.error('Error changing password:', error)
-    
+
     // Handle specific backend validation errors
     if (error.response?.data?.old_password) {
       passwordError.value = error.response.data.old_password.join(' ')
-    } 
-    else if (error.response?.data?.new_password) {
+    } else if (error.response?.data?.new_password) {
       passwordError.value = error.response.data.new_password.join(' ')
-    }
-    else {
+    } else {
       errorMessage.value = error.response?.data?.detail || 'Failed to change password'
     }
-    
+
     // Clear error messages after 3 seconds
     setTimeout(() => {
       errorMessage.value = ''

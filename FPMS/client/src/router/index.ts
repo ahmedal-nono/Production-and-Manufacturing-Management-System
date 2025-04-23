@@ -7,7 +7,7 @@ const routes = [
     path: '/',
     name: 'home',
     component: () => import('@/pages/admin/SystemAdministraion.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: false },
   },
   {
     path: '/login',
@@ -19,31 +19,31 @@ const routes = [
     path: '/workcenters',
     name: 'workcenters',
     component: () => import('@/pages/user/WorkcentersWorkstationsManagement.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: false },
   },
   {
     path: '/production',
     name: 'production',
     component: () => import('@/pages/user/Production.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: false },
   },
   {
     path: '/workorders',
     name: 'workorders',
     component: () => import('@/pages/user/Workorders.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: false },
   },
   {
     path: '/quality',
     name: 'quality',
     component: () => import('@/pages/user/QualityManagement.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: false },
   },
   {
     path: '/reports',
     name: 'reports',
     component: () => import('@/pages/user/Reports.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: false },
   },
   {
     path: '/:catchAll(.*)',
@@ -92,41 +92,41 @@ const allowedRoutesByRole = [
 ]
 
 // Navigation guard
-router.beforeEach((to, from, next) => {
-  const { isAuthenticated, user } = useUserStore()
-  const isAuth = isAuthenticated
-  const role = (user?.role || '404') as keyof typeof roleRoutes
+// router.beforeEach((to, from, next) => {
+//   const { isAuthenticated, user } = useUserStore()
+//   const isAuth = isAuthenticated
+//   const role = (user?.role || '404') as keyof typeof roleRoutes
 
-  // If route requires auth and not logged in
-  // console.log('user?.role', user?.role)
-  // console.log('isAuth', isAuth)
-  // console.log('to.name', to.name)
-  // console.log('role', role)
-  // console.log("to.name !== 'login' && !isAuth", to.name !== 'login' && !isAuth)
+//   // If route requires auth and not logged in
+//   // console.log('user?.role', user?.role)
+//   // console.log('isAuth', isAuth)
+//   // console.log('to.name', to.name)
+//   // console.log('role', role)
+//   // console.log("to.name !== 'login' && !isAuth", to.name !== 'login' && !isAuth)
 
-  if (to.name !== 'login' && !isAuth) {
-    return next({ name: 'login' })
-  }
+//   if (to.name !== 'login' && !isAuth) {
+//     return next({ name: 'login' })
+//   }
 
-  // If trying to go to login while already logged in
-  if (to.name === 'login' && isAuth) {
-    const targetRoute = roleRoutes[role]
-    return next({ name: targetRoute })
-  }
+//   // If trying to go to login while already logged in
+//   if (to.name === 'login' && isAuth) {
+//     const targetRoute = roleRoutes[role]
+//     return next({ name: targetRoute })
+//   }
 
-  // If user is not allowed to access the route
-  const allowedRoutes = allowedRoutesByRole.find((r) => r.role === role)?.names || []
-  // console.log('allowedRoutes', allowedRoutes, !allowedRoutes.includes(to.name as string))
+//   // If user is not allowed to access the route
+//   const allowedRoutes = allowedRoutesByRole.find((r) => r.role === role)?.names || []
+//   // console.log('allowedRoutes', allowedRoutes, !allowedRoutes.includes(to.name as string))
 
-  if (allowedRoutes && allowedRoutes.length > 0 && !allowedRoutes.includes(to.name as string)) {
-    // console.log(
-    //   '!allowedRoutes.includes(to.name as string)',
-    //   !allowedRoutes.includes(to.name as string),
-    // )
-    const fallback = roleRoutes[role]
-    // console.log('fallback', fallback)
-    return next({ name: fallback })
-  } else next()
-})
+//   if (allowedRoutes && allowedRoutes.length > 0 && !allowedRoutes.includes(to.name as string)) {
+//     // console.log(
+//     //   '!allowedRoutes.includes(to.name as string)',
+//     //   !allowedRoutes.includes(to.name as string),
+//     // )
+//     const fallback = roleRoutes[role]
+//     // console.log('fallback', fallback)
+//     return next({ name: fallback })
+//   } else next()
+// })
 
 export default router

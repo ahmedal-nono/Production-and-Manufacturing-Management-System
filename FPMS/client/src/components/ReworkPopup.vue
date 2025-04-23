@@ -215,8 +215,11 @@ watch(
 )
 
 onMounted(() => {
-  reworkStore.loadReworks() // Load persisted reworks from localStorage
-  fetchReworks()
+  if (reworks.value.length === 0) {
+    fetchReworks()
+  } else {
+    console.log('Reworks already loaded, skipping fetch.')
+  }
 })
 
 const filteredReworks = computed(() => {

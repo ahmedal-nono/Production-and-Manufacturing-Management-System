@@ -305,6 +305,17 @@ const startNewInspection = (inspectionId: string) => {
   }
 }
 
+const inspectionData = ref({
+  workOrder: '',
+  product: '',
+  defectLevel: 'Minor',
+  defectType: '',
+  affectedComponent: '',
+  description: '',
+  assignedTo: null,
+  dueDate: '',
+})
+
 const submitInspection = () => {
   if (selectedInspection.value) {
     console.log('Submitting inspection for:', selectedInspection.value)
@@ -312,41 +323,24 @@ const submitInspection = () => {
     // Update workflow status
     updateWorkflowStatus(selectedInspection.value.id, selectedInspection.value.status)
 
-    if (selectedInspection.value.status === 'Rework') {
-      const existingRework = reworkStore.getReworkByWorkOrder(selectedInspection.value.id)
-      const defectType =
-        defect.value.severity === 'Critical'
-          ? 'Critical Defect'
-          : defect.value.severity === 'Major'
-            ? 'Major Defect'
-            : 'Minor Defect'
+    const defectType =
+      defect.value.severity === 'Critical'
+        ? 'Critical Defect'
+        : defect.value.severity === 'Major'
+          ? 'Major Defect'
+          : 'Minor Defect'
 
-      if (existingRework) {
-        console.log('Updating existing rework:', existingRework)
-        // Update existing rework
-        reworkStore.updateRework(existingRework.id, {
-          defectLevel: defect.value.severity || 'Minor',
-          defectType: defectType,
-          affectedComponent: defect.value.component || 'N/A',
-          description: defect.value.description || 'No description provided',
-        })
-      } else {
-        console.log('Creating new rework for:', selectedInspection.value)
-        // Create new rework
-        reworkStore.createRework({
-          id: `RW-${Date.now()}`,
-          workOrder: selectedInspection.value.id,
-          product: selectedInspection.value.product,
-          defectLevel: defect.value.severity || 'Minor',
-          defectType: defectType,
-          affectedComponent: defect.value.component || 'N/A',
-          description: defect.value.description || 'No description provided',
-          assignedTo: null,
-          dueDate: new Date().toISOString().split('T')[0], // Default to today's date
-          status: 'Open',
-        })
-      }
-    }
+    // Save or update rework
+    reworkStore.saveFromQualityInspection({
+      workOrder: selectedInspection.value.id,
+      product: selectedInspection.value.product,
+      defectLevel: defect.value.severity || 'Minor',
+      defectType: defectType,
+      affectedComponent: defect.value.component || '',
+      description: defect.value.description || '',
+      assignedTo: null,
+      dueDate: new Date().toISOString().split('T')[0],
+    })
 
     console.log(`Inspection submitted with status: ${selectedInspection.value.status}`)
     showStartInspectionPopup.value = false
