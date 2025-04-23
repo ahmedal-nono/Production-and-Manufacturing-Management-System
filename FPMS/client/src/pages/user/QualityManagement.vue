@@ -3,6 +3,7 @@
     <p class="flex justify-center text-xl font-bold">Quality Management</p>
     <div class="flex flex-row gap-10 py-4">
       <div
+        v-if="userRole === 'Production Manager'"
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         @click="showQualityInspectionPopup = true"
       >
@@ -31,6 +32,12 @@
 import { ref } from 'vue'
 import QualityInspectionPopup from '@/components/QualityInspectionPopup.vue'
 import ReworkPopup from '@/components/ReworkPopup.vue'
+import { useOrdersStore } from '@/stores/useOrders'
+import { useUserStore } from '@/stores/user'
+
+const ordersStore = useOrdersStore()
+const userStore = useUserStore()
+const userRole = userStore.user?.role
 
 const showQualityInspectionPopup = ref(false)
 const showReworkPopup = ref(false)

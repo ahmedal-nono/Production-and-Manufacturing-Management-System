@@ -64,6 +64,7 @@ const roleRoutes = {
   'Quality Control Inspector': 'reports',
   'Production Manager': 'workcenters',
   'Production Planner': 'production',
+  Operator: 'quality',
   Admin: 'home',
   '404': 'not-found',
 }
@@ -88,6 +89,10 @@ const allowedRoutesByRole = [
   {
     role: 'Production Planner',
     names: ['production'],
+  },
+  {
+    role: 'Operator',
+    names: ['quality'],
   },
 ]
 

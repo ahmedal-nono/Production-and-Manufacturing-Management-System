@@ -53,8 +53,8 @@
             <th class="border p-2 text-left">Affected Component</th>
             <th class="border p-2 text-left">Assigned To</th>
             <th class="border p-2 text-left">Due Date</th>
-            <th class="border p-2 text-left">Status</th>
-            <th class="border p-2 text-left">Actions</th>
+            <th v-if="userRole === 'Production Manager'" class="border p-2 text-left">Status</th>
+            <th v-if="userRole === 'Production Manager'" class="border p-2 text-left">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -86,6 +86,7 @@
             </td>
             <td class="border p-2">
               <select
+                :disabled="userRole !== 'Production Manager'"
                 v-model="rework.assignedTo"
                 class="w-full rounded border p-1"
                 @change="updateRework(rework.id, { assignedTo: rework.assignedTo })"
@@ -99,12 +100,13 @@
             <td class="border p-2">
               <input
                 type="date"
+                disabled
                 v-model="rework.dueDate"
                 class="rounded border p-1"
                 @blur="updateRework(rework.id, { dueDate: rework.dueDate })"
               />
             </td>
-            <td class="border p-2">
+            <td v-if="userRole === 'Production Manager'" class="border p-2">
               <span v-if="rework.status === 'Open'" class="font-semibold text-orange-500"
                 >Open ●</span
               >
@@ -112,6 +114,7 @@
             </td>
             <td class="space-x-2 border p-2">
               <button
+                v-if="userRole === 'Production Manager'"
                 :class="
                   rework.status === 'Open'
                     ? 'bg-green-500 hover:bg-green-600'
@@ -135,6 +138,12 @@ import { ref, computed, onMounted, watch } from 'vue'
 import Popup from '@/components/popup.vue'
 import { useReworkStore } from '@/stores/useRework'
 import { useEmployeeStore } from '@/stores/useEmployee'
+import { useOrdersStore } from '@/stores/useOrders'
+import { useUserStore } from '@/stores/user'
+
+const ordersStore = useOrdersStore()
+const userStore = useUserStore()
+const userRole = userStore.user?.role
 
 const reworkStore = useReworkStore()
 const employeeStore = useEmployeeStore()

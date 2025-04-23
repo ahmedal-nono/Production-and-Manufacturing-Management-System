@@ -279,6 +279,7 @@
               <option value="admin">Admin</option>
               <option value="production_planner">Production Planner</option>
               <option value="production_manager" selected>Production Manager</option>
+              <option value="operator" selected>Operator</option>
             </select>
           </div>
           <div class="flex flex-col">

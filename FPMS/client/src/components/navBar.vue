@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-fit w-full flex-col pb-2 pl-3">
-    <div class="flex w-full justify-between px-2 pt-4">
-      <div>
+    <div class="flex w-full justify-end px-2 pt-4">
+      <!-- <div>
         <img
           src="../assets/noti.png"
           class="size-11 cursor-pointer"
@@ -23,7 +23,7 @@
             ></NotificationCard>
           </template>
         </Popup>
-      </div>
+      </div> -->
       <div class="flex flex-row space-x-6">
         <button class="mt-2 h-fit rounded-xl bg-red-500 px-6 py-1 text-white" @click="logout">
           Logout
