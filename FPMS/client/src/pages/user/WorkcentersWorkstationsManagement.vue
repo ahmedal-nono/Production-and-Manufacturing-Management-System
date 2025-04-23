@@ -14,7 +14,7 @@
         @click="showRealTimePerformancePopup = true"
       >
         <img src="@/assets/performance.png" class="size-20" alt="" />
-        <p class="pt-2 text-[13px] font-bold">Real-Time Performance</p>
+        <p class="pt-2 text-[13px] font-bold">Performance</p>
       </div>
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
