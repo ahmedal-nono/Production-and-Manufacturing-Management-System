@@ -25,10 +25,9 @@
       <div class="overflow-x-auto">
         <table class="w-full text-center">
           <thead class="bg-blue-500 text-white">
-            <tr class="">
-              <th class="border border-gray-700 px-4 py-2">Work Order ID</th>
+            <tr>
+              <th class="border border-gray-700 px-4 py-2">Workflow ID</th>
               <th class="border border-gray-700 px-4 py-2">Product Name</th>
-              <th class="border border-gray-700 px-4 py-2">Quantity</th>
               <th class="border border-gray-700 px-4 py-2">Due Date</th>
               <th class="border border-gray-700 px-4 py-2">Status</th>
               <th class="border border-gray-700 px-4 py-2">Actions</th>
@@ -42,14 +41,19 @@
             >
               <td class="border border-gray-700 px-4 py-2">{{ item.id }}</td>
               <td class="border border-gray-700 px-4 py-2">{{ item.product }}</td>
-              <td class="border border-gray-700 px-4 py-2">{{ item.quantity }}</td>
               <td class="border border-gray-700 px-4 py-2">{{ item.dueDate }}</td>
               <td class="border border-gray-700 px-4 py-2">
                 <span
                   :class="
-                    item.status === 'Active'
+                    item.status === 'Approved'
                       ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-200 text-gray-600'
+                      : item.status === 'Rework'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : item.status === 'Rejected'
+                          ? 'bg-red-100 text-red-700'
+                          : item.status === 'Ready for Inspection'
+                            ? 'bg-yellow-200 text-yellow-800'
+                            : 'bg-gray-200 text-gray-600'
                   "
                   class="rounded-full px-2 py-1 text-xs"
                 >
@@ -58,7 +62,7 @@
               </td>
               <td class="space-x-2 border border-gray-700 px-4 py-2">
                 <button
-                  @click="startInspection(item.id)"
+                  @click="openStartInspectionPopup(item)"
                   class="mt-4 w-full cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
                 >
                   Start Inspection
@@ -69,11 +73,6 @@
         </table>
       </div>
     </div>
-    <div class="mt-2 flex flex-row justify-center space-x-4">
-      <button class="w-2/12 rounded-lg bg-blue-600 p-1.5 text-white">Prev</button>
-      <p class="mt-2">Page 1 of 5</p>
-      <button class="w-2/12 rounded-lg bg-blue-600 p-1.5 text-white">Next</button>
-    </div>
   </Popup>
 
   <Popup :visible="showStartInspectionPopup" @update:visible="showStartInspectionPopup = $event">
@@ -83,15 +82,15 @@
 
       <!-- Work Order Info -->
       <div class="mb-6 text-sm">
-        <p><strong>Work Order ID:</strong> WO-1234</p>
-        <p><strong>Product:</strong> SKU-45B (Steel Bracket)</p>
-        <p><strong>Production Line:</strong> Line 3 - Assembly</p>
-        <p><strong>Inspection Checkpoint:</strong> Final Assembly QA</p>
+        <p><strong>Workflow ID:</strong> {{ selectedInspection?.id }}</p>
+        <p><strong>Product:</strong> {{ selectedInspection?.product }}</p>
+        <p><strong>Production Line:</strong> {{ selectedInspection?.productionLine }}</p>
+        <p><strong>Status:</strong> {{ selectedInspection?.status }}</p>
       </div>
 
-      <!-- Inspection Checklist -->
+      <!-- Job Cards Table -->
       <div class="mb-6">
-        <h3 class="mb-2 text-lg font-semibold">Inspection Checklist</h3>
+        <h3 class="mb-2 text-lg font-semibold">Job Cards</h3>
         <table class="w-full text-center">
           <thead class="bg-blue-500 text-white">
             <tr>
@@ -105,26 +104,26 @@
             <tr v-for="(item, index) in checklist" :key="index">
               <td class="border border-gray-700 px-4 py-2">{{ item.name }}</td>
               <td class="border border-gray-700 px-4 py-2">
-                <label
-                  ><input
+                <label>
+                  <input
                     type="radio"
                     :name="'status' + index"
                     value="Pass"
                     v-model="item.status"
                     class="mr-1"
                   />
-                  Pass</label
-                >
-                <label class="ml-4"
-                  ><input
+                  Pass
+                </label>
+                <label class="ml-4">
+                  <input
                     type="radio"
                     :name="'status' + index"
                     value="Fail"
                     v-model="item.status"
                     class="mr-1"
                   />
-                  Fail</label
-                >
+                  Fail
+                </label>
               </td>
               <td class="border border-gray-700 px-4 py-2">
                 <input
@@ -169,11 +168,11 @@
           <div>
             <label class="mb-1 block font-medium">Severity:</label>
             <div class="mt-2 space-x-4">
-              <label
-                ><input type="radio" value="Critical" v-model="defect.severity" /> Critical</label
-              >
-              <label><input type="radio" value="Major" v-model="defect.severity" /> Major</label>
-              <label><input type="radio" value="Minor" v-model="defect.severity" /> Minor</label>
+              <label>
+                <input type="radio" value="Critical" v-model="defect.severity" /> Critical
+              </label>
+              <label> <input type="radio" value="Major" v-model="defect.severity" /> Major </label>
+              <label> <input type="radio" value="Minor" v-model="defect.severity" /> Minor </label>
             </div>
           </div>
           <div class="md:col-span-2">
@@ -225,7 +224,10 @@
       <!-- Actions -->
       <div class="mt-6 flex justify-between">
         <div class="space-x-2">
-          <button class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+          <button
+            @click="submitInspection"
+            class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          >
             Submit Inspection
           </button>
         </div>
@@ -235,15 +237,133 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import Popup from '@/components/popup.vue'
-import { useQualityInspectionsStore } from '@/stores/useQualityInspections'
+import { useWorkflowsStore } from '@/stores/useWorkflows'
+import { useProductionLinesStore } from '@/stores/useProductionLines'
+import { useReworkStore } from '@/stores/useRework'
 
-const qualityInspectionsStore = useQualityInspectionsStore()
+const workflowsStore = useWorkflowsStore()
+const productionLinesStore = useProductionLinesStore()
+const reworkStore = useReworkStore()
 
 const showStartInspectionPopup = ref(false)
+const selectedInspection = ref<null | {
+  id: string
+  product: string
+  productionLine: string
+  dueDate: string
+  status: string
+}>(null)
 
-const instructions = computed(() => qualityInspectionsStore.inspections)
+const instructions = computed(() =>
+  workflowsStore.workflows.map((workflow) => ({
+    id: workflow.id,
+    product: workflow.product,
+    productionLine:
+      productionLinesStore.getProductionLineById(workflow.productionLineId)?.name || 'Unknown',
+    dueDate: '2023-10-01', // Placeholder, replace with actual data if available
+    status: workflow.status || 'Pending', // Default status
+  })),
+)
+
+const openStartInspectionPopup = (inspection: any) => {
+  selectedInspection.value = inspection
+  showStartInspectionPopup.value = true
+}
+
+const updateWorkflowStatus = (workflowId: string, status: string) => {
+  workflowsStore.editWorkflow(workflowId, { status })
+}
+
+const handleApprove = () => {
+  if (selectedInspection.value) {
+    selectedInspection.value.status = 'Approved'
+    console.log('Inspection Approved')
+  }
+}
+
+const handleRework = () => {
+  if (selectedInspection.value) {
+    selectedInspection.value.status = 'Rework'
+    console.log('Inspection marked for Rework')
+  }
+}
+
+const handleReject = () => {
+  if (selectedInspection.value) {
+    selectedInspection.value.status = 'Rejected'
+    console.log('Inspection Rejected')
+  }
+}
+
+const startNewInspection = (inspectionId: string) => {
+  const inspection = instructions.value.find((item) => item.id === inspectionId)
+  if (inspection) {
+    inspection.status = 'Ready for Inspection'
+    console.log('New inspection started:', inspection)
+  }
+}
+
+const submitInspection = () => {
+  if (selectedInspection.value) {
+    console.log('Submitting inspection for:', selectedInspection.value)
+
+    // Update workflow status
+    updateWorkflowStatus(selectedInspection.value.id, selectedInspection.value.status)
+
+    if (selectedInspection.value.status === 'Rework') {
+      const existingRework = reworkStore.getReworkByWorkOrder(selectedInspection.value.id)
+      const defectType =
+        defect.value.severity === 'Critical'
+          ? 'Critical Defect'
+          : defect.value.severity === 'Major'
+            ? 'Major Defect'
+            : 'Minor Defect'
+
+      if (existingRework) {
+        console.log('Updating existing rework:', existingRework)
+        // Update existing rework
+        reworkStore.updateRework(existingRework.id, {
+          defectLevel: defect.value.severity || 'Minor',
+          defectType: defectType,
+          affectedComponent: defect.value.component || 'N/A',
+          description: defect.value.description || 'No description provided',
+        })
+      } else {
+        console.log('Creating new rework for:', selectedInspection.value)
+        // Create new rework
+        reworkStore.createRework({
+          id: `RW-${Date.now()}`,
+          workOrder: selectedInspection.value.id,
+          product: selectedInspection.value.product,
+          defectLevel: defect.value.severity || 'Minor',
+          defectType: defectType,
+          affectedComponent: defect.value.component || 'N/A',
+          description: defect.value.description || 'No description provided',
+          assignedTo: null,
+          dueDate: new Date().toISOString().split('T')[0], // Default to today's date
+          status: 'Open',
+        })
+      }
+    }
+
+    console.log(`Inspection submitted with status: ${selectedInspection.value.status}`)
+    showStartInspectionPopup.value = false
+  } else {
+    console.error('No inspection selected for submission.')
+  }
+}
+
+watch(
+  () => selectedInspection.value?.status,
+  (newStatus) => {
+    console.log('Inspection status updated:', newStatus)
+    if (newStatus === 'Rework') {
+      submitInspection()
+    }
+  },
+)
 
 defineProps<{
   showQualityInspectionPopup: boolean
@@ -270,44 +390,7 @@ const handleChecklistUpload = (index: number, event: Event) => {
     const file = target.files[0]
     checklist.value[index].photo = file
   }
-  if (target && target.files) {
-    const file = target.files[0]
-    if (file) {
-      checklist.value[index].photo = file
-    }
-  }
 }
-
-const startInspection = async (inspectionId: string) => {
-  await qualityInspectionsStore.updateInspection(inspectionId, { status: 'Active' })
-}
-
-const handleApprove = () => {
-  console.log('Inspection Approved')
-  // Add logic to handle approval
-}
-
-const handleRework = () => {
-  console.log('Inspection marked for Rework')
-  // Add logic to handle rework
-}
-
-const handleReject = () => {
-  console.log('Inspection Rejected')
-  // Add logic to handle rejection
-}
-
-const fetchInspections = async () => {
-  try {
-    await qualityInspectionsStore.fetchInspections()
-  } catch (error) {
-    console.error('Failed to fetch inspections:', error)
-  }
-}
-
-onMounted(() => {
-  fetchInspections()
-})
 </script>
 
 <style>

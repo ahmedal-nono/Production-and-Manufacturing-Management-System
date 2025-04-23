@@ -90,8 +90,16 @@ export const useProductionLinesStore = defineStore('productionLines', {
     },
   },
   getters: {
-    getProductionLineById: (state) => (id: string) =>
-      state.productionLines.find((line) => line.id === id),
+    getProductionLineById: (state) => async (id: string) => {
+      try {
+        // Simulate API call or fetch from state
+        await delay(500) // Simulate delay
+        return state.productionLines.find((line) => line.id === id) || null
+      } catch (error) {
+        console.error('Error fetching production line by ID:', error)
+        return null
+      }
+    },
     getNextId: (state) => {
       const lastLine = state.productionLines[state.productionLines.length - 1]
       if (lastLine) {

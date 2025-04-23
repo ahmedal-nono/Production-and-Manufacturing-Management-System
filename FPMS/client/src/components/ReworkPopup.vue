@@ -50,6 +50,7 @@
             <th class="border p-2 text-left">Work Order</th>
             <th class="border p-2 text-left">Product</th>
             <th class="border p-2 text-left">Defect Type</th>
+            <th class="border p-2 text-left">Affected Component</th>
             <th class="border p-2 text-left">Assigned To</th>
             <th class="border p-2 text-left">Due Date</th>
             <th class="border p-2 text-left">Status</th>
@@ -73,9 +74,35 @@
                 {{ rework.defectLevel }}
               </span>
             </td>
-            <td class="border p-2">{{ rework.assignedTo || 'Not Assigned' }}</td>
             <td class="border p-2">
-              <input type="date" v-model="rework.dueDate" class="rounded border p-1" />
+              <input
+                type="text"
+                v-model="rework.affectedComponent"
+                class="w-full rounded border p-1"
+                placeholder="Enter affected component"
+                disabled
+                @blur="updateRework(rework.id, { affectedComponent: rework.affectedComponent })"
+              />
+            </td>
+            <td class="border p-2">
+              <select
+                v-model="rework.assignedTo"
+                class="w-full rounded border p-1"
+                @change="updateRework(rework.id, { assignedTo: rework.assignedTo })"
+              >
+                <option disabled value="">Select Employee</option>
+                <option v-for="employee in employees" :key="employee.id" :value="employee.name">
+                  {{ employee.name }}
+                </option>
+              </select>
+            </td>
+            <td class="border p-2">
+              <input
+                type="date"
+                v-model="rework.dueDate"
+                class="rounded border p-1"
+                @blur="updateRework(rework.id, { dueDate: rework.dueDate })"
+              />
             </td>
             <td class="border p-2">
               <span v-if="rework.status === 'Open'" class="font-semibold text-orange-500"
@@ -84,15 +111,6 @@
               <span v-else class="font-semibold text-green-600">Completed ✅</span>
             </td>
             <td class="space-x-2 border p-2">
-              <button
-                v-if="rework.status === 'Open'"
-                class="rounded bg-gray-500 px-3 py-1 text-white"
-                @click="assignRework(rework.id, 'John Doe')"
-              >
-                Assign to
-              </button>
-              <button v-else class="rounded bg-gray-500 px-3 py-1 text-white">Reassign</button>
-
               <button
                 :class="
                   rework.status === 'Open'
@@ -113,11 +131,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import Popup from '@/components/popup.vue'
 import { useReworkStore } from '@/stores/useRework'
+import { useEmployeeStore } from '@/stores/useEmployee'
 
 const reworkStore = useReworkStore()
+const employeeStore = useEmployeeStore()
 
 defineProps<{
   showReworkPopup: boolean
@@ -168,15 +188,34 @@ const assignRework = async (reworkId: string, assignedTo: string) => {
   }
 }
 
+const updateRework = async (id: string, updates: Partial<Rework>) => {
+  try {
+    await reworkStore.updateRework(id, updates)
+    console.log(`Rework ${id} updated successfully`)
+  } catch (error) {
+    console.error('Failed to update rework:', error)
+  }
+}
+
 const fetchReworks = async () => {
   try {
     await reworkStore.fetchReworks()
+    console.log('Reworks fetched successfully:', reworks.value)
   } catch (error) {
     console.error('Failed to fetch reworks:', error)
   }
 }
 
+watch(
+  () => reworkStore.reworks,
+  (newReworks) => {
+    console.log('Reworks updated:', newReworks)
+  },
+  { deep: true },
+)
+
 onMounted(() => {
+  reworkStore.loadReworks() // Load persisted reworks from localStorage
   fetchReworks()
 })
 
@@ -184,13 +223,15 @@ const filteredReworks = computed(() => {
   return reworks.value.filter((r) => {
     const matchStatus = filters.value.status === 'All' || r.status === filters.value.status
     const matchDefect =
-      filters.value.defectType === 'All' || r.defectLevel === filters.value.defectType
+      filters.value.defectType === 'All' || r.defectType === filters.value.defectType
     const matchWorkOrder = r.workOrder.includes(filters.value.workOrderId)
     const matchDate = !filters.value.date || r.dueDate === filters.value.date
 
     return matchStatus && matchDefect && matchWorkOrder && matchDate
   })
 })
+
+const employees = computed(() => employeeStore.employees)
 </script>
 
 <style>

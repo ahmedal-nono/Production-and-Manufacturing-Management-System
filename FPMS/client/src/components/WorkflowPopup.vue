@@ -68,12 +68,7 @@
       <div class="flex flex-row gap-4">
         <div class="flex w-full flex-col">
           <p class="font-medium">Workflow Name</p>
-          <input
-            type="text"
-            class="rounded border p-2"
-            placeholder="Enter Workflow Name"
-            disabled
-          />
+          <input type="text" class="rounded border p-2" placeholder="Enter Workflow Name" />
         </div>
       </div>
       <div class="flex flex-row gap-4">
@@ -83,7 +78,6 @@
             type="text"
             class="rounded border p-2"
             placeholder="Enter Workflow Description"
-            disabled
           />
         </div>
       </div>
@@ -124,7 +118,6 @@
                   class="rounded-xl border border-black p-1"
                   type="text"
                   placeholder="Stage Name"
-                  disabled
                 />
               </td>
               <td class="border border-gray-700 px-4 py-2">
@@ -132,11 +125,10 @@
                   class="rounded-xl border border-black p-1"
                   type="text"
                   placeholder="Description"
-                  disabled
                 />
               </td>
               <td class="border border-gray-700 px-4 py-2">
-                <select v-model="selectedCategory" class="rounded border p-2" disabled>
+                <select v-model="selectedCategory" class="rounded border p-2">
                   <option value="">Select Workcenter</option>
                   <option>Category 1</option>
                   <option>Category 2</option>
@@ -147,18 +139,17 @@
                   class="rounded-xl border border-black p-1"
                   type="text"
                   placeholder="Duration"
-                  disabled
                 />
               </td>
               <td class="border border-gray-700 px-4 py-2">
-                <select v-model="selectedCategory" class="rounded border p-2" disabled>
+                <select v-model="selectedCategory" class="rounded border p-2">
                   <option value="">Select Workorder</option>
                   <option>Category 1</option>
                   <option>Category 2</option>
                 </select>
               </td>
               <td class="border border-gray-700 px-4 py-2">
-                <input class="rounded-xl border border-black p-1" type="text" disabled />
+                <input class="rounded-xl border border-black p-1" type="text" />
               </td>
             </tr>
           </tbody>
@@ -315,7 +306,6 @@
             type="text"
             class="rounded border p-2"
             placeholder="Enter Workflow Name"
-            required
           />
         </div>
       </div>
@@ -366,7 +356,6 @@
                   class="rounded-xl border p-1"
                   type="text"
                   placeholder="Stage Name"
-                  required
                 />
               </td>
               <td class="border border-gray-700 px-4 py-2">
@@ -375,7 +364,6 @@
                   class="rounded-xl border p-1"
                   type="text"
                   placeholder="Description"
-                  required
                 />
               </td>
               <td class="border border-gray-700 px-4 py-2">
@@ -391,9 +379,6 @@
                   class="rounded-xl border p-1"
                   type="number"
                   placeholder="Duration"
-                  required
-                  min="0"
-                />
                 />
               </td>
               <td class="border border-gray-700 px-4 py-2">
@@ -454,12 +439,7 @@
         <div class="mb-3 flex flex-row gap-4">
           <div class="flex w-full flex-col">
             <p class="mb-2 font-medium">Checkpoint Name</p>
-            <input
-              type="text"
-              class="rounded border p-2"
-              placeholder="Enter Checkpoint Name"
-              required
-            />
+            <input type="text" class="rounded border p-2" placeholder="Enter Checkpoint Name" />
           </div>
         </div>
         <div class="mb-3 flex flex-row gap-4">
@@ -469,7 +449,6 @@
               type="text"
               class="rounded border p-2"
               placeholder="Describe inspection criteria (e.g., Dimensions, checks, material validation)"
-              required
             />
           </div>
         </div>
@@ -485,10 +464,7 @@
         </div>
       </div>
       <div class="flex justify-end">
-        <button
-          @click="saveQualityInspectionCheckpoint"
-          class="mt-4 w-2/12 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
-        >
+        <button class="mt-4 w-2/12 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white">
           Save Checkpoint
         </button>
       </div>
@@ -509,10 +485,6 @@ const userStore = useUserStore()
 const userRole = userStore.user?.role
 
 const workflowsStore = useWorkflowsStore()
-
-const saveQualityInspectionCheckpoint = () => {
-  showCreateQualityInspectionCheckpointPopup.value = false
-}
 
 // Load products when the component is mounted
 onMounted(() => {

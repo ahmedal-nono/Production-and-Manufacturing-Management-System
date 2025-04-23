@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import notificationStore from '@/stores/notificationStore'
+import { useWorkflowsStore } from '@/stores/useWorkflows'
 
 interface QualityInspection {
   id: string
@@ -60,6 +61,18 @@ export const useQualityInspectionsStore = defineStore('qualityInspections', {
       const index = this.inspections.findIndex((inspection) => inspection.id === id)
       if (index >= 0) {
         this.inspections[index] = { ...this.inspections[index], ...updates }
+      }
+    },
+    async getInspectionCheckpointByWorkflowId(workflowId: string) {
+      try {
+        const checkpoint = this.inspections.find(
+          (inspection) => inspection.workflowId === workflowId,
+        )
+        if (!checkpoint) throw new Error('Checkpoint not found')
+        return checkpoint
+      } catch (error) {
+        console.error('Error fetching inspection checkpoint:', error)
+        throw error
       }
     },
   },
