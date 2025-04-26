@@ -50,14 +50,14 @@ class ComponentSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'part_number', 'quantity', 'unit', 'unit_cost']
 
 class BOMSerializer(serializers.ModelSerializer):
-    components = ComponentSerializer(many=True)
+    components = ComponentSerializer(many=True,read_only=True,required=False)  # Handle multiple components
 
     class Meta:
         model = BOM
-        fields = ['id', 'name', 'product_code', 'version', 'status', 'created_by', 'last_updated', 'components']
+        fields = ['id', 'name', 'product_code', 'version', 'status', 'last_updated', 'components']
 
     def create(self, validated_data):
-        components_data = validated_data.pop('components')
+        components_data = validated_data.pop('components',[])
         bom = BOM.objects.create(**validated_data)
         for component_data in components_data:
             Component.objects.create(bom=bom, **component_data)
@@ -65,8 +65,8 @@ class BOMSerializer(serializers.ModelSerializer):
 
 # Product Serializer (Handles Product creation and updating)
 class ProductSerializer(serializers.ModelSerializer):
-    bom =serializers.PrimaryKeyRelatedField(queryset=Workflow.objects.all())
-    workflow = serializers.PrimaryKeyRelatedField(queryset=BOM.objects.all())
+    bom = serializers.PrimaryKeyRelatedField(queryset=BOM.objects.all())
+    workflow = serializers.PrimaryKeyRelatedField(queryset=Workflow.objects.all(), required=False)
 
     class Meta:
         model = Product
@@ -104,20 +104,25 @@ class ProductSerializer(serializers.ModelSerializer):
 
 # serializers.py
 class ProductionLineSerializer(serializers.ModelSerializer):
-    work_centers = serializers.CharField(write_only=True)  # Accepting work center names
+    work_centers = serializers.CharField(write_only=True)
     
     class Meta:
         model = ProductionLine
-        fields = ['id', 'line_name', 'capacity_limit', 'maintenance_schedule', 'preferred_shift', 'status', 'oee_target', 'work_centers']
+        fields = ['id', 'line_name', 'capacity_limit', 'maintenance_schedule', 
+                 'preferred_shift', 'status', 'oee_target', 'work_centers']
     
     def create(self, validated_data):
-        work_centers_data = validated_data.pop('work_centers', [])
+        work_centers_data = validated_data.pop('work_centers', "")
         production_line = ProductionLine.objects.create(**validated_data)
         
-        # Process work centers by name
-        for work_center_name in work_centers_data:
-            work_center = WorkCenter.objects.get(name=work_center_name)
-            production_line.work_centers.add(work_center)
+        # Split the string and get or create each WorkCenter
+        for wc_name in work_centers_data.split(','):
+            wc_name = wc_name.strip()
+            if wc_name:
+                work_center, _ = WorkCenter.objects.get_or_create(
+                    name=wc_name  # Removed the description field
+                )
+                production_line.work_centers.add(work_center)
         
         return production_line
 # serializers.py

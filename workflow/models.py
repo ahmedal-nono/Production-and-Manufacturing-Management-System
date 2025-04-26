@@ -65,7 +65,7 @@ class BOM(models.Model):
     version = models.CharField(max_length=50)
     status = models.CharField(max_length=20, choices=[('Approved', 'Approved'), ('Draft', 'Draft')], default='Draft')
     last_updated = models.DateTimeField(auto_now=True)
-    created_by = models.CharField(max_length=255)
+    
 
     def __str__(self):
         return self.name

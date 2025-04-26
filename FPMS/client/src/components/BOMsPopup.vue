@@ -1,8 +1,9 @@
 <template>
   <div>
     <Popup
-      :visible="showBOMsPopup"
-      @update:visible="(value: boolean) => emit('update:showBOMsPopup', value)"
+      v-if="showBOMsPopup"
+      :visible="true"
+      @update:visible="closeBOMsPopup"
     >
       <div>
         <h1 class="mb-6 text-4xl font-extrabold">Existing BOMs</h1>
@@ -105,7 +106,7 @@
                   class="w-full rounded-md border border-gray-300 px-3 py-2"
                 >
                   <option value="Draft">Draft</option>
-                  <option value="Pending Review">Pending Review</option>
+                  <option value="Approved">Approved</option>
                 </select>
               </div>
             </div>
@@ -231,7 +232,6 @@
         </div>
 
         <form @submit.prevent="saveBOM" class="space-y-6">
-          <!-- BOM Information -->
           <div>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
               <div>
@@ -265,7 +265,6 @@
             </div>
           </div>
 
-          <!-- Component Structure -->
           <div>
             <h2 class="mb-4 text-xl font-semibold">Component Structure</h2>
             <table class="w-full text-center">
@@ -312,7 +311,6 @@
             </table>
           </div>
 
-          <!-- Add New Component -->
           <h2 class="mb-4 text-xl font-semibold">Add New Component</h2>
           <div class="grid grid-cols-5 gap-4">
             <div>
@@ -387,7 +385,6 @@
             </button>
           </div>
 
-          <!-- Save Changes -->
           <div class="mt-6 flex justify-end space-x-3">
             <button
               type="submit"
@@ -413,7 +410,6 @@
         </div>
 
         <form class="space-y-6">
-          <!-- BOM Information -->
           <div>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
               <div>
@@ -446,7 +442,6 @@
             </div>
           </div>
 
-          <!-- Component Structure -->
           <div>
             <h2 class="mb-4 text-xl font-semibold">Component Structure</h2>
             <table class="w-full text-center">
@@ -483,7 +478,6 @@
             </table>
           </div>
 
-          <!-- Total -->
           <div class="border-t pt-4 text-right">
             <p class="text-lg font-semibold">Total Estimated Cost: ${{ totalCost.toFixed(2) }}</p>
           </div>
@@ -494,51 +488,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Popup from '@/components/popup.vue'
-import { useBOMsStore } from '@/stores/useBOMs'
-import { useOrdersStore } from '@/stores/useOrders'
+import axios from 'axios'
 import { useUserStore } from '@/stores/user'
 
-const ordersStore = useOrdersStore()
+const API_BASE_URL = 'http://localhost:8000/api/boms/'
 const userStore = useUserStore()
 const userRole = userStore.user?.role
 
-const bomsStore = useBOMsStore()
-
+// State for BOMs and UI
+const boms = ref<any[]>([])
+const products = ref<any[]>([]) // Define products as a reactive property
+const showBOMsPopup = ref(true)
 const showEditBOMsPopup = ref(false)
 const showAddBOMsPopup = ref(false)
 const showViewBOMsPopup = ref(false)
-
-const props = defineProps<{
-  showBOMsPopup: boolean
-}>()
-
 const searchQuery = ref('')
 const statusFilter = ref('all')
 
-const filteredBOMs = computed(() => {
-  return bomsStore.boms.filter((bom) => {
-    const matchesSearch =
-      bom.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      bom.productCode.toLowerCase().includes(searchQuery.value.toLowerCase())
-
-    const matchesStatus = statusFilter.value === 'all' || bom.status === statusFilter.value
-
-    return matchesSearch && matchesStatus
-  })
-})
-
+// BOM Form data
 const bomForm = ref({
-  id: '',
+  id: null as number | null,
   bomName: '',
   productCode: '',
   status: 'Draft',
-  components: [],
+  components: [] as Array<{
+    id?: number
+    name: string
+    partNumber: string
+    quantity: number
+    unit: string
+    unitCost: number
+  }>,
   baseQuantity: 1,
   version: '',
-  versionOption: 'update',
 })
+
+// Fetch products data
+async function fetchProducts() {
+  try {
+    const response = await axios.get('http://localhost:8000/api/products/') // Replace with your API endpoint
+    products.value = response.data
+  } catch (error) {
+    console.error('Error fetching products:', error)
+  }
+}
+
+// Call fetchProducts on component mount
+onMounted(() => {
+  fetchBOMs()
+  fetchProducts()
+})
+
 
 const newComponent = ref({
   name: '',
@@ -548,68 +550,151 @@ const newComponent = ref({
   unitCost: 0,
 })
 
-const editingBOMId = ref<string | null>(null)
+// Computed properties
+const filteredBOMs = computed(() => {
+  return boms.value.filter((bom) => {
+    const matchesSearch =
+      bom.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      bom.product_code.toLowerCase().includes(searchQuery.value.toLowerCase())
 
-const products = computed(() => {
-  return ordersStore.orders.map((order) => ({
-    name: order.product,
-    sku: order.id,
-  }))
+    const matchesStatus = statusFilter.value === 'all' || bom.status === statusFilter.value
+
+    return matchesSearch && matchesStatus
+  })
 })
 
-function saveBOM() {
-  const data = {
-    id: editingBOMId.value || bomsStore.getLastAndUniqueId,
-    name: bomForm.value.bomName,
-    productCode: bomForm.value.productCode,
-    status: bomForm.value.status,
-    components: bomForm.value.components,
-    baseQuantity: bomForm.value.baseQuantity,
-    version: bomForm.value.versionOption === 'new' ? generateNewVersion() : bomForm.value.version,
-  }
+const totalCost = computed(() => {
+  return bomForm.value.components.reduce((total, component) => {
+    return total + component.quantity * component.unitCost
+  }, 0)
+})
 
-  if (editingBOMId.value) {
-    bomsStore.editBOM(editingBOMId.value, data)
-  } else {
-    bomsStore.createBOM(data)
-  }
+// Lifecycle hook
+onMounted(() => {
+  fetchBOMs()
+})
 
-  resetForm()
+// API functions
+async function fetchBOMs() {
+  try {
+    const response = await axios.get(API_BASE_URL)
+    boms.value = response.data.map((bom: any) => ({
+      ...bom,
+      productCode: bom.product_code
+    }))
+  } catch (error) {
+    console.error('Error fetching BOMs:', error)
+  }
 }
 
-function editBOM(id: string) {
-  const bom = bomsStore.getBOMById(id)
-  if (bom) {
-    editingBOMId.value = bom.id
+async function fetchBOMById(id: number) {
+  try {
+    const response = await axios.get(`${API_BASE_URL}${id}/`)
+    return response.data
+  } catch (error) {
+    console.error(`Error fetching BOM with ID ${id}:`, error)
+    throw error
+  }
+}
+
+async function saveBOM() {
+  const bomData = {
+    name: bomForm.value.bomName,
+    product_code: bomForm.value.productCode,
+    status: bomForm.value.status,
+    components: bomForm.value.components.map((comp) => ({
+      name: comp.name,
+      part_number: comp.partNumber,
+      quantity: comp.quantity,
+      unit: comp.unit,
+      unit_cost: comp.unitCost.toString(),
+    })),
+    version: 'new' ? generateNewVersion() : bomForm.value.version,
+    
+  }
+
+  try {
+    if (bomForm.value.id) {
+      await axios.put(`${API_BASE_URL}${bomForm.value.id}/`, bomData)
+    } else {
+      const response = await axios.post(API_BASE_URL, bomData);
+      boms.value.push({
+        ...response.data,
+        productCode: response.data.product_code
+      })
+    }
+    fetchBOMs()
+    resetForm()
+  } catch (error) {
+    console.error('Error saving BOM:', error)
+  }
+}
+
+async function deleteBOM(id: number) {
+  if (confirm('Are you sure you want to delete this BOM?')) {
+    try {
+      await axios.delete(`${API_BASE_URL}${id}/`)
+      boms.value = boms.value.filter((bom) => bom.id !== id)
+    } catch (error) {
+      console.error(`Error deleting BOM with ID ${id}:`, error)
+    }
+  }
+}
+
+// Component functions
+function closeBOMsPopup() {
+  showBOMsPopup.value = false
+}
+
+async function editBOM(id: number) {
+  try {
+    const bom = await fetchBOMById(id)
     bomForm.value = {
       id: bom.id,
       bomName: bom.name,
-      productCode: bom.productCode,
+      productCode: bom.product_code,
       status: bom.status,
-      components: [...bom.components],
-      baseQuantity: bom.baseQuantity || 1,
+      components: bom.components.map((comp: any) => ({
+        id: comp.id,
+        name: comp.name,
+        partNumber: comp.part_number,
+        quantity: comp.quantity,
+        unit: comp.unit,
+        unitCost: parseFloat(comp.unit_cost),
+      })),
+      baseQuantity: 1,
       version: bom.version || 'v1.0',
       versionOption: 'update',
     }
-    showEditBOMsPopup.value = true // Ensure the popup is opened
-  } else {
-    console.error(`BOM with ID ${id} not found.`)
+    showEditBOMsPopup.value = true
+  } catch (error) {
+    console.error('Error loading BOM for editing:', error)
   }
 }
 
-function viewBOM(id: string) {
-  const bom = bomsStore.getBOMById(id)
-  if (bom) {
+async function viewBOM(id: number) {
+  try {
+    const bom = await fetchBOMById(id)
     bomForm.value = {
       id: bom.id,
       bomName: bom.name,
-      productCode: bom.productCode,
+      productCode: bom.product_code,
       status: bom.status,
-      components: [...bom.components],
-      baseQuantity: bom.baseQuantity || 1,
+      components: bom.components.map((comp: any) => ({
+        id: comp.id,
+        name: comp.name,
+        partNumber: comp.part_number,
+        quantity: comp.quantity,
+        unit: comp.unit,
+        unitCost: parseFloat(comp.unit_cost),
+      })),
+      baseQuantity: 1,
       version: bom.version || 'v1.0',
+      versionOption: 'update',
     }
     showViewBOMsPopup.value = true
+  } catch (error) {
+    console.error('Error loading BOM for viewing:', error)
   }
 }
 
@@ -646,23 +731,9 @@ function adjustQuantity(index: number, amount: number) {
   component.quantity = Math.max(0, component.quantity + amount)
 }
 
-function deleteBOM(id: string) {
-  if (confirm('Are you sure you want to delete this BOM?')) {
-    bomsStore.deleteBOM(id) // Call the deleteBOM action from the store
-    //alert('BOM deleted successfully!')
-  }
-}
-
-const totalCost = computed(() => {
-  return bomForm.value.components.reduce((total, component) => {
-    return total + component.quantity * component.unitCost
-  }, 0)
-})
-
 function resetForm() {
-  editingBOMId.value = null
   bomForm.value = {
-    id: '',
+    id: null,
     bomName: '',
     productCode: '',
     status: 'Draft',
@@ -681,8 +752,6 @@ function generateNewVersion() {
   const versionNumber = parseFloat(currentVersion.slice(1)) || 1.0
   return `v${(versionNumber + 0.1).toFixed(1)}`
 }
-
-const emit = defineEmits(['update:showBOMsPopup'])
 </script>
 
 <style>
