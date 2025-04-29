@@ -52,7 +52,7 @@ class Product(models.Model):
     sku = models.CharField(max_length=50, blank=True)
     category = models.CharField(max_length=100, choices=[('Electronics', 'Electronics'), ('Furniture', 'Furniture'), ('Automotive', 'Automotive'), ('Clothing', 'Clothing'), ('Food', 'Food'), ('Other', 'Other')], default='Other')
     specifications = models.TextField()
-    bom = models.ForeignKey('BOM', on_delete=models.CASCADE)
+    bom = models.ForeignKey('BOM', on_delete=models.CASCADE,null=True)
     workflow = models.ForeignKey(Workflow, on_delete=models.SET_NULL, null=True, blank=True ,related_name='products')  # Link Workflow
     
     def __str__(self):

@@ -65,20 +65,33 @@ class BOMSerializer(serializers.ModelSerializer):
 
 # Product Serializer (Handles Product creation and updating)
 class ProductSerializer(serializers.ModelSerializer):
-    bom = serializers.PrimaryKeyRelatedField(queryset=BOM.objects.all())
-    workflow = serializers.PrimaryKeyRelatedField(queryset=Workflow.objects.all(), required=False)
+    bom = BOMSerializer(read_only=True)
+    workflow = WorkflowSerializer(read_only=True)
+    bom_id = serializers.PrimaryKeyRelatedField(
+        queryset=BOM.objects.all(), 
+        source='bom',
+        write_only=True
+    )
+    workflow_id = serializers.PrimaryKeyRelatedField(
+        queryset=Workflow.objects.all(),
+        source='workflow',
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'sku', 'category', 'specifications', 'bom', 'workflow']
+        fields = ['id', 'name', 'sku', 'category', 'specifications',
+            'bom', 'bom_id', 'workflow', 'workflow_id']
     
     def create(self, validated_data):
-        bom_data = validated_data.pop('bom')
-        workflow_data = validated_data.pop('workflow')
+        # Extract BOM and Workflow IDs
+        bom_id = validated_data.pop('bom', None)
+        workflow_id = validated_data.pop('workflow', None)
 
-        # Create BOM and Workflow first
-        bom = BOM.objects.create(**bom_data)
-        workflow = Workflow.objects.create(**workflow_data)
+        # Retrieve existing BOM and Workflow instances using their IDs
+        bom = BOM.objects.get(id=bom_id.id) if bom_id else None
+        workflow = Workflow.objects.get(id=workflow_id.id) if workflow_id else None
 
         # Create the Product and associate it with the BOM and Workflow
         product = Product.objects.create(bom=bom, workflow=workflow, **validated_data)
@@ -86,21 +99,27 @@ class ProductSerializer(serializers.ModelSerializer):
         return product
 
     def update(self, instance, validated_data):
-        bom_data = validated_data.pop('bom')
-        workflow_data = validated_data.pop('workflow')
+        # Handle BOM update
+        bom_data = validated_data.pop('bom', None)
+        if bom_data:
+            instance.bom = BOM.objects.get(id=bom_data.id) if isinstance(bom_data, BOM) else bom_data
 
-        # Update the BOM and Workflow
-        instance.bom.name = bom_data.get('name', instance.bom.name)
-        instance.workflow.name = workflow_data.get('name', instance.workflow.name)
+        # Handle Workflow update
+        workflow_data = validated_data.pop('workflow', None)
+        if workflow_data:
+            instance.workflow = Workflow.objects.get(id=workflow_data.id) if isinstance(workflow_data, Workflow) else workflow_data
+
+        # Update other fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
 
         instance.save()
-
         return instance
 
-class ProductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = ['id', 'name', 'sku', 'category', 'specifications']
+# class ProductSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Product
+#         fields = ['id', 'name', 'sku', 'category', 'specifications']
 
 # serializers.py
 class ProductionLineSerializer(serializers.ModelSerializer):

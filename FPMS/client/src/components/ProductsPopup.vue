@@ -14,7 +14,7 @@
         <div class="px-4 pt-4">
           <div class="mb-4 flex items-center justify-between">
             <button
-            v-if="userRole === 'Production Manager'"
+              v-if="userRole === 'Production Manager'"
               @click="showCreateProductsPopup = true"
               class="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-600"
             >
@@ -31,14 +31,10 @@
               class="flex-1 rounded border p-2"
             />
             <select v-model="selectedCategory" class="rounded border p-2">
-              <option value="">Category</option>
-              <option>Category 1</option>
-              <option>Category 2</option>
-            </select>
-            <select v-model="variantAvailability" class="rounded border p-2">
-              <option value="">Variant Availability</option>
-              <option>Available</option>
-              <option>Unavailable</option>
+              <option value="">All Categories</option>
+              <option v-for="category in categoryOptions" :key="category.value" :value="category.value">
+                {{ category.label }}
+              </option>
             </select>
           </div>
 
@@ -56,26 +52,35 @@
                 </tr>
               </thead>
               <tbody>
+                <tr v-if="loading">
+                  <td colspan="6" class="py-4 text-center">Loading data...</td>
+                </tr>
+                <tr v-else-if="filteredProducts.length === 0">
+                  <td colspan="6" class="py-4 text-center">No products found</td>
+                </tr>
                 <tr
                   v-for="product in filteredProducts"
+                  v-else
                   :key="product.id"
                   class="border-t hover:bg-gray-100"
                 >
                   <td class="border border-gray-700 px-4 py-2">{{ product.name }}</td>
-                  <td class="border border-gray-700 px-4 py-2">{{ product.sku }}</td>
+                  <td class="border border-gray-700 px-4 py-2">{{ product.sku || '-' }}</td>
                   <td class="border border-gray-700 px-4 py-2">{{ product.category }}</td>
-                  <td class="border border-gray-700 px-4 py-2">{{ product.bom }}</td>
-                  <td class="border border-gray-700 px-4 py-2">{{ product.workflow }}</td>
+                  <td class="border border-gray-700 px-4 py-2">
+                    {{ product.bom ? `${product.bom.name} (${product.bom.status})` : 'Not assigned' }}
+                  </td>
+                  <td class="border border-gray-700 px-4 py-2">
+                    {{ product.workflow ? product.workflow.name : 'Not assigned' }}
+                  </td>
                   <td v-if="userRole === 'Production Manager'" class="border border-gray-700 px-4 py-2">
                     <button
-                    v-if="userRole === 'Production Manager'"
                       @click="openEditPopup(product)"
                       class="mr-2 rounded bg-green-600 px-3 py-1 text-white hover:bg-green-600"
                     >
                       Edit
                     </button>
                     <button
-                    v-if="userRole === 'Production Manager'"
                       @click="deleteProduct(product.id)"
                       class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700"
                     >
@@ -99,13 +104,15 @@
 
       <div class="flex flex-row gap-4">
         <div class="flex w-full flex-col">
-          <p class="font-medium">Product Name</p>
+          <p class="font-medium">Product Name*</p>
           <input
             v-model="newProduct.name"
             type="text"
             class="rounded border p-2"
             placeholder="Enter Product Name"
+            required
           />
+          <p v-if="errors.name" class="text-red-500 text-sm">{{ errors.name }}</p>
         </div>
         <div class="flex w-full flex-col">
           <p class="font-medium">SKU</p>
@@ -119,13 +126,13 @@
       </div>
       <div class="flex flex-row gap-4">
         <div class="flex w-full flex-col">
-          <p class="font-medium">Category</p>
-          <input
-            v-model="newProduct.category"
-            type="text"
-            class="rounded border p-2"
-            placeholder="Enter Category"
-          />
+          <p class="font-medium">Category*</p>
+          <select v-model="newProduct.category" class="rounded border p-2" required>
+            <option v-for="category in categoryOptions" :key="category.value" :value="category.value">
+              {{ category.label }}
+            </option>
+          </select>
+          <p v-if="errors.category" class="text-red-500 text-sm">{{ errors.category }}</p>
         </div>
         <div class="flex w-full flex-col">
           <p class="font-medium">Specifications</p>
@@ -140,31 +147,59 @@
       <h1 class="mb-2 text-xl font-semibold">Link Workflows/BOMs</h1>
       <div class="flex flex-row gap-4">
         <div class="flex w-full flex-col">
-          <p class="font-medium">Workflows</p>
-          <select v-model="newProduct.workflow" class="rounded border p-2">
-            <option value="">Select Workflow</option>
-            <option v-for="workflow in workflows" :key="workflow.id" :value="workflow.name">
-              {{ workflow.name }}
+          <p class="font-medium">Workflow</p>
+          <select 
+            v-model="newProduct.workflow_id" 
+            class="rounded border p-2"
+            :disabled="workflowsLoading"
+          >
+            <option :value="null">Select Workflow</option>
+            <option 
+              v-for="workflow in workflows" 
+              :key="workflow.id" 
+              :value="workflow.id"
+            >
+              {{ workflow.name }} (Product: {{ workflow.product }})
             </option>
           </select>
+          <p v-if="workflowsLoading" class="text-sm text-gray-500">Loading workflows...</p>
         </div>
         <div class="flex w-full flex-col">
-          <p class="font-medium">BOMs</p>
-          <select v-model="newProduct.bom" class="rounded border p-2">
-            <option value="">Select BOM</option>
-            <option v-for="bom in boms" :key="bom.id" :value="bom.name">
-              {{ bom.name }}
+          <p class="font-medium">BOM</p>
+          <select 
+            v-model="newProduct.bom_id" 
+            class="rounded border p-2"
+            :disabled="bomsLoading"
+          >
+            <option :value="null">Select BOM</option>
+            <option 
+              v-for="bom in boms" 
+              :key="bom.id" 
+              :value="bom.id"
+            >
+              {{ bom.name }} ({{ bom.status }})
             </option>
           </select>
+          <p v-if="bomsLoading" class="text-sm text-gray-500">Loading BOMs...</p>
         </div>
       </div>
 
-      <button
-        @click="createProduct"
-        class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
-      >
-        Save Product
-      </button>
+      <div class="mt-4 flex justify-between">
+        <button
+          @click="showCreateProductsPopup = false"
+          class="rounded-lg bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+        >
+          Cancel
+        </button>
+        <button
+          @click="createProduct"
+          class="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+          :disabled="creatingProduct"
+        >
+          <span v-if="creatingProduct">Saving...</span>
+          <span v-else>Save Product</span>
+        </button>
+      </div>
     </Popup>
 
     <!-- Edit Product Popup -->
@@ -176,13 +211,15 @@
 
       <div class="flex flex-row gap-4">
         <div class="flex w-full flex-col">
-          <p class="font-medium">Product Name</p>
+          <p class="font-medium">Product Name*</p>
           <input
             v-model="newProduct.name"
             type="text"
             class="rounded border p-2"
             placeholder="Enter Product Name"
+            required
           />
+          <p v-if="errors.name" class="text-red-500 text-sm">{{ errors.name }}</p>
         </div>
         <div class="flex w-full flex-col">
           <p class="font-medium">SKU</p>
@@ -196,13 +233,13 @@
       </div>
       <div class="flex flex-row gap-4">
         <div class="flex w-full flex-col">
-          <p class="font-medium">Category</p>
-          <input
-            v-model="newProduct.category"
-            type="text"
-            class="rounded border p-2"
-            placeholder="Enter Category"
-          />
+          <p class="font-medium">Category*</p>
+          <select v-model="newProduct.category" class="rounded border p-2" required>
+            <option v-for="category in categoryOptions" :key="category.value" :value="category.value">
+              {{ category.label }}
+            </option>
+          </select>
+          <p v-if="errors.category" class="text-red-500 text-sm">{{ errors.category }}</p>
         </div>
         <div class="flex w-full flex-col">
           <p class="font-medium">Specifications</p>
@@ -217,144 +254,396 @@
       <h1 class="mb-2 text-xl font-semibold">Link Workflows/BOMs</h1>
       <div class="flex flex-row gap-4">
         <div class="flex w-full flex-col">
-          <p class="font-medium">Workflows</p>
-          <select v-model="newProduct.workflow" class="rounded border p-2">
-            <option value="">Select Workflow</option>
-            <option v-for="workflow in workflows" :key="workflow.id" :value="workflow.name">
-              {{ workflow.name }}
+          <p class="font-medium">Workflow</p>
+          <select 
+            v-model="newProduct.workflow_id" 
+            class="rounded border p-2"
+            :disabled="workflowsLoading"
+          >
+            <option :value="null">Select Workflow</option>
+            <option 
+              v-for="workflow in workflows" 
+              :key="workflow.id" 
+              :value="workflow.id"
+            >
+              {{ workflow.name }} (Product: {{ workflow.product }})
             </option>
           </select>
+          <p v-if="workflowsLoading" class="text-sm text-gray-500">Loading workflows...</p>
         </div>
         <div class="flex w-full flex-col">
-          <p class="font-medium">BOMs</p>
-          <select v-model="newProduct.bom" class="rounded border p-2">
-            <option value="">Select BOM</option>
-            <option v-for="bom in boms" :key="bom.id" :value="bom.name">
-              {{ bom.name }}
+          <p class="font-medium">BOM</p>
+          <select 
+            v-model="newProduct.bom_id" 
+            class="rounded border p-2"
+            :disabled="bomsLoading"
+          >
+            <option :value="null">Select BOM</option>
+            <option 
+              v-for="bom in boms" 
+              :key="bom.id" 
+              :value="bom.id"
+            >
+              {{ bom.name }} ({{ bom.status }})
             </option>
           </select>
+          <p v-if="bomsLoading" class="text-sm text-gray-500">Loading BOMs...</p>
         </div>
       </div>
 
-      <button
-        @click="editProduct"
-        class="mt-4 w-2/12 cursor-pointer rounded-lg bg-green-600 p-1.5 text-white"
-      >
-        Save Changes
-      </button>
+      <div class="mt-4 flex justify-between">
+        <button
+          @click="showEditProductsPopup = false"
+          class="rounded-lg bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+        >
+          Cancel
+        </button>
+        <button
+          @click="editProduct"
+          class="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+          :disabled="updatingProduct"
+        >
+          <span v-if="updatingProduct">Saving...</span>
+          <span v-else>Save Changes</span>
+        </button>
+      </div>
     </Popup>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
 import Popup from '@/components/popup.vue'
-import { useProductsStore } from '@/stores/useProducts'
-import { useWorkflowsStore } from '@/stores/useWorkflows'
-import { useBOMsStore } from '@/stores/useBOMs'
-import { useOrdersStore } from '@/stores/useOrders'
 import { useUserStore } from '@/stores/user'
 
-const ordersStore = useOrdersStore()
+const API_BASE_URL = 'http://localhost:8000/api/'
+
+interface Product {
+  id?: number
+  name: string
+  sku: string
+  category: string
+  specifications: string
+  bom: {
+    id: number
+    name: string
+    status: string
+    product_code: string
+    version: string
+  } | null
+  workflow: {
+    id: number
+    name: string
+    description: string
+    product: number
+  } | null
+  bom_id?: number | null
+  workflow_id?: number | null
+}
+
+interface Workflow {
+  id: number
+  name: string
+  description: string
+  product: number
+  assigned_work_center: number
+  stages: any[]
+}
+
+interface BOM {
+  id: number
+  name: string
+  product_code: string
+  version: string
+  status: string
+  last_updated: string
+  components: Component[]
+}
+
+interface Component {
+  id: number
+  name: string
+  part_number: string
+  quantity: number
+  unit: string
+  unit_cost: string
+}
+
+interface CategoryOption {
+  value: string
+  label: string
+}
+
+// State
+const showCreateProductsPopup = ref(false)
+const showEditProductsPopup = ref(false)
+const selectedProductId = ref<number | null>(null)
+const products = ref<Product[]>([])
+const workflows = ref<Workflow[]>([])
+const boms = ref<BOM[]>([])
+const loading = ref(false)
+const workflowsLoading = ref(false)
+const bomsLoading = ref(false)
+const creatingProduct = ref(false)
+const updatingProduct = ref(false)
+const error = ref<string | null>(null)
+const errors = ref<Record<string, string>>({})
+
 const userStore = useUserStore()
 const userRole = userStore.user?.role
 
-const showCreateProductsPopup = ref(false)
-const showEditProductsPopup = ref(false)
-const selectedProductId = ref<string | null>(null)
-
+// Props & Emits
 defineProps<{
   showProductsPopup: boolean
 }>()
 
 const emitEvent = defineEmits(['close', 'submit', 'update:showProductsPopup'])
 
+// Filters
 const searchQuery = ref('')
 const selectedCategory = ref('')
-const variantAvailability = ref('')
 
-const productsStore = useProductsStore()
-const workflowsStore = useWorkflowsStore()
-const bomsStore = useBOMsStore()
+const categoryOptions: CategoryOption[] = [
+  { value: 'Electronics', label: 'Electronics' },
+  { value: 'Furniture', label: 'Furniture' },
+  { value: 'Automotive', label: 'Automotive' },
+  { value: 'Clothing', label: 'Clothing' },
+  { value: 'Food', label: 'Food' },
+  { value: 'Other', label: 'Other' }
+]
 
+// Computed
 const filteredProducts = computed(() => {
-  return productsStore.products.filter((product) => {
+  return products.value.filter((product) => {
     const matchesSearch =
       product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchQuery.value.toLowerCase())
+      (product.sku && product.sku.toLowerCase().includes(searchQuery.value.toLowerCase()))
 
     const matchesCategory =
       selectedCategory.value === '' || product.category === selectedCategory.value
 
-    const matchesVariant =
-      variantAvailability.value === '' ||
-      (variantAvailability.value === 'Available' && product.variantAvailable) ||
-      (variantAvailability.value === 'Unavailable' && !product.variantAvailable)
-
-    return matchesSearch && matchesCategory && matchesVariant
+    return matchesSearch && matchesCategory
   })
 })
 
-const workflows = computed(() => workflowsStore.workflows)
-const boms = computed(() => bomsStore.boms)
-
-const newProduct = ref({
+// Form data
+const newProduct = ref<Product>({
   name: '',
   sku: '',
-  category: '',
-  bom: '',
-  workflow: '',
-  variantAvailable: false,
+  category: 'Other',
+  specifications: '',
+  bom: null,
+  workflow: null,
+  bom_id: null,
+  workflow_id: null
 })
 
+// Methods
 const resetNewProduct = () => {
-  Object.assign(newProduct.value, {
+  newProduct.value = {
     name: '',
     sku: '',
-    category: '',
-    bom: '',
-    workflow: '',
-    variantAvailable: false,
-  })
+    category: 'Other',
+    specifications: '',
+    bom: null,
+    workflow: null,
+    bom_id: null,
+    workflow_id: null
+  }
+  errors.value = {}
+}
+
+const validateProduct = (): boolean => {
+  errors.value = {}
+  let isValid = true
+
+  if (!newProduct.value.name.trim()) {
+    errors.value.name = 'Product name is required'
+    isValid = false
+  }
+
+  if (!newProduct.value.category) {
+    errors.value.category = 'Category is required'
+    isValid = false
+  }
+
+  return isValid
+}
+
+const fetchProducts = async () => {
+  try {
+    loading.value = true
+    const response = await axios.get(`${API_BASE_URL}products/`)
+    products.value = response.data.map((product: any) => ({
+      ...product,
+      bom_id: product.bom?.id || null,
+      workflow_id: product.workflow?.id || null
+    }))
+  } catch (err) {
+    error.value = 'Failed to fetch products'
+    console.error('Error fetching products:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchWorkflows = async () => {
+  try {
+    workflowsLoading.value = true
+    const response = await axios.get(`${API_BASE_URL}workflows/`)
+    workflows.value = response.data
+  } catch (err) {
+    console.error('Error fetching workflows:', err)
+  } finally {
+    workflowsLoading.value = false
+  }
+}
+
+const fetchBOMs = async () => {
+  try {
+    bomsLoading.value = true
+    const response = await axios.get(`${API_BASE_URL}boms/`)
+    boms.value = response.data
+  } catch (err) {
+    console.error('Error fetching BOMs:', err)
+  } finally {
+    bomsLoading.value = false
+  }
 }
 
 const createProduct = async () => {
-  if (!newProduct.value.name || !newProduct.value.category) {
-    alert('Please fill in all required fields.')
-    return
+  if (!validateProduct()) return
+
+  try {
+    creatingProduct.value = true
+    const payload = {
+      name: newProduct.value.name,
+      sku: newProduct.value.sku || undefined, // Send undefined if empty to let backend handle
+      category: newProduct.value.category,
+      specifications: newProduct.value.specifications,
+      bom_id: newProduct.value.bom_id,
+      workflow_id: newProduct.value.workflow_id
+    }
+
+    const response = await axios.post(`${API_BASE_URL}products/`, payload)
+    
+    // Fetch the complete product with relationships
+    const completeProduct = await fetchProductDetails(response.data.id)
+    if (completeProduct) {
+      products.value.push(completeProduct)
+    }
+    
+    showCreateProductsPopup.value = false
+    resetNewProduct()
+  } catch (err: any) {
+    if (err.response?.data) {
+      if (typeof err.response.data === 'object') {
+        errors.value = err.response.data
+      } else {
+        error.value = err.response.data
+      }
+    } else {
+      error.value = 'Failed to create product'
+    }
+    console.error('Error creating product:', err)
+  } finally {
+    creatingProduct.value = false
   }
-  if (!newProduct.value.sku) {
-    newProduct.value.sku = productsStore.generateSKU()
-  }
-  await productsStore.createProduct({
-    id: productsStore.getLastAndUniqueId,
-    ...newProduct.value,
-  })
-  showCreateProductsPopup.value = false
-  resetNewProduct()
 }
 
 const editProduct = async () => {
-  if (!selectedProductId.value) return
-  await productsStore.editProduct(selectedProductId.value, newProduct.value)
-  showEditProductsPopup.value = false
-}
+  if (!selectedProductId.value || !validateProduct()) return
 
-const deleteProduct = async (id: string) => {
-  if (confirm('Are you sure you want to delete this product?')) {
-    await productsStore.deleteProduct(id)
+  try {
+    updatingProduct.value = true
+    const payload = {
+      name: newProduct.value.name,
+      sku: newProduct.value.sku || undefined,
+      category: newProduct.value.category,
+      specifications: newProduct.value.specifications,
+      bom_id: newProduct.value.bom_id,
+      workflow_id: newProduct.value.workflow_id
+    }
+
+    await axios.put(`${API_BASE_URL}products/${selectedProductId.value}/`, payload)
+    
+    // Refresh the product list to get updated relationships
+    await fetchProducts()
+    
+    showEditProductsPopup.value = false
+    resetNewProduct()
+  } catch (err: any) {
+    if (err.response?.data) {
+      if (typeof err.response.data === 'object') {
+        errors.value = err.response.data
+      } else {
+        error.value = err.response.data
+      }
+    } else {
+      error.value = 'Failed to update product'
+    }
+    console.error('Error updating product:', err)
+  } finally {
+    updatingProduct.value = false
   }
 }
 
-const openEditPopup = (product: any) => {
-  selectedProductId.value = product.id
-  Object.assign(newProduct.value, product)
+const deleteProduct = async (id: number) => {
+  if (!confirm('Are you sure you want to delete this product?')) return
+
+  try {
+    await axios.delete(`${API_BASE_URL}products/${id}/`)
+    products.value = products.value.filter(product => product.id !== id)
+  } catch (err) {
+    error.value = 'Failed to delete product'
+    console.error('Error deleting product:', err)
+  }
+}
+
+const fetchProductDetails = async (productId: number) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}products/${productId}/`)
+    return {
+      ...response.data,
+      bom_id: response.data.bom?.id || null,
+      workflow_id: response.data.workflow?.id || null
+    }
+  } catch (err) {
+    console.error('Error fetching product details:', err)
+    return null
+  }
+}
+
+const openEditPopup = async (product: Product) => {
+  selectedProductId.value = product.id || null
+  const fullProduct = await fetchProductDetails(product.id!)
+  if (fullProduct) {
+    newProduct.value = { 
+      ...fullProduct,
+      bom_id: fullProduct.bom?.id || null,
+      workflow_id: fullProduct.workflow?.id || null
+    }
+  } else {
+    newProduct.value = { ...product }
+  }
   showEditProductsPopup.value = true
 }
+
+// Lifecycle
+onMounted(() => {
+  fetchProducts()
+  fetchWorkflows()
+  fetchBOMs()
+})
 </script>
 
 <style>
 button {
   cursor: pointer;
+}
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 </style>

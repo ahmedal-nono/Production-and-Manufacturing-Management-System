@@ -48,8 +48,10 @@ class WorkflowViewSet(viewsets.ModelViewSet):
 
 # Product ViewSet (Handles Product CRUD with BOM and Workflow linked)
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.select_related('bom', 'workflow').all()
     serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['category', 'bom__status']
     permission_classes = [] 
 
     # Single endpoint to create the Product with BOM and Workflow
