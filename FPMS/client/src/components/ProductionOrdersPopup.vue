@@ -1,8 +1,9 @@
 <template>
   <div>
+    <!-- Main Production Orders Popup -->
     <Popup
-      :visible="showProductionOrdersPopup"
-      @update:visible="(value: boolean) => emitEvent('update:showProductionOrdersPopup', value)"
+      :visible="props.showProductionOrdersPopup"
+      @update:visible="(value: boolean) => emit('update:showProductionOrdersPopup', value)"
       @update-dates="updateOrderDatesHandler"
     >
       <div class="p-4">
@@ -23,9 +24,11 @@
             <thead>
               <tr class="bg-blue-500 text-white">
                 <th class="border border-gray-700 px-4 py-2">Order ID</th>
-                <th class="border border-gray-700 px-4 py-2">Product Name</th>
+                <th class="border border-gray-700 px-4 py-2">Order Name</th>
+                <th class="border border-gray-700 px-4 py-2">Product</th>
                 <th class="border border-gray-700 px-4 py-2">Quantity</th>
-                <th class="border border-gray-700 px-4 py-2">Due Date</th>
+                <th class="border border-gray-700 px-4 py-2">Start Date</th>
+                <th class="border border-gray-700 px-4 py-2">End Date</th>
                 <th class="border border-gray-700 px-4 py-2">Status</th>
                 <th
                   v-if="userRole === 'Production Manager'"
@@ -37,14 +40,16 @@
             </thead>
             <tbody>
               <tr
-                v-for="order in ordersStore.orders"
+                v-for="order in orders"
                 :key="order.id"
                 class="border border-gray-700 px-4 py-2"
               >
                 <td class="border border-gray-700 px-4 py-2">{{ order.id }}</td>
-                <td class="border border-gray-700 px-4 py-2">{{ order.product }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ order.order_name }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ getProductName(order.product) }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ order.quantity }}</td>
-                <td class="border border-gray-700 px-4 py-2">{{ order.endDate }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ formatDate(order.start_date) }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ formatDate(order.end_date) }}</td>
                 <td class="border border-gray-700 px-4 py-2">
                   <span
                     :class="getStatusClass(order.status)"
@@ -55,15 +60,13 @@
                 </td>
                 <td v-if="userRole === 'Production Manager'" class="space-x-2 px-4 py-2">
                   <button
-                    v-if="userRole === 'Production Manager'"
                     @click="openEditPopup(order)"
                     class="cursor-pointer rounded bg-gray-200 px-3 py-1 hover:bg-gray-300"
                   >
                     Edit
                   </button>
                   <button
-                    v-if="userRole === 'Production Manager'"
-                    @click="() => ordersStore.deleteOrder(order.id)"
+                    @click="() => deleteOrder(order.id)"
                     class="cursor-pointer rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
                   >
                     Delete
@@ -79,12 +82,7 @@
     <!-- Create Order Popup -->
     <Popup
       :visible="showCreateProductionOrdersPopup"
-      @update:visible="
-        (value) => {
-          showCreateProductionOrdersPopup = value
-          if (!value) resetCreateForm()
-        }
-      "
+      @update:visible="(value) => showCreateProductionOrdersPopup = value"
     >
       <div>
         <h1 class="mb-6 text-2xl font-semibold">Create Production Order</h1>
@@ -94,7 +92,7 @@
             <h2 class="mb-2 text-lg font-medium">Order Details</h2>
             <div class="grid grid-cols-2 gap-4">
               <label>
-                Product Name
+                Order Name
                 <input
                   v-model="orderName"
                   type="text"
@@ -119,11 +117,11 @@
             <div class="space-y-4">
               <div class="grid grid-cols-2 gap-4">
                 <label>
-                  Selected Variant
-                  <select v-model="selectedVariant" class="w-full rounded border p-2" required>
-                    <option>Medium</option>
-                    <option>Large</option>
-                    <option>Small</option>
+                  Product
+                  <select v-model="productId" class="w-full rounded border p-2" required>
+                    <option v-for="product in products" :key="product.id" :value="product.id">
+                      {{ product.name }}
+                    </option>
                   </select>
                 </label>
                 <div>
@@ -142,15 +140,6 @@
                     >
                       +
                     </button>
-                    <div class="-mt-6 flex">
-                      <label>
-                        Selected Variant
-                        <select v-model="selectedStatus" class="w-full rounded border p-2" required>
-                          <option>On Track</option>
-                          <option>Delayed</option>
-                        </select>
-                      </label>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -163,22 +152,29 @@
             <div class="grid grid-cols-3 gap-4">
               <label>
                 Start Date
-                <input v-model="startDate" type="date" class="w-full rounded border p-2" required />
+                <input v-model="startDate" type="datetime-local" class="w-full rounded border p-2" required />
               </label>
               <label>
-                Deadline
-                <input v-model="deadline" type="date" class="w-full rounded border p-2" required />
+                End Date
+                <input v-model="endDate" type="datetime-local" class="w-full rounded border p-2" required />
               </label>
               <label>
                 Production Line
-                <select v-model="productionLine" class="w-full rounded border p-2">
-                  <option
-                    v-for="line in productionLinesStore.productionLines"
-                    :key="line.id"
-                    :value="line.name"
-                  >
-                    {{ line.name }}
-                  </option>
+                <input
+                  v-model="productionLine"
+                  type="number"
+                  placeholder="Production Line ID"
+                  class="w-full rounded border p-2"
+                  required
+                />
+              </label>
+              <label>
+                Status
+                <select v-model="status" class="w-full rounded border p-2" required>
+                  <option>Pending</option>
+                  <option>In Progress</option>
+                  <option>Completed</option>
+                  <option>Cancelled</option>
                 </select>
               </label>
             </div>
@@ -191,6 +187,12 @@
           >
             Create Production Order
           </button>
+          <button
+            @click="showCreateProductionOrdersPopup = false"
+            class="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </Popup>
@@ -198,7 +200,7 @@
     <!-- Edit Order Popup -->
     <Popup
       :visible="showEditProductionOrdersPopup"
-      @update:visible="showEditProductionOrdersPopup = $event"
+      @update:visible="(value) => showEditProductionOrdersPopup = value"
     >
       <div>
         <h1 class="mb-6 text-2xl font-semibold">Edit Production Order</h1>
@@ -208,7 +210,7 @@
             <h2 class="mb-2 text-lg font-medium">Order Details</h2>
             <div class="grid grid-cols-2 gap-4">
               <label>
-                Product Name
+                Order Name
                 <input
                   v-model="orderName"
                   type="text"
@@ -233,11 +235,11 @@
             <div class="space-y-4">
               <div class="grid grid-cols-2 gap-4">
                 <label>
-                  Selected Variant
-                  <select v-model="selectedVariant" class="w-full rounded border p-2" required>
-                    <option>Medium</option>
-                    <option>Large</option>
-                    <option>Small</option>
+                  Product
+                  <select v-model="productId" class="w-full rounded border p-2" required>
+                    <option v-for="product in products" :key="product.id" :value="product.id">
+                      {{ product.name }}
+                    </option>
                   </select>
                 </label>
                 <div>
@@ -256,15 +258,6 @@
                     >
                       +
                     </button>
-                    <div class="-mt-6 flex">
-                      <label>
-                        Selected Variant
-                        <select v-model="selectedStatus" class="w-full rounded border p-2" required>
-                          <option>On Track</option>
-                          <option>Delayed</option>
-                        </select>
-                      </label>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -277,22 +270,29 @@
             <div class="grid grid-cols-3 gap-4">
               <label>
                 Start Date
-                <input v-model="startDate" type="date" class="w-full rounded border p-2" required />
+                <input v-model="startDate" type="datetime-local" class="w-full rounded border p-2" required />
               </label>
               <label>
-                Deadline
-                <input v-model="deadline" type="date" class="w-full rounded border p-2" required />
+                End Date
+                <input v-model="endDate" type="datetime-local" class="w-full rounded border p-2" required />
               </label>
               <label>
                 Production Line
-                <select v-model="productionLine" class="w-full rounded border p-2">
-                  <option
-                    v-for="line in productionLinesStore.productionLines"
-                    :key="line.id"
-                    :value="line.name"
-                  >
-                    {{ line.name }}
-                  </option>
+                <input
+                  v-model="productionLine"
+                  type="number"
+                  placeholder="Production Line ID"
+                  class="w-full rounded border p-2"
+                  required
+                />
+              </label>
+              <label>
+                Status
+                <select v-model="status" class="w-full rounded border p-2" required>
+                  <option>Pending</option>
+                  <option>In Progress</option>
+                  <option>Completed</option>
+                  <option>Cancelled</option>
                 </select>
               </label>
             </div>
@@ -305,6 +305,12 @@
           >
             Save Changes
           </button>
+          <button
+            @click="showEditProductionOrdersPopup = false"
+            class="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </Popup>
@@ -312,56 +318,70 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 import Popup from '@/components/popup.vue'
-import { useOrdersStore } from '@/stores/useOrders'
 import { useUserStore } from '@/stores/user'
-import { useProductionLinesStore } from '@/stores/useProductionLines'
 
-const ordersStore = useOrdersStore()
-const userStore = useUserStore()
-const productionLinesStore = useProductionLinesStore()
-const userRole = userStore.user?.role
+const API_BASE_URL = 'http://localhost:8000/api/'
 
-const showCreateProductionOrdersPopup = ref(false)
-const showEditProductionOrdersPopup = ref(false)
-const showViewProductionOrdersPopup = ref(false)
+interface Order {
+  id: number
+  order_name: string
+  priority: string
+  product: number
+  quantity: number
+  start_date: string
+  end_date: string
+  production_line: number
+  status: string
+}
+
+interface Product {
+  id: number
+  name: string
+  sku: string
+  category: string
+  specifications: string
+}
 
 const props = defineProps<{
   showProductionOrdersPopup: boolean
 }>()
 
-interface Order {
-  id: string
-  product: string
-  quantity: number
-  status: 'On Track' | 'Delayed'
-  startDate: string
-  endDate: string
-  productionLine: string
-  priority: 'High' | 'Low'
-  dueDate: string
-}
+const emit = defineEmits(['update:showProductionOrdersPopup'])
 
-const getStatusClass = (status: string) => {
-  return status === 'On Track' ? 'bg-green-200 text-green-700' : 'bg-red-200 text-red-700'
-}
+const userStore = useUserStore()
+const userRole = userStore.user?.role
 
-const getPriorityClass = (priority: string) => {
-  return priority === 'High' && 'high' ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-700'
-}
+const showCreateProductionOrdersPopup = ref(false)
+const showEditProductionOrdersPopup = ref(false)
+const orders = ref<Order[]>([])
+const products = ref<Product[]>([])
+const selectedOrderId = ref<number | null>(null)
 
-const emitEvent = defineEmits(['close', 'submit', 'update:showProductionOrdersPopup'])
-
+// Form fields
 const orderName = ref('')
-const priority = ref('Normal')
-const selectedVariant = ref('Blue - Medium')
-const selectedStatus = ref('On Track')
+const priority = ref('High')
+const productId = ref(1)
 const quantity = ref(1)
 const startDate = ref('')
-const deadline = ref('')
-const productionLine = ref('Line 1')
-const selectedOrderId = ref<string | null>(null) // Track the selected order ID for editing
+const endDate = ref('')
+const productionLine = ref(1)
+const status = ref('Pending')
+
+const getStatusClass = (status: string) => {
+  switch (status) {
+    case 'Completed':
+      return 'bg-green-200 text-green-700'
+    case 'In Progress':
+      return 'bg-blue-200 text-blue-700'
+    case 'Cancelled':
+      return 'bg-red-200 text-red-700'
+    default: // Pending
+      return 'bg-yellow-200 text-yellow-700'
+  }
+}
 
 const increaseQty = () => {
   quantity.value++
@@ -371,79 +391,167 @@ const decreaseQty = () => {
   if (quantity.value > 1) quantity.value--
 }
 
-// Reset form fields for creating a new order
 const resetCreateForm = () => {
   orderName.value = ''
+  priority.value = 'High'
+  productId.value = products.value[0]?.id || 1
   quantity.value = 1
   startDate.value = ''
-  deadline.value = ''
-  productionLine.value = 'Line 1'
-  priority.value = 'Normal'
+  endDate.value = ''
+  productionLine.value = 1
+  status.value = 'Pending'
 }
 
-// Add a new order
-const submitOrder = () => {
-  const newOrder: Order = {
-    id: ordersStore.getLastAndUniqeId,
-    product: orderName.value,
-    quantity: quantity.value,
-    status: selectedStatus.value as 'On Track' | 'Delayed',
-    startDate: startDate.value,
-    endDate: deadline.value,
-    productionLine: productionLine.value,
-    priority: priority.value as 'High' | 'Low',
-    dueDate: deadline.value,
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+}
+
+const getProductName = (productId: number) => {
+  const product = products.value.find(p => p.id === productId)
+  return product ? product.name : 'Unknown Product'
+}
+
+// Fetch all production orders
+const fetchOrders = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}production-orders/`)
+    orders.value = response.data
+  } catch (error) {
+    console.error('Error fetching production orders:', error)
   }
-  ordersStore.createOrder(newOrder)
-  showCreateProductionOrdersPopup.value = false
-  resetCreateForm() // Reset form fields after creating an order
 }
 
-// Edit an existing order
-const editOrder = () => {
-  if (selectedOrderId.value) {
-    const orderIndex = ordersStore.orders.findIndex((order) => order.id === selectedOrderId.value)
-    if (orderIndex !== -1) {
-      ordersStore.orders[orderIndex] = {
-        ...ordersStore.orders[orderIndex],
-        product: orderName.value,
-        quantity: quantity.value,
-        startDate: startDate.value,
-        endDate: deadline.value,
-        productionLine: productionLine.value,
-        priority: priority.value as 'High' | 'Low',
-        dueDate: deadline.value,
-        status: selectedStatus.value as 'On Track' | 'Delayed',
-      }
-      showEditProductionOrdersPopup.value = false
-      resetCreateForm() // Reset form fields after editing an order
+// Fetch all products
+const fetchProducts = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}products/`)
+    products.value = response.data
+    if (products.value.length > 0) {
+      productId.value = products.value[0].id
     }
+  } catch (error) {
+    console.error('Error fetching products:', error)
+  }
+}
+
+// Create a new production order
+const submitOrder = async () => {
+  try {
+    const newOrder = {
+      order_name: orderName.value,
+      priority: priority.value,
+      product: productId.value,
+      quantity: quantity.value,
+      start_date: new Date(startDate.value).toISOString(),
+      end_date: new Date(endDate.value).toISOString(),
+      production_line: productionLine.value,
+      status: status.value
+    }
+
+    const response = await axios.post(`${API_BASE_URL}production-orders/`, newOrder)
+    orders.value.push(response.data)
+    showCreateProductionOrdersPopup.value = false
+    resetCreateForm()
+  } catch (error) {
+    console.error('Error creating production order:', error)
+  }
+}
+
+// Edit an existing production order
+const editOrder = async () => {
+  if (selectedOrderId.value) {
+    try {
+      const updatedOrder = {
+        order_name: orderName.value,
+        priority: priority.value,
+        product: productId.value,
+        quantity: quantity.value,
+        start_date: new Date(startDate.value).toISOString(),
+        end_date: new Date(endDate.value).toISOString(),
+        production_line: productionLine.value,
+        status: status.value
+      }
+
+      const response = await axios.put(
+        `${API_BASE_URL}production-orders/${selectedOrderId.value}/`,
+        updatedOrder
+      )
+
+      const index = orders.value.findIndex(order => order.id === selectedOrderId.value)
+      if (index !== -1) {
+        orders.value[index] = response.data
+      }
+      
+      showEditProductionOrdersPopup.value = false
+      resetCreateForm()
+    } catch (error) {
+      console.error('Error updating production order:', error)
+    }
+  }
+}
+
+// Delete a production order
+const deleteOrder = async (id: number) => {
+  try {
+    await axios.delete(`${API_BASE_URL}production-orders/${id}/`)
+    orders.value = orders.value.filter(order => order.id !== id)
+  } catch (error) {
+    console.error('Error deleting production order:', error)
   }
 }
 
 // Open the edit popup and populate the form with the selected order's data
 const openEditPopup = (order: Order) => {
   selectedOrderId.value = order.id
-  orderName.value = order.product
-  quantity.value = order.quantity
-  startDate.value = order.startDate
-  deadline.value = order.endDate
-  productionLine.value = order.productionLine
+  orderName.value = order.order_name
   priority.value = order.priority
+  productId.value = order.product
+  quantity.value = order.quantity
+  startDate.value = order.start_date.slice(0, 16)
+  endDate.value = order.end_date.slice(0, 16)
+  productionLine.value = order.production_line
+  status.value = order.status
   showEditProductionOrdersPopup.value = true
 }
 
 // Update order dates
-const updateOrderDatesHandler = (payload: {
-  orderId: string
+const updateOrderDatesHandler = async (payload: {
+  orderId: number
   newStartTime: string
   newEndTime: string
 }) => {
-  const success = updateOrderDates(payload.orderId, payload.newStartTime, payload.newEndTime)
-  if (!success) {
-    console.error(`Failed to update order with ID ${payload.orderId}.`)
+  try {
+    const orderToUpdate = orders.value.find(order => order.id === payload.orderId)
+    if (orderToUpdate) {
+      const updatedOrder = {
+        ...orderToUpdate,
+        start_date: new Date(payload.newStartTime).toISOString(),
+        end_date: new Date(payload.newEndTime).toISOString()
+      }
+
+      const response = await axios.put(
+        `${API_BASE_URL}production-orders/${payload.orderId}/`,
+        updatedOrder
+      )
+
+      const index = orders.value.findIndex(order => order.id === payload.orderId)
+      if (index !== -1) {
+        orders.value[index] = response.data
+      }
+    }
+  } catch (error) {
+    console.error('Error updating order dates:', error)
+    return false
   }
+  return true
 }
+
+// Fetch data when component is mounted
+onMounted(() => {
+  fetchOrders()
+  fetchProducts()
+})
 </script>
 
 <style>

@@ -150,7 +150,7 @@ class ProductionOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductionOrder
-        fields = ['id', 'order_name', 'priority', 'product', 'quantity', 'start_date', 'end_date', 'production_line', 'status']
+        fields = ['id', 'order_name', 'priority', 'product', 'quantity','product_name', 'start_date', 'end_date', 'production_line', 'status']
 
     def create(self, validated_data):
         product_name = validated_data.pop('product_name', None)
