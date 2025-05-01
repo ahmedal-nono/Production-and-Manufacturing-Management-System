@@ -1,171 +1,229 @@
 from rest_framework import serializers
-from .models import BOM, Product, Workflow, Stage, InspectionCheckpoint, Component
-from .models import Product, ProductionLine, ProductionOrder, Rescheduling
-from workcentre.models import WorkCenter  
-from .models import Product
+from .models import (
+    BOM,
+    Product,
+    Workflow,
+    Stage,
+    InspectionCheckpoint,
+    Component,
+    ProductionLine,
+    ProductionOrder,
+    Rescheduling
+)
+from workcentre.models import WorkCenter
+
 
 class InspectionCheckpointSerializer(serializers.ModelSerializer):
     class Meta:
         model = InspectionCheckpoint
-        fields = ['id', 'checkpoint_name', 'inspection_criteria', 'tools_equipment_required']
+        fields = [
+            'id',
+            'checkpoint_name',
+            'inspection_criteria',
+            'tools_equipment_required'
+        ]
+
 
 class StageSerializer(serializers.ModelSerializer):
-    inspection_checkpoints = serializers.PrimaryKeyRelatedField(queryset=InspectionCheckpoint.objects.all(), many=True)  # Handle Inspection Checkpoints
+    inspection_checkpoints = serializers.PrimaryKeyRelatedField(
+        queryset=InspectionCheckpoint.objects.all(),
+        many=True,
+        required=False
+    )
+    workflow = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Stage
-        fields = ['id', 'name', 'description', 'assigned_work_center', 'work_order', 'duration', 'workflow', 'inspection_checkpoints']
+        fields = [
+            'id',
+            'name',
+            'description',
+            'assigned_work_center',
+            'work_order',
+            'duration',
+            'inspection_checkpoints',
+            'workflow'
+        ]
 
     def create(self, validated_data):
-        inspection_checkpoints_data = validated_data.pop('inspection_checkpoints', [])
+        checkpoints = validated_data.pop('inspection_checkpoints', [])
         stage = Stage.objects.create(**validated_data)
-        for checkpoint in inspection_checkpoints_data:
-            stage.inspection_checkpoints.add(checkpoint)
+        if checkpoints:
+            stage.inspection_checkpoints.set(checkpoints)
         return stage
 
+
 class WorkflowSerializer(serializers.ModelSerializer):
-    stages = StageSerializer(many=True)  # Handle multiple stages
-    assigned_work_center = serializers.PrimaryKeyRelatedField(queryset=WorkCenter.objects.all(), required=False)  # Handle assigned_work_center as a select field
-    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())  # Handle product as a select field
+    stages = StageSerializer(many=True, required=False)
+    assigned_work_center = serializers.PrimaryKeyRelatedField(
+        queryset=WorkCenter.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    product = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all())
 
     class Meta:
         model = Workflow
-        fields = ['id', 'name', 'description', 'product', 'assigned_work_center', 'stages']  # Include all necessary fields
+        fields = [
+            'id',
+            'name',
+            'description',
+            'product',
+            'assigned_work_center',
+            'stages'
+        ]
 
     def create(self, validated_data):
-        stages_data = validated_data.pop('stages')  # Extract stages data
-        workflow = Workflow.objects.create(**validated_data)  # Create the workflow
-        
+        stages_data = validated_data.pop('stages', [])
+        workflow = Workflow.objects.create(**validated_data)
         for stage_data in stages_data:
-            Stage.objects.create(workflow=workflow, **stage_data)  # Create stages and link to workflow
-        
+            checkpoints = stage_data.pop('inspection_checkpoints', [])
+            stage = Stage.objects.create(workflow=workflow, **stage_data)
+            stage.inspection_checkpoints.set(checkpoints)
         return workflow
 
+    def update(self, instance, validated_data):
+        stages_data = validated_data.pop('stages', None)
+
+        # تحديث الحقول الأساسية للـ Workflow
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if stages_data is not None:
+            # حذف المراحل القديمة
+            instance.stages.all().delete()
+
+            # إنشاء المراحل الجديدة
+            for stage_data in stages_data:
+                checkpoints = stage_data.pop('inspection_checkpoints', [])
+                stage = Stage.objects.create(workflow=instance, **stage_data)
+                stage.inspection_checkpoints.set(checkpoints)
+
+        return instance
 
 
-# BOM Serializer (Handles BOM with its components)
 class ComponentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Component
-        fields = ['id', 'name', 'part_number', 'quantity', 'unit', 'unit_cost']
+        fields = [
+            'id',
+            'name',
+            'part_number',
+            'quantity',
+            'unit',
+            'unit_cost'
+        ]
+
 
 class BOMSerializer(serializers.ModelSerializer):
-    components = ComponentSerializer(many=True,read_only=True,required=False)  # Handle multiple components
+    components = ComponentSerializer(many=True)
 
     class Meta:
         model = BOM
-        fields = ['id', 'name', 'product_code', 'version', 'status', 'last_updated', 'components']
+        fields = [
+            'id',
+            'name',
+            'product_code',
+            'version',
+            'status',
+            'last_updated',
+            'components'
+        ]
 
     def create(self, validated_data):
-        components_data = validated_data.pop('components',[])
+        comps = validated_data.pop('components', [])
         bom = BOM.objects.create(**validated_data)
-        for component_data in components_data:
-            Component.objects.create(bom=bom, **component_data)
+        for comp_data in comps:
+            Component.objects.create(bom=bom, **comp_data)
         return bom
 
-# Product Serializer (Handles Product creation and updating)
+    def update(self, instance, validated_data):
+        comps = validated_data.pop('components', [])
+
+        # تحديث الحقول الأساسية
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # إزالة المكونات القديمة وإعادة إنشائها (يمكن لاحقًا تحسينه للتعديل الذكي)
+        instance.components.all().delete()
+        for comp_data in comps:
+            Component.objects.create(bom=instance, **comp_data)
+
+        return instance
+
+
 class ProductSerializer(serializers.ModelSerializer):
-    bom = BOMSerializer(read_only=True)
-    workflow = WorkflowSerializer(read_only=True)
-    bom_id = serializers.PrimaryKeyRelatedField(
-        queryset=BOM.objects.all(), 
-        source='bom',
-        write_only=True
-    )
-    workflow_id = serializers.PrimaryKeyRelatedField(
-        queryset=Workflow.objects.all(),
-        source='workflow',
-        write_only=True,
-        required=False
-    )
+    bom = serializers.PrimaryKeyRelatedField(queryset=BOM.objects.all())
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'sku', 'category', 'specifications',
-            'bom', 'bom_id', 'workflow', 'workflow_id']
-    
-    def create(self, validated_data):
-        # Extract BOM and Workflow IDs
-        bom_id = validated_data.pop('bom', None)
-        workflow_id = validated_data.pop('workflow', None)
+        fields = [
+            'id',
+            'name',
+            'sku',
+            'category',
+            'specifications',
+            'bom'
+        ]
 
-        # Retrieve existing BOM and Workflow instances using their IDs
-        bom = BOM.objects.get(id=bom_id.id) if bom_id else None
-        workflow = Workflow.objects.get(id=workflow_id.id) if workflow_id else None
 
-        # Create the Product and associate it with the BOM and Workflow
-        product = Product.objects.create(bom=bom, workflow=workflow, **validated_data)
-
-        return product
-
-    def update(self, instance, validated_data):
-        # Handle BOM update
-        bom_data = validated_data.pop('bom', None)
-        if bom_data:
-            instance.bom = BOM.objects.get(id=bom_data.id) if isinstance(bom_data, BOM) else bom_data
-
-        # Handle Workflow update
-        workflow_data = validated_data.pop('workflow', None)
-        if workflow_data:
-            instance.workflow = Workflow.objects.get(id=workflow_data.id) if isinstance(workflow_data, Workflow) else workflow_data
-
-        # Update other fields
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
-        instance.save()
-        return instance
-
-# class ProductSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Product
-#         fields = ['id', 'name', 'sku', 'category', 'specifications']
-
-# serializers.py
 class ProductionLineSerializer(serializers.ModelSerializer):
-    work_centers = serializers.CharField(write_only=True)
-    
+    work_centers = serializers.PrimaryKeyRelatedField(
+        queryset=WorkCenter.objects.all(),
+        many=True
+    )
+
     class Meta:
         model = ProductionLine
-        fields = ['id', 'line_name', 'capacity_limit', 'maintenance_schedule', 
-                 'preferred_shift', 'status', 'oee_target', 'work_centers']
-    
-    def create(self, validated_data):
-        work_centers_data = validated_data.pop('work_centers', "")
-        production_line = ProductionLine.objects.create(**validated_data)
-        
-        # Split the string and get or create each WorkCenter
-        for wc_name in work_centers_data.split(','):
-            wc_name = wc_name.strip()
-            if wc_name:
-                work_center, _ = WorkCenter.objects.get_or_create(
-                    name=wc_name  # Removed the description field
-                )
-                production_line.work_centers.add(work_center)
-        
-        return production_line
-# serializers.py
-class ProductionOrderSerializer(serializers.ModelSerializer):
-    product_name = serializers.CharField(write_only=True, required=False)
+        fields = [
+            'id',
+            'line_name',
+            'capacity_limit',
+            'oee_target',
+            'status',
+            'maintenance_schedule',
+            'preferred_shift',
+            'work_centers'
+        ]
 
+    def create(self, validated_data):
+        wcs = validated_data.pop('work_centers', [])
+        pl = ProductionLine.objects.create(**validated_data)
+        pl.work_centers.set(wcs)
+        return pl
+
+
+class ProductionOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductionOrder
-        fields = ['id', 'order_name', 'priority', 'product', 'quantity','product_name', 'start_date', 'end_date', 'production_line', 'status']
+        fields = [
+            'id',
+            'order_name',
+            'priority',
+            'product',
+            'quantity',
+            'start_date',
+            'end_date',
+            'production_line',
+            'status'
+        ]
 
-    def create(self, validated_data):
-        product_name = validated_data.pop('product_name', None)
-        if product_name:
-            product = Product.objects.get(name=product_name)
-            validated_data['product'] = product
-        production_order = ProductionOrder.objects.create(**validated_data)
-        return production_order
 
-
-# serializers.py
 class ReschedulingSerializer(serializers.ModelSerializer):
+    production_order = serializers.PrimaryKeyRelatedField(
+        queryset=ProductionOrder.objects.all()
+    )
+
     class Meta:
         model = Rescheduling
-        fields = ['id', 'production_order', 'new_start_time', 'new_end_time', 'reason_for_rescheduling', 'notes']
-
-
-
+        fields = [
+            'id',
+            'production_order',
+            'new_start_time',
+            'new_end_time',
+            'reason_for_rescheduling',
+            'notes'
+        ]

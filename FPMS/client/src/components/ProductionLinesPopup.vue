@@ -19,24 +19,28 @@
               class="rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             >
               <option value="all">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="maintenance">Maintenance</option>
-              <option value="inactive">Inactive</option>
+              <option value="Active">Active</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Inactive">Inactive</option>
             </select>
           </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <div v-if="loading" class="py-8 text-center">
+          <span class="animate-pulse">Loading production lines...</span>
+        </div>
+        <div v-else-if="error" class="py-4 text-center text-red-500">{{ error }}</div>
+        <div v-else class="overflow-x-auto">
           <table class="w-full text-center">
             <thead class="bg-blue-500 text-white">
-              <tr class="">
+              <tr>
                 <th class="border border-gray-700 px-4 py-2">Line Name</th>
                 <th class="border border-gray-700 px-4 py-2">Status</th>
-                <th class="border border-gray-700 px-4 py-2">Current Output</th>
-                <th class="border border-gray-700 px-4 py-2">Capacity Utilization</th>
-                <th class="border border-gray-700 px-4 py-2">OEE</th>
-                <th class="border border-gray-700 px-4 py-2">Workcenters</th>
-                <th class="border border-gray-700 px-4 py-2">Assigned Workflows</th>
+                <th class="border border-gray-700 px-4 py-2">Capacity</th>
+                <th class="border border-gray-700 px-4 py-2">Maintenance</th>
+                <th class="border border-gray-700 px-4 py-2">Shift</th>
+                <th class="border border-gray-700 px-4 py-2">OEE Target</th>
+                <th class="border border-gray-700 px-4 py-2">Work Centers</th>
                 <th
                   v-if="userRole === 'Production Manager'"
                   class="border border-gray-700 px-4 py-2"
@@ -47,7 +51,7 @@
             </thead>
             <tbody>
               <tr v-for="line in filteredLines" :key="line.id" class="border-t hover:bg-gray-100">
-                <td class="border border-gray-700 px-4 py-2">{{ line.name }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ line.line_name }}</td>
                 <td class="border border-gray-700 px-4 py-2">
                   <span
                     :class="[
@@ -62,31 +66,24 @@
                     {{ line.status }}
                   </span>
                 </td>
+                <td class="border border-gray-700 px-4 py-2">{{ line.capacity_limit }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ line.maintenance_schedule }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ line.preferred_shift }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ line.oee_target }}%</td>
                 <td class="border border-gray-700 px-4 py-2">
-                  {{ line.currentOutput }}/{{ line.capacity }} units
-                </td>
-                <td class="border border-gray-700 px-4 py-2">{{ line.utilization }}%</td>
-                <td class="border border-gray-700 px-4 py-2">{{ line.oee ?? '-' }}</td>
-                <td class="border border-gray-700 px-4 py-2">{{ line.workcenters }}</td>
-                <td class="border border-gray-700 px-4 py-2">
-                  <span v-if="Array.isArray(line.workflows) && line.workflows.length">
-                    {{ line.workflows.join(', ') }}
-                  </span>
-                  <span v-else class="text-gray-400">-</span>
+                  {{ formatWorkCenters(line.work_centers) }}
                 </td>
                 <td
                   v-if="userRole === 'Production Manager'"
                   class="border border-gray-700 px-4 py-2"
                 >
                   <button
-                    v-if="userRole === 'Production Manager'"
                     @click="openEditPopup(line.id)"
                     class="cursor-pointer rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-500"
                   >
                     Edit
                   </button>
                   <button
-                    v-if="userRole === 'Production Manager'"
                     @click="deleteProductionLine(line.id)"
                     class="ml-2 cursor-pointer rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
                   >
@@ -108,28 +105,28 @@
       </div>
     </Popup>
 
+    <!-- Add Production Line Popup -->
     <Popup
       :visible="showAddProductionLinesPopup"
       @update:visible="showAddProductionLinesPopup = $event"
     >
-      <div>
+      <div class="p-5">
         <h2 class="mb-6 text-2xl font-bold">Create Production Line</h2>
         <form @submit.prevent="handleAddProductionLine" class="space-y-6">
           <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <label class="mb-1 block text-sm font-medium">Line Name</label>
+              <label class="mb-1 block text-sm font-medium">Line Name*</label>
               <input
-                v-model="form.name"
+                v-model="form.line_name"
                 type="text"
-                placeholder="Enter line name"
+                placeholder="Electronics Assembly"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
-                minlength="5"
               />
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">Status</label>
+              <label class="mb-1 block text-sm font-medium">Status*</label>
               <select
                 v-model="form.status"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -142,75 +139,67 @@
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">Current Output (units)</label>
+              <label class="mb-1 block text-sm font-medium">Capacity Limit*</label>
               <input
-                v-model="form.currentOutput"
+                v-model="form.capacity_limit"
                 type="number"
-                placeholder="Enter current output"
+                placeholder="50"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
-                min="1"
               />
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">Capacity (units/hour)</label>
+              <label class="mb-1 block text-sm font-medium">OEE Target*</label>
               <input
-                v-model="form.capacity"
+                v-model="form.oee_target"
                 type="number"
-                placeholder="Enter capacity"
+                placeholder="90"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
-                min="1"
               />
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">Capacity Utilization (%)</label>
-              <input
-                v-model="form.utilization"
-                type="number"
-                placeholder="Enter utilization"
+              <label class="mb-1 block text-sm font-medium">Maintenance Schedule*</label>
+              <select
+                v-model="form.maintenance_schedule"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
-                min="0"
-              />
+              >
+                <option value="Weekly">Weekly</option>
+                <option value="Bi-weekly">Bi-weekly</option>
+                <option value="Monthly">Monthly</option>
+              </select>
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">OEE (%)</label>
-              <input
-                v-model="form.oee"
-                type="number"
-                placeholder="Enter OEE"
+              <label class="mb-1 block text-sm font-medium">Preferred Shift*</label>
+              <select
+                v-model="form.preferred_shift"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                min="0"
-              />
+                required
+              >
+                <option value="Morning">Morning</option>
+                <option value="Afternoon">Afternoon</option>
+                <option value="Evening">Evening</option>
+                <option value="Night">Night</option>
+              </select>
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">Workcenters</label>
-              <input
-                v-model="form.workcenters"
-                type="number"
-                placeholder="Enter number of workcenters"
+              <label class="mb-1 block text-sm font-medium">Work Centers</label>
+              <div v-if="workCentersLoading" class="text-sm text-gray-500">Loading work centers...</div>
+              <select
+                v-else
+                v-model="form.work_centers"
+                multiple
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-                min="1"
-              />
-            </div>
-
-            <div>
-              <label class="mb-1 block text-sm font-medium">Assigned Workflows</label>
-              <input
-                v-model="form.workflows"
-                type="text"
-                placeholder="Enter workflows (comma-separated)"
-                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-                pattern="^[a-zA-Z0-9, ]+$"
-                minlength="5"
-              />
+              >
+                <option v-for="wc in workCenters" :key="wc.id" :value="wc.id">
+                  {{ wc.name }}
+                </option>
+              </select>
             </div>
           </div>
 
@@ -218,39 +207,41 @@
             <button
               type="submit"
               class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              :disabled="loading"
             >
-              Save Configuration
+              <span v-if="loading">Saving...</span>
+              <span v-else>Save Configuration</span>
             </button>
           </div>
         </form>
       </div>
     </Popup>
 
+    <!-- Edit Production Line Popup -->
     <Popup
       :visible="showEditProductionLinesPopup"
       @update:visible="showEditProductionLinesPopup = $event"
     >
-      <div>
+      <div class="p-5">
         <h2 class="mb-6 text-2xl font-bold">Edit Production Line</h2>
         <form @submit.prevent="handleEditProductionLine" class="space-y-6">
           <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <label class="mb-1 block text-sm font-medium">Line Name</label>
+              <label class="mb-1 block text-sm font-medium">Line Name*</label>
               <input
-                v-model="form.name"
+                v-model="editForm.line_name"
                 type="text"
-                placeholder="Enter line name"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
-                minlength="5"
               />
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">Status</label>
+              <label class="mb-1 block text-sm font-medium">Status*</label>
               <select
-                v-model="form.status"
+                v-model="editForm.status"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
               >
                 <option value="Active">Active</option>
                 <option value="Maintenance">Maintenance</option>
@@ -259,84 +250,81 @@
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">Current Output (units)</label>
+              <label class="mb-1 block text-sm font-medium">Capacity Limit*</label>
               <input
-                v-model="form.currentOutput"
+                v-model="editForm.capacity_limit"
                 type="number"
-                placeholder="Enter current output"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
-                min="1"
               />
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">Capacity (units/hour)</label>
+              <label class="mb-1 block text-sm font-medium">OEE Target*</label>
               <input
-                v-model="form.capacity"
+                v-model="editForm.oee_target"
                 type="number"
-                placeholder="Enter capacity"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
-                min="1"
               />
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">Capacity Utilization (%)</label>
-              <input
-                v-model="form.utilization"
-                type="number"
-                placeholder="Enter utilization"
+              <label class="mb-1 block text-sm font-medium">Maintenance Schedule*</label>
+              <select
+                v-model="editForm.maintenance_schedule"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
-                min="0"
-              />
+              >
+                <option value="Weekly">Weekly</option>
+                <option value="Bi-weekly">Bi-weekly</option>
+                <option value="Monthly">Monthly</option>
+              </select>
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">OEE (%)</label>
-              <input
-                v-model="form.oee"
-                type="number"
-                placeholder="Enter OEE"
+              <label class="mb-1 block text-sm font-medium">Preferred Shift*</label>
+              <select
+                v-model="editForm.preferred_shift"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                min="0"
-              />
+                required
+              >
+                <option value="Morning">Morning</option>
+                <option value="Afternoon">Afternoon</option>
+                <option value="Evening">Evening</option>
+                <option value="Night">Night</option>
+              </select>
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium">Workcenters</label>
-              <input
-                v-model="form.workcenters"
-                type="number"
-                placeholder="Enter number of workcenters"
+              <label class="mb-1 block text-sm font-medium">Work Centers</label>
+              <select
+                v-model="editForm.work_centers"
+                multiple
                 class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-                min="1"
-              />
-            </div>
-
-            <div>
-              <label class="mb-1 block text-sm font-medium">Assigned Workflows</label>
-              <input
-                v-model="form.workflows"
-                type="text"
-                placeholder="Enter workflows (comma-separated)"
-                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-                pattern="^[a-zA-Z0-9, ]+$"
-                minlength="5"
-              />
+              >
+                <option v-for="wc in workCenters" :key="wc.id" :value="wc.id">
+                  {{ wc.name }}
+                </option>
+              </select>
             </div>
           </div>
 
           <div class="flex justify-end space-x-3 pt-4">
             <button
+              type="button"
+              @click="showEditProductionLinesPopup = false"
+              class="rounded-md bg-gray-500 px-4 py-2 text-white hover:bg-gray-600 focus:outline-none"
+            >
+              Cancel
+            </button>
+            <button
               type="submit"
               class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              :disabled="loading"
             >
-              Save Changes
+              <span v-if="loading">Saving...</span>
+              <span v-else>Save Changes</span>
             </button>
           </div>
         </form>
@@ -346,118 +334,210 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useProductionLinesStore } from '@/stores/useProductionLines'
+import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
 import Popup from '@/components/popup.vue'
-import { useOrdersStore } from '@/stores/useOrders'
 import { useUserStore } from '@/stores/user'
 
-const ordersStore = useOrdersStore()
+interface ProductionLine {
+  id: number
+  line_name: string
+  capacity_limit: number
+  maintenance_schedule: string
+  preferred_shift: string
+  status: string
+  oee_target: number
+  work_centers?: number[]
+}
+
+interface WorkCenter {
+  id: number
+  name: string
+  code: string
+  location: string
+  status: string
+  remarks: string
+}
+
+const api = axios.create({
+  baseURL: 'http://localhost:8000/api/',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
+
+// State
 const userStore = useUserStore()
 const userRole = userStore.user?.role
-
-const showAddProductionLinesPopup = ref(false)
-const showEditProductionLinesPopup = ref(false)
-const editingLineId = ref<string | null>(null)
-
-defineProps<{
-  showProductionLinesPopup: boolean
-}>()
-
-const emitEvent = defineEmits(['close', 'submit', 'update:showProductionLinesPopup'])
-
-const productionLinesStore = useProductionLinesStore()
-
+const productionLines = ref<ProductionLine[]>([])
+const workCenters = ref<WorkCenter[]>([])
+const loading = ref(false)
+const workCentersLoading = ref(false)
+const error = ref<string | null>(null)
 const searchQuery = ref('')
 const statusFilter = ref('all')
 
+// Popup states
+const showAddProductionLinesPopup = ref(false)
+const showEditProductionLinesPopup = ref(false)
+const editingLineId = ref<number | null>(null)
+
+// Forms
+const form = ref({
+  line_name: '',
+  capacity_limit: 0,
+  oee_target: 0,
+  status: 'Active',
+  maintenance_schedule: 'Weekly',
+  preferred_shift: 'Morning',
+  work_centers: [] as number[],
+})
+
+const editForm = ref({
+  line_name: '',
+  capacity_limit: 0,
+  oee_target: 0,
+  status: 'Active',
+  maintenance_schedule: 'Weekly',
+  preferred_shift: 'Morning',
+  work_centers: [] as number[],
+})
+
+// Computed
 const filteredLines = computed(() => {
-  return productionLinesStore.productionLines.filter((line) => {
-    const matchesSearch = line.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-    const matchesStatus =
-      statusFilter.value === 'all' || line.status.toLowerCase() === statusFilter.value
+  return productionLines.value.filter(line => {
+    const matchesSearch = line.line_name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    const matchesStatus = statusFilter.value === 'all' || line.status.toLowerCase() === statusFilter.value.toLowerCase()
     return matchesSearch && matchesStatus
   })
 })
 
-const form = ref({
-  name: '',
-  status: 'Active',
-  currentOutput: 0,
-  capacity: 0,
-  utilization: 0,
-  oee: null,
-  workcenters: 0,
-  workflows: [] as string[],
-})
+// Methods
+const formatWorkCenters = (workCenterIds: number[] | undefined) => {
+  if (!workCenterIds || !workCenterIds.length) return '-'
+  return workCenterIds.map(id => {
+    const wc = workCenters.value.find(w => w.id === id)
+    return wc ? wc.name : ''
+  }).filter(Boolean).join(', ') || '-'
+}
 
 const resetForm = () => {
   form.value = {
-    name: '',
+    line_name: '',
+    capacity_limit: 0,
+    oee_target: 0,
     status: 'Active',
-    currentOutput: 0,
-    capacity: 0,
-    utilization: 0,
-    oee: null,
-    workcenters: 0,
-    workflows: [],
+    maintenance_schedule: 'Weekly',
+    preferred_shift: 'Morning',
+    work_centers: [],
   }
 }
 
-const handleAddProductionLine = () => {
-  const newLine = {
-    id: productionLinesStore.getNextId, // Correctly call getNextId as a function
-    name: form.value.name,
-    status: form.value.status,
-    currentOutput: form.value.currentOutput || 0,
-    capacity: form.value.capacity,
-    utilization: form.value.utilization || 0,
-    oee: form.value.oee || null,
-    workcenters: form.value.workcenters,
-    workflows: form.value.workflows
-      ? form.value.workflows.split(',').map((workflow) => workflow.trim())
-      : [], // Handle empty workflows gracefully
+const fetchProductionLines = async () => {
+  try {
+    loading.value = true
+    error.value = null
+    const response = await api.get('production-lines/')
+    productionLines.value = response.data
+  } catch (err) {
+    error.value = 'Failed to fetch production lines'
+    console.error(err)
+  } finally {
+    loading.value = false
   }
-
-  productionLinesStore.addProductionLine(newLine) // Add the new production line to the store
-  resetForm() // Reset the form after adding
-  showAddProductionLinesPopup.value = false // Close the popup
-  //alert('Production Line added successfully!')
 }
 
-const handleEditProductionLine = () => {
-  if (!editingLineId.value) {
-    alert('No production line selected for editing.')
-    return
+const fetchWorkCenters = async () => {
+  try {
+    workCentersLoading.value = true
+    const response = await api.get('workcentre/workcenters')
+    workCenters.value = response.data
+  } catch (err) {
+    console.error('Failed to fetch work centers', err)
+  } finally {
+    workCentersLoading.value = false
   }
-
-  if (!form.value.name || form.value.name.length < 3) {
-    alert('Line Name is required and must be at least 3 characters long.')
-    return
-  }
-
-  const updatedLine = {
-    name: form.value.name,
-    status: form.value.status,
-    currentOutput: form.value.currentOutput,
-    capacity: form.value.capacity,
-    utilization: form.value.utilization,
-    oee: form.value.oee,
-    workcenters: form.value.workcenters,
-    workflows: form.value.workflows.split(',').map((workflow) => workflow.trim()),
-  }
-
-  productionLinesStore.editProductionLine(editingLineId.value, updatedLine)
-  resetForm()
-  showEditProductionLinesPopup.value = false
-  editingLineId.value = null
-  alert('Production Line updated successfully!')
 }
 
-const deleteProductionLine = (lineId: string) => {
-  if (confirm('Are you sure you want to delete this production line?')) {
-    productionLinesStore.deleteProductionLine(lineId)
-    //alert('Production Line deleted successfully!')
+const handleAddProductionLine = async () => {
+  try {
+    loading.value = true
+    const response = await api.post('production-lines/', {
+      line_name: form.value.line_name,
+      capacity_limit: form.value.capacity_limit,
+      oee_target: form.value.oee_target,
+      status: form.value.status,
+      maintenance_schedule: form.value.maintenance_schedule,
+      preferred_shift: form.value.preferred_shift,
+      work_centers: form.value.work_centers
+    })
+    productionLines.value.push(response.data)
+    resetForm()
+    showAddProductionLinesPopup.value = false
+  } catch (err) {
+    error.value = 'Failed to add production line'
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const openEditPopup = (id: number) => {
+  const line = productionLines.value.find(line => line.id === id)
+  if (line) {
+    editingLineId.value = id
+    editForm.value = {
+      line_name: line.line_name,
+      capacity_limit: line.capacity_limit,
+      oee_target: line.oee_target,
+      status: line.status,
+      maintenance_schedule: line.maintenance_schedule,
+      preferred_shift: line.preferred_shift,
+      work_centers: line.work_centers || [],
+    }
+    showEditProductionLinesPopup.value = true
+  }
+}
+
+const handleEditProductionLine = async () => {
+  if (!editingLineId.value) return
+
+  try {
+    loading.value = true
+    const response = await api.put(`production-lines/${editingLineId.value}/`, {
+      line_name: editForm.value.line_name,
+      capacity_limit: editForm.value.capacity_limit,
+      oee_target: editForm.value.oee_target,
+      status: editForm.value.status,
+      maintenance_schedule: editForm.value.maintenance_schedule,
+      preferred_shift: editForm.value.preferred_shift,
+      work_centers: editForm.value.work_centers
+    })
+    
+    const index = productionLines.value.findIndex(line => line.id === editingLineId.value)
+    if (index !== -1) {
+      productionLines.value[index] = response.data
+    }
+    
+    showEditProductionLinesPopup.value = false
+    editingLineId.value = null
+  } catch (err) {
+    error.value = 'Failed to update production line'
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const deleteProductionLine = async (id: number) => {
+  if (!confirm('Are you sure you want to delete this production line?')) return
+
+  try {
+    await api.delete(`production-lines/${id}/`)
+    productionLines.value = productionLines.value.filter(line => line.id !== id)
+  } catch (err) {
+    error.value = 'Failed to delete production line'
+    console.error(err)
   }
 }
 
@@ -466,21 +546,27 @@ const openAddPopup = () => {
   showAddProductionLinesPopup.value = true
 }
 
-const openEditPopup = (lineId: string) => {
-  const line = productionLinesStore.getProductionLineById(lineId)
-  if (line) {
-    form.value = {
-      ...line,
-      workflows: Array.isArray(line.workflows) ? line.workflows.join(', ') : '',
-    }
-    editingLineId.value = lineId
-    showEditProductionLinesPopup.value = true
-  }
-}
+// Lifecycle
+onMounted(async () => {
+  await fetchProductionLines()
+  await fetchWorkCenters()
+})
+
+// Props and Emits
+defineProps<{
+  showProductionLinesPopup: boolean
+}>()
+
+const emitEvent = defineEmits(['close', 'submit', 'update:showProductionLinesPopup'])
 </script>
 
 <style>
 button {
   cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 </style>

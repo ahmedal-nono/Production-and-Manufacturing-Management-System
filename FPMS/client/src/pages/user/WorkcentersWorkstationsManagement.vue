@@ -28,7 +28,7 @@
 
   <Popup :visible="showWorkCenterPopup" @update:visible="showWorkCenterPopup = $event">
     <div>
-      <h3 class="mb-4 text-center text-2xl font-bold">Workcenters</h3>
+      <h3 class="mb-4 text-center text-2xl font-bold">Work Centers</h3>
       <div class="grid grid-cols-5 gap-6">
         <div
           v-for="(workcenter, index) in workCenters"

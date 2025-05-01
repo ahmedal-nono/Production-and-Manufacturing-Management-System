@@ -3,12 +3,7 @@ from workcentre.models import WorkCenter
 # from .models import InspectionCheckpoint  
 
 # Work Center Model
-class WorkCenter(models.Model):
-    name = models.CharField(max_length=255)
-    description = models.TextField()
 
-    def __str__(self):
-        return self.name
 
 # Inspection Checkpoint Model (linked to Stage)
 class InspectionCheckpoint(models.Model):
@@ -88,6 +83,7 @@ class Component(models.Model):
 
 class ProductionLine(models.Model):
     line_name = models.CharField(max_length=255)
+    
     capacity_limit = models.PositiveIntegerField()
     oee_target = models.IntegerField()
     status = models.CharField(max_length=20, choices=[('Active', 'Active'), ('Inactive', 'Inactive')])
