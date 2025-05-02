@@ -48,7 +48,11 @@ class WorkflowViewSet(viewsets.ModelViewSet):
 
 # Product ViewSet (Handles Product CRUD with BOM and Workflow linked)
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.select_related('bom', 'workflow').all()
+    queryset = Product.objects.select_related('bom', 'workflow').prefetch_related(
+        'workflow__stages',
+        'workflow__stages__inspection_checkpoints',
+        'bom__components'
+    ).all()
     serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['category', 'bom__status']

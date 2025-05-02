@@ -60,8 +60,16 @@ class WorkflowSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
-    product = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all())
+    
+    # Change this to read-only to avoid circular reference issues
+    product = serializers.PrimaryKeyRelatedField(read_only=True)
+    
+    # Add this for write capability
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(),
+        source='product',
+        write_only=True
+    )
 
     class Meta:
         model = Workflow
@@ -70,6 +78,7 @@ class WorkflowSerializer(serializers.ModelSerializer):
             'name',
             'description',
             'product',
+            'product_id',
             'assigned_work_center',
             'stages'
         ]
@@ -156,7 +165,22 @@ class BOMSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    bom = serializers.PrimaryKeyRelatedField(queryset=BOM.objects.all())
+    bom = BOMSerializer(read_only=True)  # Show full BOM details instead of just PK
+    workflow = WorkflowSerializer(read_only=True)  # Show full Workflow details
+    
+    # Add these to allow writing via PK while reading full objects
+    bom_id = serializers.PrimaryKeyRelatedField(
+        queryset=BOM.objects.all(),
+        source='bom',
+        write_only=True
+    )
+    workflow_id = serializers.PrimaryKeyRelatedField(
+        queryset=Workflow.objects.all(),
+        source='workflow',
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
 
     class Meta:
         model = Product
@@ -166,9 +190,11 @@ class ProductSerializer(serializers.ModelSerializer):
             'sku',
             'category',
             'specifications',
-            'bom'
+            'bom',
+            'workflow',
+            'bom_id',
+            'workflow_id'  # Add this for write capability
         ]
-
 
 class ProductionLineSerializer(serializers.ModelSerializer):
     work_centers = serializers.PrimaryKeyRelatedField(

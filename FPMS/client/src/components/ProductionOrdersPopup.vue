@@ -39,14 +39,12 @@
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-for="order in orders"
-                :key="order.id"
-                class="border border-gray-700 px-4 py-2"
-              >
+              <tr v-for="order in orders" :key="order.id" class="border border-gray-700 px-4 py-2">
                 <td class="border border-gray-700 px-4 py-2">{{ order.id }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ order.order_name }}</td>
-                <td class="border border-gray-700 px-4 py-2">{{ getProductName(order.product) }}</td>
+                <td class="border border-gray-700 px-4 py-2">
+                  {{ getProductName(order.product) }}
+                </td>
                 <td class="border border-gray-700 px-4 py-2">{{ order.quantity }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ formatDate(order.start_date) }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ formatDate(order.end_date) }}</td>
@@ -82,7 +80,7 @@
     <!-- Create Order Popup -->
     <Popup
       :visible="showCreateProductionOrdersPopup"
-      @update:visible="(value) => showCreateProductionOrdersPopup = value"
+      @update:visible="(value) => (showCreateProductionOrdersPopup = value)"
     >
       <div>
         <h1 class="mb-6 text-2xl font-semibold">Create Production Order</h1>
@@ -152,21 +150,31 @@
             <div class="grid grid-cols-3 gap-4">
               <label>
                 Start Date
-                <input v-model="startDate" type="datetime-local" class="w-full rounded border p-2" required />
-              </label>
-              <label>
-                End Date
-                <input v-model="endDate" type="datetime-local" class="w-full rounded border p-2" required />
-              </label>
-              <label>
-                Production Line
                 <input
-                  v-model="productionLine"
-                  type="number"
-                  placeholder="Production Line ID"
+                  v-model="startDate"
+                  type="datetime-local"
                   class="w-full rounded border p-2"
                   required
                 />
+              </label>
+              <label>
+                End Date
+                <input
+                  v-model="endDate"
+                  type="datetime-local"
+                  class="w-full rounded border p-2"
+                  required
+                />
+              </label>
+              <label>
+                Production Line
+                <select v-model="productionLine" class="w-full rounded border p-2" required>
+                  <option :value="null" disabled>Select Production Line</option>
+                  <option v-for="line in productionLines" :key="line.id" :value="line.id">
+                    {{ line.line_name }}
+                    <span v-if="line.capacity_limit">(Capacity: {{ line.capacity_limit }})</span>
+                  </option>
+                </select>
               </label>
               <label>
                 Status
@@ -200,7 +208,7 @@
     <!-- Edit Order Popup -->
     <Popup
       :visible="showEditProductionOrdersPopup"
-      @update:visible="(value) => showEditProductionOrdersPopup = value"
+      @update:visible="(value) => (showEditProductionOrdersPopup = value)"
     >
       <div>
         <h1 class="mb-6 text-2xl font-semibold">Edit Production Order</h1>
@@ -270,11 +278,21 @@
             <div class="grid grid-cols-3 gap-4">
               <label>
                 Start Date
-                <input v-model="startDate" type="datetime-local" class="w-full rounded border p-2" required />
+                <input
+                  v-model="startDate"
+                  type="datetime-local"
+                  class="w-full rounded border p-2"
+                  required
+                />
               </label>
               <label>
                 End Date
-                <input v-model="endDate" type="datetime-local" class="w-full rounded border p-2" required />
+                <input
+                  v-model="endDate"
+                  type="datetime-local"
+                  class="w-full rounded border p-2"
+                  required
+                />
               </label>
               <label>
                 Production Line
@@ -359,7 +377,8 @@ const showEditProductionOrdersPopup = ref(false)
 const orders = ref<Order[]>([])
 const products = ref<Product[]>([])
 const selectedOrderId = ref<number | null>(null)
-
+const productionLines = ref<any[]>([])
+const productionLine = ref<number | null>(null)
 // Form fields
 const orderName = ref('')
 const priority = ref('High')
@@ -367,7 +386,7 @@ const productId = ref(1)
 const quantity = ref(1)
 const startDate = ref('')
 const endDate = ref('')
-const productionLine = ref(1)
+// const productionLine = ref(1)
 const status = ref('Pending')
 
 const getStatusClass = (status: string) => {
@@ -408,7 +427,7 @@ const formatDate = (dateString: string) => {
 }
 
 const getProductName = (productId: number) => {
-  const product = products.value.find(p => p.id === productId)
+  const product = products.value.find((p) => p.id === productId)
   return product ? product.name : 'Unknown Product'
 }
 
@@ -446,7 +465,7 @@ const submitOrder = async () => {
       start_date: new Date(startDate.value).toISOString(),
       end_date: new Date(endDate.value).toISOString(),
       production_line: productionLine.value,
-      status: status.value
+      status: status.value,
     }
 
     const response = await axios.post(`${API_BASE_URL}production-orders/`, newOrder)
@@ -459,6 +478,19 @@ const submitOrder = async () => {
 }
 
 // Edit an existing production order
+const fetchProductionLines = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}production-lines/`)
+    productionLines.value = response.data
+    if (productionLines.value.length > 0) {
+      productionLine.value = productionLines.value[0].id // Set default value
+    }
+  } catch (error) {
+    console.error('Error fetching production lines:', error)
+    alert('Failed to load production lines')
+  }
+}
+
 const editOrder = async () => {
   if (selectedOrderId.value) {
     try {
@@ -470,19 +502,19 @@ const editOrder = async () => {
         start_date: new Date(startDate.value).toISOString(),
         end_date: new Date(endDate.value).toISOString(),
         production_line: productionLine.value,
-        status: status.value
+        status: status.value,
       }
 
       const response = await axios.put(
         `${API_BASE_URL}production-orders/${selectedOrderId.value}/`,
-        updatedOrder
+        updatedOrder,
       )
 
-      const index = orders.value.findIndex(order => order.id === selectedOrderId.value)
+      const index = orders.value.findIndex((order) => order.id === selectedOrderId.value)
       if (index !== -1) {
         orders.value[index] = response.data
       }
-      
+
       showEditProductionOrdersPopup.value = false
       resetCreateForm()
     } catch (error) {
@@ -495,7 +527,7 @@ const editOrder = async () => {
 const deleteOrder = async (id: number) => {
   try {
     await axios.delete(`${API_BASE_URL}production-orders/${id}/`)
-    orders.value = orders.value.filter(order => order.id !== id)
+    orders.value = orders.value.filter((order) => order.id !== id)
   } catch (error) {
     console.error('Error deleting production order:', error)
   }
@@ -522,20 +554,20 @@ const updateOrderDatesHandler = async (payload: {
   newEndTime: string
 }) => {
   try {
-    const orderToUpdate = orders.value.find(order => order.id === payload.orderId)
+    const orderToUpdate = orders.value.find((order) => order.id === payload.orderId)
     if (orderToUpdate) {
       const updatedOrder = {
         ...orderToUpdate,
         start_date: new Date(payload.newStartTime).toISOString(),
-        end_date: new Date(payload.newEndTime).toISOString()
+        end_date: new Date(payload.newEndTime).toISOString(),
       }
 
       const response = await axios.put(
         `${API_BASE_URL}production-orders/${payload.orderId}/`,
-        updatedOrder
+        updatedOrder,
       )
 
-      const index = orders.value.findIndex(order => order.id === payload.orderId)
+      const index = orders.value.findIndex((order) => order.id === payload.orderId)
       if (index !== -1) {
         orders.value[index] = response.data
       }
@@ -551,6 +583,7 @@ const updateOrderDatesHandler = async (payload: {
 onMounted(() => {
   fetchOrders()
   fetchProducts()
+  fetchProductionLines()
 })
 </script>
 

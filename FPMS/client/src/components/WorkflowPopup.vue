@@ -653,7 +653,7 @@ async function saveWorkflow() {
     const workflowData = {
       name: workflowName.value,
       description: description.value,
-      product: selectedProduct.value,
+      product_id: selectedProduct.value,
       assigned_work_center: stages.value[0]?.assigned_work_center || null,
       stages: stages.value
     }

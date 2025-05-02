@@ -609,21 +609,29 @@ async function saveBOM() {
       unit: comp.unit,
       unit_cost: comp.unitCost.toString(),
     })),
-    version: 'new' ? generateNewVersion() : bomForm.value.version,
-    
+    version: bomForm.value.id ? bomForm.value.version : generateNewVersion(), // Use existing version or generate a new one
   }
 
   try {
     if (bomForm.value.id) {
-      await axios.put(`${API_BASE_URL}${bomForm.value.id}/`, bomData)
+      // Update existing BOM
+      const response = await axios.put(`${API_BASE_URL}${bomForm.value.id}/`, bomData)
+      const updatedBOM = {
+        ...response.data,
+        productCode: response.data.product_code,
+      }
+      const index = boms.value.findIndex((bom) => bom.id === bomForm.value.id)
+      if (index !== -1) {
+        boms.value[index] = updatedBOM // Update the BOM in the list
+      }
     } else {
-      const response = await axios.post(API_BASE_URL, bomData);
+      // Create new BOM
+      const response = await axios.post(API_BASE_URL, bomData)
       boms.value.push({
         ...response.data,
-        productCode: response.data.product_code
-      })
+        productCode: response.data.product_code,
+      }) // Add the new BOM to the list
     }
-    fetchBOMs()
     resetForm()
   } catch (error) {
     console.error('Error saving BOM:', error)
