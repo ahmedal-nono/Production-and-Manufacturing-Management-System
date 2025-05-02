@@ -4,7 +4,7 @@
     <div class="flex flex-row gap-10 py-4">
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
-        @click="showProductionPopup = true"
+        @click="() => (showProductionPopup = true)"
       >
         <img src="@/assets/production.png" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Production</p>
@@ -18,14 +18,14 @@
       </div>
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
-        @click="showProductionLinesPopup = true"
+        @click="() => (showProductionLinesPopup = true)"
       >
         <img src="@/assets/production_line.png" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Production Lines</p>
       </div>
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
-        @click="showBOMsPopup = true"
+        @click="() => (showBOMsPopup = true)"
       >
         <img src="@/assets/bom.png" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">BOMs</p>
@@ -39,21 +39,21 @@
       <div class="flex flex-row gap-10 py-4">
         <div
           class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
-          @click="showProductionSchedulePopup = true"
+          @click="() => (showProductionSchedulePopup = true)"
         >
           <img src="@/assets/production_schedule.png" class="size-20" alt="" />
           <p class="pt-2 text-[13px] font-bold">Production Schedule</p>
         </div>
         <div
           class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
-          @click="showProductionOrdersPopup = true"
+          @click="() => (showProductionOrdersPopup = true)"
         >
           <img src="@/assets/production_orders.png" class="size-20" alt="" />
           <p class="pt-2 text-[13px] font-bold">Production Orders</p>
         </div>
         <div
           class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
-          @click="showProductsPopup = true"
+          @click="() => (showProductsPopup = true)"
         >
           <img src="@/assets/products.png" class="size-20" alt="" />
           <p class="pt-2 text-[13px] font-bold">Products</p>

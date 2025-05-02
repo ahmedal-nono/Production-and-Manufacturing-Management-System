@@ -1,9 +1,8 @@
 <template>
   <div>
     <Popup
-      v-if="showBOMsPopup"
-      :visible="true"
-      @update:visible="closeBOMsPopup"
+      :visible="showBOMsPopup"
+      @update:visible="(value: boolean) => emitEvent('update:showBOMsPopup', value)"
     >
       <div>
         <h1 class="mb-6 text-4xl font-extrabold">Existing BOMs</h1>
@@ -24,7 +23,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="bom in filteredBOMs" :key="bom.id" class="border-t hover:bg-gray-100">
+              <tr v-for="bom in filteredBOMs" :key="bom.id" class="border-t">
                 <td class="border border-gray-700 px-4 py-2">{{ bom.name }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ bom.productCode }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ bom.version }}</td>
@@ -35,21 +34,21 @@
                 >
                   <button
                     v-if="userRole === 'Production Manager'"
-                    @click="viewBOM(bom.id)"
+                    @click="() => viewBOM(bom.id)"
                     class="mr-2 rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-500"
                   >
                     View
                   </button>
                   <button
                     v-if="userRole === 'Production Manager'"
-                    @click="editBOM(bom.id)"
+                    @click="() => editBOM(bom.id)"
                     class="mr-2 rounded bg-green-600 px-3 py-1 text-white hover:bg-green-500"
                   >
                     Edit
                   </button>
                   <button
                     v-if="userRole === 'Production Manager'"
-                    @click="deleteBOM(bom.id)"
+                    @click="() => deleteBOM(bom.id)"
                     class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
                   >
                     Delete
@@ -62,7 +61,7 @@
       </div>
       <button
         v-if="userRole === 'Production Manager'"
-        @click="createBOM()"
+        @click="() => createBOM()"
         class="mt-4 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
       >
         + New BOM
@@ -155,7 +154,7 @@
                       />
                       <button
                         type="button"
-                        @click="adjustQuantity(index, 1)"
+                        @click="() => adjustQuantity(index, 1)"
                         class="ml-1 px-1 text-gray-600 hover:text-gray-900"
                       >
                         ↑
@@ -187,7 +186,7 @@
                   <td class="border border-gray-700 px-4 py-2">
                     <button
                       type="button"
-                      @click="removeComponent(index)"
+                      @click="() => removeComponent(index)"
                       class="text-sm text-red-600 hover:text-red-800"
                     >
                       Remove
@@ -300,7 +299,7 @@
                   <td class="border border-gray-700 px-4 py-2">
                     <button
                       type="button"
-                      @click="removeComponent(index)"
+                      @click="() => removeComponent(index)"
                       class="text-sm text-red-600 hover:text-red-800"
                     >
                       Remove
@@ -497,10 +496,12 @@ const API_BASE_URL = 'http://localhost:8000/api/boms/'
 const userStore = useUserStore()
 const userRole = userStore.user?.role
 
-// State for BOMs and UI
+defineProps<{
+  showBOMsPopup: boolean
+}>()
+const emitEvent = defineEmits(['update:showBOMsPopup']) // State for BOMs and UI
 const boms = ref<any[]>([])
 const products = ref<any[]>([]) // Define products as a reactive property
-const showBOMsPopup = ref(true)
 const showEditBOMsPopup = ref(false)
 const showAddBOMsPopup = ref(false)
 const showViewBOMsPopup = ref(false)
@@ -541,7 +542,6 @@ onMounted(() => {
   fetchProducts()
 })
 
-
 const newComponent = ref({
   name: '',
   partNumber: '',
@@ -580,7 +580,7 @@ async function fetchBOMs() {
     const response = await axios.get(API_BASE_URL)
     boms.value = response.data.map((bom: any) => ({
       ...bom,
-      productCode: bom.product_code
+      productCode: bom.product_code,
     }))
   } catch (error) {
     console.error('Error fetching BOMs:', error)

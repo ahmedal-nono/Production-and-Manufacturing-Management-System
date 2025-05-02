@@ -2,7 +2,7 @@
   <div>
     <Popup
       :visible="showWorkflowsPopup"
-      @update:visible="(value: boolean) => showWorkflowsPopup = value"
+      @update:visible="(value: boolean) => emitEvent('update:showWorkflowsPopup', value)"
     >
       <div>
         <h1 class="mb-6 text-3xl font-extrabold">Existing Workflows</h1>
@@ -35,11 +35,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-for="workflow in filteredWorkflows"
-                :key="workflow.id"
-                class="border-t hover:bg-gray-100"
-              >
+              <tr v-for="workflow in filteredWorkflows" :key="workflow.id" class="border-t">
                 <td class="border border-gray-700 px-4 py-2">{{ workflow.name }}</td>
                 <td class="border border-gray-700 px-4 py-2">
                   {{ getProductName(workflow.product) }}
@@ -49,19 +45,19 @@
                   class="border border-gray-700 px-4 py-2"
                 >
                   <button
-                    @click="viewWorkflow(workflow.id)"
+                    @click="() => viewWorkflow(workflow.id)"
                     class="mr-2 rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-500"
                   >
                     View
                   </button>
                   <button
-                    @click="editWorkflow(workflow.id)"
+                    @click="() => editWorkflow(workflow.id)"
                     class="mr-2 rounded bg-green-600 px-3 py-1 text-white hover:bg-green-500"
                   >
                     Edit
                   </button>
                   <button
-                    @click="deleteWorkflow(workflow.id)"
+                    @click="() => deleteWorkflow(workflow.id)"
                     class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
                   >
                     Delete
@@ -74,7 +70,7 @@
       </div>
       <button
         v-if="userRole === 'Production Manager'"
-        @click="showCreateWorkflowPopup = true"
+        @click="() => (showCreateWorkflowPopup = true)"
         class="mt-4 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-500"
       >
         Create New Workflow
@@ -138,7 +134,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(stage, index) in stages" :key="index" class="border-t hover:bg-gray-100">
+            <tr v-for="(stage, index) in stages" :key="index" class="border-t">
               <td class="border border-gray-700 px-4 py-2">
                 <input
                   v-model="stage.name"
@@ -180,25 +176,29 @@
                 />
               </td>
               <td class="border border-gray-700 px-4 py-2">
-                <select 
-                  v-model="stage.inspection_checkpoints" 
+                <select
+                  v-model="stage.inspection_checkpoints"
                   multiple
-                  class="rounded border p-2 h-full"
+                  class="h-full rounded border p-2"
                 >
                   <option v-for="cp in inspectionCheckpoints" :key="cp.id" :value="cp.id">
                     {{ cp.checkpoint_name }}
                   </option>
                 </select>
                 <button
-                  @click="showCreateQualityInspectionCheckpointPopup = true"
-                  class="mt-2 bg-gray-300 hover:bg-gray-400 text-black px-2 py-1 rounded"
+                  @click="
+                    () => {
+                      showCreateQualityInspectionCheckpointPopup = true
+                    }
+                  "
+                  class="mt-2 rounded bg-gray-300 px-2 py-1 text-black hover:bg-gray-400"
                 >
                   Create Checkpoint
                 </button>
               </td>
               <td class="border border-gray-700 px-4 py-2">
                 <button
-                  @click="removeStage(index)"
+                  @click="() => removeStage(index)"
                   class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
                 >
                   Remove
@@ -216,7 +216,7 @@
         </button>
       </div>
 
-      <div class="flex justify-end gap-4 mt-4">
+      <div class="mt-4 flex justify-end gap-4">
         <button
           @click="resetForm"
           class="w-2/12 cursor-pointer rounded-lg bg-gray-600 p-1.5 text-white"
@@ -289,7 +289,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(stage, index) in stages" :key="index" class="border-t hover:bg-gray-100">
+            <tr v-for="(stage, index) in stages" :key="index" class="border-t">
               <td class="border border-gray-700 px-4 py-2">
                 <input
                   v-model="stage.name"
@@ -331,25 +331,25 @@
                 />
               </td>
               <td class="border border-gray-700 px-4 py-2">
-                <select 
-                  v-model="stage.inspection_checkpoints" 
+                <select
+                  v-model="stage.inspection_checkpoints"
                   multiple
-                  class="rounded border p-2 h-full"
+                  class="h-full rounded border p-2"
                 >
                   <option v-for="cp in inspectionCheckpoints" :key="cp.id" :value="cp.id">
                     {{ cp.checkpoint_name }}
                   </option>
                 </select>
                 <button
-                  @click="showCreateQualityInspectionCheckpointPopup = true"
-                  class="mt-2 bg-gray-300 hover:bg-gray-400 text-black px-2 py-1 rounded"
+                  @click="() => (showCreateQualityInspectionCheckpointPopup = true)"
+                  class="mt-2 rounded bg-gray-300 px-2 py-1 text-black hover:bg-gray-400"
                 >
                   Create Checkpoint
                 </button>
               </td>
               <td class="border border-gray-700 px-4 py-2">
                 <button
-                  @click="removeStage(index)"
+                  @click="() => removeStage(index)"
                   class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500"
                 >
                   Remove
@@ -367,7 +367,7 @@
         </button>
       </div>
 
-      <div class="flex justify-end gap-4 mt-4">
+      <div class="mt-4 flex justify-end gap-4">
         <button
           @click="resetForm"
           class="w-2/12 cursor-pointer rounded-lg bg-gray-600 p-1.5 text-white"
@@ -393,23 +393,14 @@
       <div class="mb-4 flex flex-row gap-4">
         <div class="flex w-full flex-col">
           <p class="font-medium">Workflow Name</p>
-          <input
-            v-model="currentWorkflow.name"
-            type="text"
-            class="rounded border p-2"
-            readonly
-          />
+          <input v-model="currentWorkflow.name" type="text" class="rounded border p-2" readonly />
         </div>
       </div>
 
       <div class="mb-4 flex flex-row gap-4">
         <div class="flex w-full flex-col">
           <p class="font-medium">Description</p>
-          <textarea
-            v-model="currentWorkflow.description"
-            class="rounded border p-2"
-            readonly
-          />
+          <textarea v-model="currentWorkflow.description" class="rounded border p-2" readonly />
         </div>
       </div>
 
@@ -439,7 +430,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(stage, index) in currentWorkflow.stages" :key="index" class="border-t hover:bg-gray-100">
+            <tr v-for="(stage, index) in currentWorkflow.stages" :key="index" class="border-t">
               <td class="border border-gray-700 px-4 py-2">{{ stage.name }}</td>
               <td class="border border-gray-700 px-4 py-2">{{ stage.description }}</td>
               <td class="border border-gray-700 px-4 py-2">
@@ -459,9 +450,9 @@
         </table>
       </div>
 
-      <div class="flex justify-end mt-4">
+      <div class="mt-4 flex justify-end">
         <button
-          @click="showViewWorkflowPopup = false"
+          @click="() => (showViewWorkflowPopup = false)"
           class="w-2/12 cursor-pointer rounded-lg bg-blue-600 p-1.5 text-white"
         >
           Close
@@ -512,9 +503,9 @@
           </div>
         </div>
       </div>
-      <div class="flex justify-end gap-4 mt-4">
+      <div class="mt-4 flex justify-end gap-4">
         <button
-          @click="showCreateQualityInspectionCheckpointPopup = false"
+          @click="() => (showCreateQualityInspectionCheckpointPopup = false)"
           class="w-2/12 cursor-pointer rounded-lg bg-gray-600 p-1.5 text-white"
         >
           Cancel
@@ -538,13 +529,18 @@ import { baseApiUrl } from '@/api.ts'
 import { useUserStore } from '@/stores/user'
 import axios from 'axios'
 
+defineProps<{
+  showWorkflowsPopup: boolean
+}>()
+
+const emitEvent = defineEmits(['update:showWorkflowsPopup'])
+
 // Stores
 const userStore = useUserStore()
 const userRole = userStore.user?.role
 const workflowsStore = useWorkflowsStore()
 
 // Popup visibility
-const showWorkflowsPopup = ref(false) // Ensure this is initialized
 const showCreateWorkflowPopup = ref(false)
 const showEditWorkflowPopup = ref(false)
 const showViewWorkflowPopup = ref(false)
@@ -575,7 +571,7 @@ const toolsEquipmentRequired = ref('')
 const filteredWorkflows = computed(() => {
   return workflows.value.filter((workflow) => {
     const matchesSearch = workflow.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-    const matchesCategory = 
+    const matchesCategory =
       selectedCategory.value === '' || workflow.product.toString() === selectedCategory.value
     return matchesSearch && matchesCategory
   })
@@ -583,28 +579,28 @@ const filteredWorkflows = computed(() => {
 
 // Methods
 function getProductName(productId: number) {
-  const product = apiProducts.value.find(p => p.id === productId)
+  const product = apiProducts.value.find((p) => p.id === productId)
   return product ? product.name : 'Unknown'
 }
 
 function getWorkCenterName(workCenterId: number) {
-  const wc = workCenters.value.find(w => w.id === workCenterId)
+  const wc = workCenters.value.find((w) => w.id === workCenterId)
   return wc ? wc.name : 'Unknown'
 }
 
 function getCheckpointName(checkpointId: number) {
-  const cp = inspectionCheckpoints.value.find(c => c.id === checkpointId)
+  const cp = inspectionCheckpoints.value.find((c) => c.id === checkpointId)
   return cp ? cp.checkpoint_name : 'Unknown'
 }
 
 function addStage() {
-  stages.value.push({ 
-    name: '', 
-    description: '', 
-    assigned_work_center: null, 
-    duration: null, 
+  stages.value.push({
+    name: '',
+    description: '',
+    assigned_work_center: null,
+    duration: null,
     work_order: '',
-    inspection_checkpoints: [] 
+    inspection_checkpoints: [],
   })
 }
 
@@ -655,7 +651,7 @@ async function saveWorkflow() {
       description: description.value,
       product_id: selectedProduct.value,
       assigned_work_center: stages.value[0]?.assigned_work_center || null,
-      stages: stages.value
+      stages: stages.value,
     }
 
     if (editingWorkflowId.value) {
@@ -675,7 +671,7 @@ async function editWorkflow(id: number) {
   try {
     const response = await axios.get(`${baseApiUrl}/workflows/${id}/`)
     const workflow = response.data
-    
+
     editingWorkflowId.value = workflow.id
     workflowName.value = workflow.name
     description.value = workflow.description
@@ -711,12 +707,12 @@ async function saveQualityInspectionCheckpoint() {
     const checkpointData = {
       checkpoint_name: checkpointName.value,
       inspection_criteria: inspectionCriteria.value,
-      tools_equipment_required: toolsEquipmentRequired.value
+      tools_equipment_required: toolsEquipmentRequired.value,
     }
 
     await axios.post(`${baseApiUrl}/inspection-checkpoints/`, checkpointData)
     await fetchInspectionCheckpoints()
-    
+
     checkpointName.value = ''
     inspectionCriteria.value = ''
     toolsEquipmentRequired.value = ''
@@ -742,13 +738,7 @@ onMounted(() => {
   fetchProducts()
   fetchWorkCenters()
   fetchInspectionCheckpoints()
-  openWorkflowsPopup() // Automatically open the popup for testing
 })
-
-// Example function to open the popup
-function openWorkflowsPopup() {
-  showWorkflowsPopup.value = true
-}
 </script>
 
 <style scoped>
@@ -756,19 +746,9 @@ button {
   cursor: pointer;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   border: 1px solid #ccc;
-}
-
-table {
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 8px 12px;
-}
-
-tr:hover {
-  background-color: #f5f5f5;
 }
 </style>
