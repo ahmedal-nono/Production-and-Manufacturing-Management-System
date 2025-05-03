@@ -25,7 +25,7 @@ class Stage(models.Model):
     assigned_work_center = models.ForeignKey(WorkCenter, on_delete=models.SET_NULL, null=True, blank=True)
     work_order = models.CharField(max_length=255, blank=True)
     duration = models.IntegerField(help_text="Duration in minutes")
-    workflow = models.ForeignKey('Workflow', on_delete=models.CASCADE,related_name='workflow_stages')
+    workflow = models.ForeignKey('Workflow', on_delete=models.CASCADE,related_name='stages')
     inspection_checkpoints = models.ManyToManyField(InspectionCheckpoint, blank=True)  # Many-to-many relation to Inspection Checkpoints
     
     def __str__(self):
@@ -37,7 +37,7 @@ class Workflow(models.Model):
     description = models.TextField()
     product = models.ForeignKey('Product', on_delete=models.CASCADE ,related_name='workflows')  # Linking Workflow to Product
     assigned_work_center = models.ForeignKey(WorkCenter, on_delete=models.SET_NULL, null=True, blank=True)  # Link to WorkCenter
-    stages = models.ManyToManyField('Stage', related_name='workflows', blank=True)
+    # stages = models.ManyToManyField('Stage', related_name='workflows', blank=True)
     def __str__(self):
         return self.name
 

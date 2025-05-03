@@ -30,5 +30,5 @@ urlpatterns = [
     path('api/', include('workflow.urls')),
     path('api/', include('work_instructions.urls')),
     path('api/', include('quality_control.urls')),
-    path('api/', include('reports.urls')),
+    path('api/reports/', include('reports.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -176,15 +176,6 @@
                 />
               </td>
               <td class="border border-gray-700 px-4 py-2">
-                <select
-                  v-model="stage.inspection_checkpoints"
-                  multiple
-                  class="h-full rounded border p-2"
-                >
-                  <option v-for="cp in inspectionCheckpoints" :key="cp.id" :value="cp.id">
-                    {{ cp.checkpoint_name }}
-                  </option>
-                </select>
                 <button
                   @click="
                     () => {
@@ -331,15 +322,6 @@
                 />
               </td>
               <td class="border border-gray-700 px-4 py-2">
-                <select
-                  v-model="stage.inspection_checkpoints"
-                  multiple
-                  class="h-full rounded border p-2"
-                >
-                  <option v-for="cp in inspectionCheckpoints" :key="cp.id" :value="cp.id">
-                    {{ cp.checkpoint_name }}
-                  </option>
-                </select>
                 <button
                   @click="() => (showCreateQualityInspectionCheckpointPopup = true)"
                   class="mt-2 rounded bg-gray-300 px-2 py-1 text-black hover:bg-gray-400"

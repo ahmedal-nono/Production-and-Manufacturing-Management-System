@@ -181,7 +181,6 @@
                 <select v-model="status" class="w-full rounded border p-2" required>
                   <option>Pending</option>
                   <option>In Progress</option>
-                  <option>Completed</option>
                   <option>Cancelled</option>
                 </select>
               </label>
@@ -296,13 +295,13 @@
               </label>
               <label>
                 Production Line
-                <input
-                  v-model="productionLine"
-                  type="number"
-                  placeholder="Production Line ID"
-                  class="w-full rounded border p-2"
-                  required
-                />
+                <select v-model="productionLine" class="w-full rounded border p-2" required>
+                  <option :value="null" disabled>Select Production Line</option>
+                  <option v-for="line in productionLines" :key="line.id" :value="line.id">
+                    {{ line.line_name }}
+                    <span v-if="line.capacity_limit">(Capacity: {{ line.capacity_limit }})</span>
+                  </option>
+                </select>
               </label>
               <label>
                 Status

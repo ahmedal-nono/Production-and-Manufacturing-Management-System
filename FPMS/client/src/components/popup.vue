@@ -1,6 +1,6 @@
 <template>
   <div v-if="visible" class="popup-overlay" @click="handleOverlayClick">
-    <div class="popup-content" @click.stop>
+    <div class="popup-content !h-[110vh] overflow-y-auto" @click.stop>
       <button
         @click="$emit('update:visible', false)"
         class="close-button rounded-full! bg-white! px-4! py-2! shadow!"
