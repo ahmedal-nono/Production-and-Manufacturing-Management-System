@@ -30,6 +30,7 @@
                 <th class="border border-gray-700 px-4 py-2">Start Date</th>
                 <th class="border border-gray-700 px-4 py-2">End Date</th>
                 <th class="border border-gray-700 px-4 py-2">Status</th>
+                <th class="border border-gray-700 px-4 py-2">Work Orders</th>
                 <th
                   v-if="userRole === 'Production Manager'"
                   class="border border-gray-700 px-4 py-2"
@@ -56,6 +57,9 @@
                     {{ order.status }}
                   </span>
                 </td>
+                <td class="border border-gray-700 px-4 py-2">
+                  {{ order.work_orders_count ?? 0 }}
+                </td>
                 <td v-if="userRole === 'Production Manager'" class="space-x-2 px-4 py-2">
                   <button
                     @click="openEditPopup(order)"
@@ -80,7 +84,7 @@
     <!-- Create Order Popup -->
     <Popup
       :visible="showCreateProductionOrdersPopup"
-      @update:visible="(value) => (showCreateProductionOrdersPopup = value)"
+      @update:visible="(value: boolean) => (showCreateProductionOrdersPopup = value)"
     >
       <div>
         <h1 class="mb-6 text-2xl font-semibold">Create Production Order</h1>
@@ -207,7 +211,7 @@
     <!-- Edit Order Popup -->
     <Popup
       :visible="showEditProductionOrdersPopup"
-      @update:visible="(value) => (showEditProductionOrdersPopup = value)"
+      @update:visible="(value: boolean) => (showEditProductionOrdersPopup = value)"
     >
       <div>
         <h1 class="mb-6 text-2xl font-semibold">Edit Production Order</h1>
@@ -339,8 +343,9 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
 import { useUserStore } from '@/stores/user'
+import { baseApiUrl } from '@/api'
 
-const API_BASE_URL = 'http://localhost:8000/api/'
+const API_BASE_URL = `${baseApiUrl}/`
 
 interface Order {
   id: number
@@ -352,6 +357,8 @@ interface Order {
   end_date: string
   production_line: number
   status: string
+  work_orders?: number[]
+  work_orders_count?: number
 }
 
 interface Product {

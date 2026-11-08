@@ -18,11 +18,15 @@ from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Workstation
 from .serializers import WorkstationSerializer
+from administration.permissions import RoleWritePermission
+
+WORKCENTRE_ROLES = ('admin', 'production_manager')
 
 class WorkCenterViewSet(viewsets.ModelViewSet):
     queryset = WorkCenter.objects.all()
     serializer_class = WorkCenterSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [RoleWritePermission]
+    required_roles = WORKCENTRE_ROLES
     
     
 
@@ -31,7 +35,8 @@ class WorkCenterViewSet(viewsets.ModelViewSet):
 
 class WorkstationViewSet(viewsets.ViewSet):  # Using ViewSet instead of ModelViewSet
     queryset = Workstation.objects.all()  # Make sure this is defined
-    permission_classes = [AllowAny]
+    permission_classes = [RoleWritePermission]
+    required_roles = WORKCENTRE_ROLES
     
     def list(self, request):
         # Custom list logic
@@ -76,9 +81,17 @@ class WorkstationViewSet(viewsets.ViewSet):  # Using ViewSet instead of ModelVie
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def partial_update(self, request, pk=None):
-        # Similar to update but for PATCH requests
-        # Implement your partial update logic here
-        pass
+        try:
+            workstation = Workstation.objects.get(pk=pk)
+        except Workstation.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = WorkstationSerializer(
+            workstation, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def destroy(self, request, pk=None):
         # Custom delete logic
@@ -92,7 +105,10 @@ class WorkstationViewSet(viewsets.ViewSet):  # Using ViewSet instead of ModelVie
     # You can also add custom actions
     @action(detail=True, methods=['get'])
     def custom_action(self, request, pk=None):
-        workstation = self.get_object(pk)
+        try:
+            Workstation.objects.get(pk=pk)
+        except Workstation.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         # Your custom logic here
         return Response({'message': 'Custom action performed'})
 # class WorkstationViewSet(viewsets.ModelViewSet):
@@ -208,4 +224,5 @@ class WorkstationViewSet(viewsets.ViewSet):  # Using ViewSet instead of ModelVie
 class MaintenanceViewSet(viewsets.ModelViewSet):
     queryset = Maintenance.objects.all()
     serializer_class = MaintenanceSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [RoleWritePermission]
+    required_roles = WORKCENTRE_ROLES

@@ -18,6 +18,7 @@ router.register(r'backups', views.BackupRecordViewSet, basename='backup')
 router.register(r'settings', views.SystemSettingViewSet)
 router.register(r'health-metrics', views.HealthMetricViewSet)
 router.register(r'activity-logs', views.ActivityLogViewSet)
+router.register(r'notifications', views.NotificationViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

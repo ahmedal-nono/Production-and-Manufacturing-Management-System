@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
+import axios from 'axios'
 import notificationStore from '@/stores/notificationStore'
+import { baseApiUrl } from '@/api'
 
-
-interface Rework {
+export interface Rework {
   id: string
   workOrder: string
   product: string
@@ -17,117 +18,100 @@ interface Rework {
 
 interface ReworkState {
   reworks: Rework[]
+  loading: boolean
+  error: string
 }
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const API_URL = `${baseApiUrl}/rework-requests/`
+
+const SEVERITY_LABELS: Record<string, Rework['defectLevel']> = {
+  critical: 'Critical',
+  major: 'Major',
+  minor: 'Minor',
+}
+
+const fromApi = (item: any): Rework => ({
+  id: String(item.id),
+  workOrder: item.workorder_id != null ? `WO-${item.workorder_id}` : '',
+  product: item.product_name || '',
+  defectLevel: SEVERITY_LABELS[String(item.severity).toLowerCase()] || 'Minor',
+  defectType: item.defect_type || '',
+  affectedComponent: item.affected_component || '',
+  description: item.description || '',
+  assignedTo: null,
+  dueDate: String(item.updated_at || item.created_at || '').split('T')[0],
+  status: item.status === 'pending' ? 'Open' : 'Completed',
+})
+
+const toApiStatus = (status: Rework['status']): string =>
+  status === 'Open' ? 'pending' : 'approved'
 
 export const useReworkStore = defineStore('rework', {
   state: (): ReworkState => ({
     reworks: [],
+    loading: false,
+    error: '',
   }),
   actions: {
-    async createRework(rework: Rework) {
+    async fetchReworks() {
+      this.loading = true
+      this.error = ''
       try {
-        await delay(1500) // Simulate API delay
-        this.reworks.push(rework)
-        console.log('Rework created:', rework)
-        notificationStore.addNotification('Rework created successfully!', 'success', 'manager')
+        const { data } = await axios.get(API_URL)
+        this.reworks = (Array.isArray(data) ? data : []).map(fromApi)
       } catch (error) {
-        notificationStore.addNotification('Failed to create rework.', 'error', 'manager')
-        console.error('Failed to create rework:', error)
+        this.error = 'Failed to load rework requests'
+        console.error('Failed to fetch reworks:', error)
         throw error
+      } finally {
+        this.loading = false
       }
     },
     async deleteRework(id: string) {
+      // The backend has no delete endpoint for reworks; they follow inspections.
       this.reworks = this.reworks.filter((rework) => rework.id !== id)
     },
     async updateRework(id: string, updates: Partial<Rework>) {
       const index = this.reworks.findIndex((rework) => rework.id === id)
-      if (index >= 0) {
-        this.reworks[index] = { ...this.reworks[index], ...updates }
-        console.log(`Rework ${id} updated successfully`, updates)
-      } else {
+      if (index < 0) {
         console.error(`Rework with ID ${id} not found`)
+        return
       }
-    },
-    // async fetchReworks() {
-    //   if (this.reworks.length > 0) {
-    //     console.log('Reworks already loaded, skipping fetch.')
-    //     return
-    //   }
-    //   await delay(1500) // Simulate API delay
-    //   this.reworks = [
-    //     {
-    //       id: 'RW-001',
-    //       workOrder: 'WO-001',
-    //       product: 'Steel Bracket',
-    //       defectLevel: 'Critical',
-    //       defectType: 'Crack',
-    //       affectedComponent: 'Bracket Arm',
-    //       description: 'A visible crack on the bracket arm.',
-    //       assignedTo: null,
-    //       dueDate: '2023-12-01',
-    //       status: 'Open',
-    //     },
-    //     {
-    //       id: 'RW-002',
-    //       workOrder: 'WO-002',
-    //       product: 'Aluminum Frame',
-    //       defectLevel: 'Major',
-    //       defectType: 'Dent',
-    //       affectedComponent: 'Frame Edge',
-    //       description: 'A dent on the edge of the frame.',
-    //       assignedTo: 'John Doe',
-    //       dueDate: '2023-12-05',
-    //       status: 'Completed',
-    //     },
-    //   ]
-    //   console.log('Reworks fetched successfully:', this.reworks)
-    // },
-    async saveFromQualityInspection(data: Partial<Rework>) {
-      try {
-        const existingRework = this.reworks.find((rework) => rework.workOrder === data.workOrder)
-        if (existingRework) {
-          console.log('Updating existing rework:', existingRework)
-          Object.assign(existingRework, {
-            defectLevel: data.defectLevel || existingRework.defectLevel,
-            defectType: data.defectType || existingRework.defectType,
-            affectedComponent: data.affectedComponent || existingRework.affectedComponent,
-            description: data.description || existingRework.description,
-          })
-        } else {
-          const newRework: Rework = {
-            id: `RW-${Date.now()}`, // Generate a unique ID
-            workOrder: data.workOrder || 'Unknown',
-            product: data.product || 'Unknown',
-            defectLevel: data.defectLevel || 'Minor',
-            defectType: data.defectType || 'Unknown',
-            affectedComponent: data.affectedComponent || 'Unknown',
-            description: data.description || 'No description provided',
-            assignedTo: data.assignedTo || null,
-            dueDate: data.dueDate || new Date().toISOString().split('T')[0],
-            status: 'Open',
-          }
-          this.reworks.push(newRework)
-          console.log('Rework saved from QualityInspectionPopup:', newRework)
+      if (updates.status) {
+        try {
+          await axios.patch(`${API_URL}${id}/`, { status: toApiStatus(updates.status) })
+        } catch (error) {
+          notificationStore.addNotification('Failed to update rework.', 'error', 'manager')
+          console.error('Failed to update rework status:', error)
+          throw error
         }
+      }
+      this.reworks[index] = { ...this.reworks[index], ...updates }
+      notificationStore.addNotification('Rework updated successfully!', 'success', 'manager')
+    },
+    async saveFromQualityInspection() {
+      // Rework requests are created server-side when an inspection decision is
+      // "rework"; just refresh the list so the new request shows up.
+      try {
+        await this.fetchReworks()
         notificationStore.addNotification(
           'Rework saved from Quality Inspection successfully!',
           'success',
           'manager',
         )
       } catch (error) {
-        console.error('Failed to save rework from Quality Inspection:', error)
         notificationStore.addNotification(
           'Failed to save rework from Quality Inspection.',
           'error',
           'manager',
         )
+        console.error('Failed to save rework from Quality Inspection:', error)
       }
     },
   },
   getters: {
-    getReworkById: (state) => (id: string) => state.reworks.find((rework) => rework.id === id),
+    getReworkById: (state) => (id: string) =>
+      state.reworks.find((rework) => rework.id === id),
     getReworkByWorkOrder: (state) => (workOrder: string) =>
       state.reworks.find((rework) => rework.workOrder === workOrder),
   },

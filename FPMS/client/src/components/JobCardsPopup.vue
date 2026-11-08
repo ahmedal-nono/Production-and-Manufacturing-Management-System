@@ -67,18 +67,18 @@
 
           <div class="mb-3 space-y-1 text-sm">
             <p><strong>Task:</strong> {{ card.task_name }}</p>
-            <p><strong>Work Order:</strong> WO-{{ card.work_order.name }}</p>
-            <p><strong>Assigned To:</strong> {{ getEmployeeName(card.assigned_to) }}</p>
+            <p><strong>Work Order:</strong> {{ card.work_order.name }}</p>
+            <p><strong>Assigned To:</strong> {{ getAssignedCenterName(card.assigned_to) }}</p>
             <p class="flex items-center gap-2">
               <strong>Priority:</strong>
               <span
                 :class="{
-                  'h-3 w-3 rounded-full bg-red-500': card.priority === 'High',
-                  'h-3 w-3 rounded-full bg-yellow-500': card.priority === 'Medium',
-                  'h-3 w-3 rounded-full bg-green-500': card.priority === 'Low',
+                  'h-3 w-3 rounded-full bg-red-500': card.work_order?.priority === 'High',
+                  'h-3 w-3 rounded-full bg-yellow-500': card.work_order?.priority === 'Medium',
+                  'h-3 w-3 rounded-full bg-green-500': card.work_order?.priority === 'Low',
                 }"
               ></span>
-              {{ card.priority }}
+              {{ card.work_order?.priority }}
             </p>
             <p><strong>Tools:</strong> {{ card.required_tools }}</p>
             <p><strong>Materials:</strong> {{ card.required_materials }}</p>
@@ -127,11 +127,12 @@ import axios from 'axios'
 import Popup from '@/components/popup.vue'
 import JobCardDetailsModal from './JobCardDetailsModal.vue'
 import UpdateStatusModal from './UpdateStatusModal.vue'
+import { baseApiUrl } from '@/api'
 
-const API_BASE_URL = 'http://localhost:8000/api'
+const API_BASE_URL = baseApiUrl
 const JOB_CARDS_ENDPOINT = `${API_BASE_URL}/job_cards/`
 const PRODUCTION_LINES_ENDPOINT = `${API_BASE_URL}/production-lines/`
-const EMPLOYEES_ENDPOINT = `${API_BASE_URL}/employees/`
+const WORK_CENTERS_ENDPOINT = `${API_BASE_URL}/workcentre/workcenters/`
 
 defineProps<{
   showJobCardsPopup: boolean
@@ -142,7 +143,7 @@ const emitEvent = defineEmits(['update:showJobCardsPopup'])
 // Data
 const jobCards = ref<any[]>([])
 const productionLines = ref<any[]>([])
-const employees = ref<any[]>([])
+const workCenters = ref<any[]>([])
 const lastSynced = ref<string>('just now')
 const selectedJobCard = ref<any>(null)
 const statusUpdateCard = ref<any>(null)
@@ -184,12 +185,12 @@ const fetchProductionLines = async () => {
   }
 }
 
-const fetchEmployees = async () => {
+const fetchWorkCenters = async () => {
   try {
-    const response = await axios.get(EMPLOYEES_ENDPOINT)
-    employees.value = response.data
+    const response = await axios.get(WORK_CENTERS_ENDPOINT)
+    workCenters.value = response.data
   } catch (error) {
-    console.error('Error fetching employees:', error)
+    console.error('Error fetching work centers:', error)
   }
 }
 
@@ -199,22 +200,29 @@ const filteredJobCards = computed(() => {
     const matchSearch =
       filters.value.search === '' ||
       card.task_name.toLowerCase().includes(filters.value.search.toLowerCase()) ||
-      getEmployeeName(card.assigned_to).toLowerCase().includes(filters.value.search.toLowerCase())
+      getAssignedCenterName(card.assigned_to)
+        .toLowerCase()
+        .includes(filters.value.search.toLowerCase())
 
     const matchStatus = filters.value.status === '' || card.status === filters.value.status
 
-    const matchPriority = filters.value.priority === '' || card.priority === filters.value.priority
+    const priority = card.work_order?.priority
+    const matchPriority = filters.value.priority === '' || priority === filters.value.priority
 
-    const matchLine = filters.value.line === '' || card.production_line === filters.value.line
+    const line = card.work_order?.production_line
+    const matchLine =
+      filters.value.line === '' ||
+      String(line ?? '') === String(filters.value.line)
 
     return matchSearch && matchStatus && matchPriority && matchLine
   })
 })
 
 // Helpers
-const getEmployeeName = (employeeId: number) => {
-  const employee = employees.value.find((e) => e.id === employeeId)
-  return employee ? `${employee.first_name} ${employee.last_name}` : 'Unassigned'
+const getAssignedCenterName = (centerId: number | null) => {
+  if (!centerId) return 'Unassigned'
+  const center = workCenters.value.find((c) => c.id === centerId)
+  return center ? center.name : `Center #${centerId}`
 }
 
 const getStatusClass = (status: string) => {
@@ -262,7 +270,7 @@ const handleStatusUpdate = (updatedCard: any) => {
 onMounted(() => {
   fetchJobCards()
   fetchProductionLines()
-  fetchEmployees()
+  fetchWorkCenters()
 })
 </script>
 

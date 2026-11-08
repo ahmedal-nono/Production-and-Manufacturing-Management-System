@@ -161,3 +161,19 @@ class ActivityLog(models.Model):
     
     def __str__(self):
         return f"{self.user} {self.get_action_display()} at {self.timestamp}"
+
+class Notification(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    url = models.CharField(max_length=200, blank=True, null=True)
+    related_model = models.CharField(max_length=50, blank=True, null=True)
+    related_id = models.PositiveIntegerField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user_id}: {self.message}"

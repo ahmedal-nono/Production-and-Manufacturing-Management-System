@@ -2,14 +2,18 @@ from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count, Avg, Sum, F, Min, Max, Q
 from django.db.models.functions import Cast
 from django.db import models
 from datetime import timedelta
+from django.utils import timezone
+from django.utils.dateparse import parse_duration
 from django.http import HttpResponse
 from io import BytesIO
 import pandas as pd
 
+from administration.permissions import RoleWritePermission
 from .models import Issue, Report, ReportTemplate, ScheduledReport
 from .serializers import (
     IssueListSerializer, IssueDetailSerializer,
@@ -22,16 +26,25 @@ from .serializers import (
 )
 from workflow.models import ProductionOrder, ProductionLine, Workflow, Stage
 
+REPORTS_ROLES = (
+    'admin',
+    'production_manager',
+    'quality_control_manager',
+    'quality_control_inspector',
+)
+
 class IssueViewSet(viewsets.ModelViewSet):
     queryset = Issue.objects.all().order_by('-created_at')
-    permission_classes = []
+    permission_classes = [RoleWritePermission]
+    required_roles = REPORTS_ROLES
 
     def get_serializer_class(self):
         return IssueListSerializer if self.action == 'list' else IssueDetailSerializer
 
 class ReportViewSet(viewsets.ModelViewSet):
     queryset = Report.objects.all().order_by('-created_at')
-    permission_classes = []
+    permission_classes = [RoleWritePermission]
+    required_roles = REPORTS_ROLES
 
     def get_serializer_class(self):
         return ReportListSerializer if self.action == 'list' else ReportDetailSerializer
@@ -39,47 +52,61 @@ class ReportViewSet(viewsets.ModelViewSet):
 class ReportTemplateViewSet(viewsets.ModelViewSet):
     queryset = ReportTemplate.objects.all()
     serializer_class = ReportTemplateSerializer
-    permission_classes = []
+    permission_classes = [RoleWritePermission]
+    required_roles = REPORTS_ROLES
 
 class ScheduledReportViewSet(viewsets.ModelViewSet):
     queryset = ScheduledReport.objects.all()
     serializer_class = ScheduledReportSerializer
-    permission_classes = []
+    permission_classes = [RoleWritePermission]
+    required_roles = REPORTS_ROLES
 
 class ProductionPerformanceReportAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
         try:
+            now = timezone.now()
             lines = ProductionLine.objects.annotate(
                 total_orders=Count('productionorder'),
                 completed_orders=Count('productionorder', filter=Q(productionorder__status='Completed')),
-                completion_rate=(Count('productionorder', filter=Q(productionorder__status='Completed')) * 100.0 / 
-                               Count('productionorder')),
                 average_duration=Avg(Cast(
                     F('productionorder__end_date') - F('productionorder__start_date'),
                     output_field=models.DurationField()
                 )),
-                delayed_orders=Count('productionorder', 
-                                   filter=Q(productionorder__end_date__gt=F('productionorder__start_date') + 
-                                           timedelta(days=1)))
+                delayed_orders=Count('productionorder',
+                                   filter=Q(productionorder__end_date__lt=now) &
+                                           ~Q(productionorder__status='Completed'))
             )
-            
-            report_data = [{
-                'production_line': line.line_name,
-                'total_orders': line.total_orders or 0,
-                'completed_orders': line.completed_orders or 0,
-                'completion_rate': round(float(line.completion_rate), 2) if line.completion_rate else 0,
-                'average_duration': str(line.average_duration) if line.average_duration else None,
-                'delayed_orders': line.delayed_orders or 0
-            } for line in lines]
-            
-            serializer = ProductionPerformanceReportSerializer(data=report_data, many=True)
-            serializer.is_valid(raise_exception=True)
+
+            report_data = []
+            for line in lines:
+                total = line.total_orders or 0
+                completed = line.completed_orders or 0
+                average_duration = line.average_duration
+                if isinstance(average_duration, str):
+                    average_duration = parse_duration(average_duration)
+                elif isinstance(average_duration, (int, float)):
+                    average_duration = timedelta(microseconds=average_duration)
+                report_data.append({
+                    'production_line': line.line_name,
+                    'total_orders': total,
+                    'completed_orders': completed,
+                    'completion_rate': round(completed * 100.0 / total, 2) if total else 0,
+                    'average_duration': average_duration,
+                    'delayed_orders': line.delayed_orders or 0
+                })
+
+            serializer = ProductionPerformanceReportSerializer(
+                report_data, many=True)
             return Response(serializer.data)
-        
+
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class WorkflowAnalysisReportAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
         try:
             workflows = Workflow.objects.annotate(
@@ -114,6 +141,8 @@ class WorkflowAnalysisReportAPI(APIView):
             )
 
 class ProductionOrderStatusReportAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
         try:
             status_data = ProductionOrder.objects.values('status').annotate(
@@ -134,6 +163,8 @@ class ProductionOrderStatusReportAPI(APIView):
             )
 
 class StageDurationReportAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, workflow_id=None, *args, **kwargs):
         try:
             queryset = Stage.objects.all()
@@ -162,7 +193,9 @@ class StageDurationReportAPI(APIView):
             )
 
 class ExportProductionReportAPI(APIView):
-    def get(self, request, format=None, *args, **kwargs):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, report_format=None, *args, **kwargs):
         try:
             lines = ProductionLine.objects.annotate(
                 total_orders=Count('productionorder'),
@@ -171,7 +204,7 @@ class ExportProductionReportAPI(APIView):
             
             df = pd.DataFrame.from_records(lines)
             
-            if format == 'excel':
+            if report_format == 'excel':
                 output = BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     df.to_excel(writer, sheet_name='Production Report')
@@ -184,7 +217,7 @@ class ExportProductionReportAPI(APIView):
                 response['Content-Disposition'] = 'attachment; filename=production_report.xlsx'
                 return response
                 
-            elif format == 'csv':
+            elif report_format == 'csv':
                 response = HttpResponse(content_type='text/csv')
                 response['Content-Disposition'] = 'attachment; filename=production_report.csv'
                 df.to_csv(response, index=False)

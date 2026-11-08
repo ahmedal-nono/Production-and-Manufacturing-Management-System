@@ -1,9 +1,7 @@
-# serializers.py
-
 from rest_framework import serializers
 from .models import WorkOrder, JobCard, WorkInstruction
 from workcentre.models import WorkCenter  # Assuming WorkCenter is in the workcentre app
-from workflow.models import ProductionLine  # Assuming ProductionLine is in the workflow app
+from workflow.models import ProductionLine, ProductionOrder  # Assuming ProductionLine is in the workflow app
 
 
 class WorkInstructionSerializer(serializers.ModelSerializer):
@@ -15,19 +13,24 @@ class WorkInstructionSerializer(serializers.ModelSerializer):
 class WorkOrderSerializer(serializers.ModelSerializer):
     work_instruction = serializers.PrimaryKeyRelatedField(queryset=WorkInstruction.objects.all())
     production_line = serializers.PrimaryKeyRelatedField(queryset=ProductionLine.objects.all(), required=False)
-    
+    production_order = serializers.PrimaryKeyRelatedField(
+        queryset=ProductionOrder.objects.all(),
+        required=False,
+        allow_null=True
+    )
+
     class Meta:
         model = WorkOrder
-        fields = ['id', 'name', 'quantity_required', 'due_date', 'priority', 'work_instruction', 'production_line']
+        fields = ['id', 'name', 'quantity_required', 'due_date', 'priority', 'work_instruction', 'production_line', 'production_order']
     def create(self, validated_data):
         work_order = super().create(validated_data)
         work_instruction = work_order.work_instruction
-        
+
         # Get the assigned work center (simplest working version)
         assigned_to = None
         if work_order.production_line and work_order.production_line.work_centers.exists():
             assigned_to = WorkCenter.objects.get(pk=work_order.production_line.work_centers.first().pk)
-        
+
         # Create job cards
         if work_instruction.task_steps:
             JobCard.objects.bulk_create([
@@ -42,7 +45,7 @@ class WorkOrderSerializer(serializers.ModelSerializer):
                 for task in work_instruction.task_steps.split('\n')
                 if task.strip()
             ])
-        
+
         return work_order
     
 

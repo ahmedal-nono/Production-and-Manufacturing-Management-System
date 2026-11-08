@@ -1,6 +1,4 @@
 import { defineStore } from 'pinia'
-import { useBOMsStore } from './useBOMs'
-import { useWorkflowsStore } from './useWorkflows'
 import notificationStore from '@/stores/notificationStore'
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -69,11 +67,6 @@ export const useProductsStore = defineStore('products', {
       if (index >= 0) {
         this.products[index] = { ...this.products[index], ...updatedProduct }
       }
-    },
-    async loadBOMsAndWorkflows() {
-      const bomsStore = useBOMsStore()
-      const workflowsStore = useWorkflowsStore()
-      await Promise.all([bomsStore.$patch(), workflowsStore.$patch()]) // Ensure data is loaded
     },
     generateSKU() {
       const lastProduct = this.products[this.products.length - 1]

@@ -42,6 +42,10 @@
               />
             </div>
 
+            <div v-if="errorMessage" class="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+              {{ errorMessage }}
+            </div>
+
             <button
               type="submit"
               class="focus:ring-primary-300 hover:bg-primary-700 focus:ring-primary-800 w-full cursor-pointer rounded-xl bg-[#F0F0F0] px-5 py-2.5 text-center text-sm font-medium text-black hover:bg-gray-200 focus:ring-4 focus:outline-none"
@@ -50,8 +54,6 @@
               <span v-if="!loading">Sign in</span>
               <span v-else>Signing in...</span>
             </button>
-            <!-- <div v-if="error" class="text-red-500 text-sm">
-            </div> -->
           </form>
         </div>
       </div>
@@ -62,7 +64,7 @@
 <script lang="ts" setup>
 import { baseApiUrl } from '@/api'
 import { useUserStore, type UserType } from '@/stores/user'
-import { useAxios } from '@vueuse/integrations/useAxios'
+import axios from 'axios'
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -71,23 +73,31 @@ const loginForm = reactive({
   password: '',
 })
 const loading = ref(false)
+const errorMessage = ref('')
 
 const router = useRouter() // Initialize the router instance
 
 const handleLogin = async () => {
-  const { data } = await useAxios<{
-    user: UserType
-    access: string
-    refresh: string
-  }>(`${baseApiUrl}/admin/users/login/`, {
-    method: 'POST',
-    data: loginForm,
-  })
+  loading.value = true
+  errorMessage.value = ''
+  try {
+    const { data } = await axios.post<{
+      user: UserType
+      access: string
+      refresh: string
+    }>(`${baseApiUrl}/admin/users/login/`, loginForm)
 
-  const userStore = useUserStore()
-  if (data.value) {
-    userStore.setUser(data.value.user, data.value.access, data.value.refresh)
+    const userStore = useUserStore()
+    userStore.setUser(data.user, data.access, data.refresh)
     router.push({ name: 'home' })
+  } catch (error: any) {
+    errorMessage.value =
+      error?.response?.data?.error ||
+      error?.response?.data?.detail ||
+      (typeof error?.response?.data === 'string' ? error.response.data : '') ||
+      'Login failed. Please check your credentials and try again.'
+  } finally {
+    loading.value = false
   }
 }
 </script>

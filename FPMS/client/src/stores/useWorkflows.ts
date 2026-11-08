@@ -52,14 +52,12 @@ export const useWorkflowsStore = defineStore('workflows', {
         await delay(1500) // Simulate API delay
         this.workflows.push(workflow)
         notificationStore.addNotification(
-          Date.now().toString(),
           'Workflow created successfully!',
           'success',
           'manager',
         )
       } catch (error) {
         notificationStore.addNotification(
-          Date.now().toString(),
           'Failed to create workflow.',
           'error',
           'manager',
@@ -72,14 +70,12 @@ export const useWorkflowsStore = defineStore('workflows', {
         await delay(1500) // Simulate API delay
         this.workflows = this.workflows.filter((workflow) => workflow.id !== id)
         notificationStore.addNotification(
-          Date.now().toString(),
           'Workflow deleted successfully!',
           'success',
           'manager',
         )
       } catch (error) {
         notificationStore.addNotification(
-          Date.now().toString(),
           'Failed to delete workflow.',
           'error',
           'manager',

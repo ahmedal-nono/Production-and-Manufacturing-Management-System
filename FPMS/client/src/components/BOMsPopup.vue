@@ -491,8 +491,9 @@ import { ref, computed, onMounted } from 'vue'
 import Popup from '@/components/popup.vue'
 import axios from 'axios'
 import { useUserStore } from '@/stores/user'
+import { baseApiUrl } from '@/api'
 
-const API_BASE_URL = 'http://localhost:8000/api/boms/'
+const API_BASE_URL = `${baseApiUrl}/boms/`
 const userStore = useUserStore()
 const userRole = userStore.user?.role
 
@@ -524,12 +525,13 @@ const bomForm = ref({
   }>,
   baseQuantity: 1,
   version: '',
+  versionOption: 'update',
 })
 
 // Fetch products data
 async function fetchProducts() {
   try {
-    const response = await axios.get('http://localhost:8000/api/products/') // Replace with your API endpoint
+    const response = await axios.get(`${baseApiUrl}/products/`)
     products.value = response.data
   } catch (error) {
     console.error('Error fetching products:', error)
@@ -651,7 +653,7 @@ async function deleteBOM(id: number) {
 
 // Component functions
 function closeBOMsPopup() {
-  showBOMsPopup.value = false
+  emitEvent('update:showBOMsPopup', false)
 }
 
 async function editBOM(id: number) {

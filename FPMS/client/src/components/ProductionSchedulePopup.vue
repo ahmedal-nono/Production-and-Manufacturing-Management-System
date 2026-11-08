@@ -99,7 +99,7 @@
         <h2 class="mb-1 text-xl font-bold">
           Reschedule Order: <span class="font-bold">{{ currentOrder?.id }}</span>
           <p class="mt-2 mb-1 text-sm text-gray-600">
-            Current Schedule: <span class="font-medium">{{ formatDate(currentOrder?.end_date) }}</span>
+            Current Schedule: <span class="font-medium">{{ formatDate(currentOrder?.end_date ?? '') }}</span>
           </p>
           <p class="mb-4 text-sm text-gray-600">
             Production Line:
@@ -176,8 +176,9 @@ import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
 import { useUserStore } from '@/stores/user'
+import { baseApiUrl } from '@/api'
 
-const API_BASE_URL = 'http://localhost:8000/api/'
+const API_BASE_URL = `${baseApiUrl}/`
 
 interface ProductionOrder {
   id: number

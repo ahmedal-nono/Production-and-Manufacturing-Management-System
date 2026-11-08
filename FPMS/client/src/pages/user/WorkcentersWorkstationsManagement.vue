@@ -168,7 +168,7 @@
           type="text"
           placeholder="Enter Workstation Name"
           v-model="newWorkstation.name"
-          @change="(e) => (newWorkstation.name = e.target.value)"
+          @change="(e: Event) => (newWorkstation.name = (e.target as HTMLInputElement).value)"
           required
           minlength="5"
         />
@@ -178,7 +178,7 @@
         <select
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           v-model="newWorkstation.status"
-          @change="(e) => (newWorkstation.status = e.target.value)"
+          @change="(e: Event) => (newWorkstation.status = (e.target as HTMLInputElement).value)"
           required
         >
           <optgroup>
@@ -194,7 +194,7 @@
           type="text"
           placeholder="Enter Capacity"
           v-model="newWorkstation.capacity"
-          @change="(e) => (newWorkstation.capacity = e.target.value)"
+          @change="(e: Event) => (newWorkstation.capacity = (e.target as HTMLInputElement).value)"
           required
         />
       </div>
@@ -206,7 +206,7 @@
           id=""
           placeholder="Enter Workstation Description"
           v-model="newWorkstation.description"
-          @change="(e) => (newWorkstation.description = e.target.value)"
+          @change="(e: Event) => (newWorkstation.description = (e.target as HTMLInputElement).value)"
           required
           minlength="10"
         ></textarea>
@@ -216,7 +216,7 @@
         <select
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           v-model="newWorkstation.machines"
-          @change="(e) => (newWorkstation.machines = e.target.value)"
+          @change="(e: Event) => (newWorkstation.machines = (e.target as HTMLInputElement).value)"
         >
           <optgroup v-for="(machine, index) in allWorkstations">
             <option>{{ machine.machine }}</option>
@@ -228,7 +228,7 @@
         <select
           class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
           v-model="newWorkstation.tools"
-          @change="(e) => (newWorkstation.tools = (e.target as HTMLSelectElement).value)"
+          @change="(e: Event) => (newWorkstation.tools = (e.target as HTMLSelectElement).value)"
         >
           <optgroup v-for="(tool, index) in allWorkstations">
             <option>{{ tool.tool }}</option>
@@ -319,7 +319,7 @@
           type="text"
           placeholder="Enter Workstation Id"
           v-model="showWorkStationObject.name"
-          @change="(e) => (showWorkStationObject.name = e.target.value)"
+          @change="(e: Event) => (showWorkStationObject.name = (e.target as HTMLInputElement).value)"
           required
         />
       </div>
@@ -330,7 +330,7 @@
           type="text"
           placeholder="Enter Workstation Name"
           v-model="showWorkStationObject.name"
-          @change="(e) => (showWorkStationObject.name = e.target.value)"
+          @change="(e: Event) => (showWorkStationObject.name = (e.target as HTMLInputElement).value)"
           required
         />
       </div>
@@ -358,7 +358,7 @@
           type="text"
           placeholder="Enter Capacity"
           v-model="showWorkStationObject.capacity"
-          @change="(e) => (showWorkStationObject.capacity = e.target.value)"
+          @change="(e: Event) => (showWorkStationObject.capacity = (e.target as HTMLInputElement).value)"
           required
         />
       </div>
@@ -370,7 +370,7 @@
           id=""
           placeholder="Enter Workstation Description"
           v-model="showWorkStationObject.description"
-          @change="(e) => (showWorkStationObject.description = e.target.value)"
+          @change="(e: Event) => (showWorkStationObject.description = (e.target as HTMLInputElement).value)"
           required
           minlength="10"
         ></textarea>
@@ -468,7 +468,7 @@
         <label class="py-1 text-gray-500" for="workcenter">Select Workcenter:</label>
         <select
           v-model="currentWorkCentersNames"
-          @change="(e) => (currentWorkCentersNames = e.target.value)"
+          @change="(e: Event) => (currentWorkCentersNames = (e.target as HTMLInputElement).value)"
           class="rounded-lg border-2 border-gray-400 p-0.5"
         >
           <option v-for="(n, index) in workCentersNames" :value="n" :key="index">
@@ -538,7 +538,7 @@
         type="text"
         placeholder="Enter Workcenter Name"
         v-model="newWorkCenter.name"
-        @change="(e) => (newWorkCenter.name = e.target.value)"
+        @change="(e: Event) => (newWorkCenter.name = (e.target as HTMLInputElement).value)"
         required
         minlength="5"
       />
@@ -550,7 +550,7 @@
         type="text"
         placeholder="Enter Workcenter Code"
         v-model="newWorkCenter.code"
-        @change="(e) => (newWorkCenter.code = e.target.value)"
+        @change="(e: Event) => (newWorkCenter.code = (e.target as HTMLInputElement).value)"
         required
         minlength="1"
       />
@@ -563,7 +563,7 @@
         id=""
         placeholder="Enter Workcenter Location"
         v-model="newWorkCenter.location"
-        @change="(e) => (newWorkCenter.location = e.target.value)"
+        @change="(e: Event) => (newWorkCenter.location = (e.target as HTMLInputElement).value)"
         required
         minlength="5"
       ></textarea>
@@ -573,7 +573,7 @@
       <select
         class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
         v-model="newWorkCenter.status"
-        @change="(e) => (newWorkCenter.status = e.target.value)"
+        @change="(e: Event) => (newWorkCenter.status = (e.target as HTMLInputElement).value)"
         required
       >
         <optgroup>
@@ -590,7 +590,7 @@
         id=""
         placeholder="Enter Additional Details (Optional)"
         v-model="newWorkCenter.remarks"
-        @change="(e) => (newWorkCenter.remarks = e.target.value)"
+        @change="(e: Event) => (newWorkCenter.remarks = (e.target as HTMLInputElement).value)"
         required
         minlength="5"
       ></textarea>
@@ -807,7 +807,7 @@
       <select
         class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
         v-model="newSchedule.workstation"
-        @change="(e) => (newSchedule.workstation = e.target.value)"
+        @change="(e: Event) => (newSchedule.workstation = (e.target as HTMLInputElement).value)"
         required
       >
         <optgroup v-for="(workstation, index) in allWorkstations">
@@ -823,7 +823,7 @@
         name=""
         id=""
         v-model="newSchedule.maintenance_date"
-        @change="(e) => (newSchedule.maintenance_date = e.target.value)"
+        @change="(e: Event) => (newSchedule.maintenance_date = (e.target as HTMLInputElement).value)"
         required
       />
     </div>
@@ -835,7 +835,7 @@
         name=""
         id=""
         v-model="newSchedule.maintenance_time"
-        @change="(e) => (newSchedule.maintenance_time = e.target.value)"
+        @change="(e: Event) => (newSchedule.maintenance_time = (e.target as HTMLInputElement).value)"
         required
       />
     </div>
@@ -844,7 +844,7 @@
       <select
         class="mb-2.5 w-full rounded-lg border-2 border-gray-400 p-1.5"
         v-model="newSchedule.recurrence"
-        @change="(e) => (newSchedule.recurrence = e.target.value)"
+        @change="(e: Event) => (newSchedule.recurrence = (e.target as HTMLInputElement).value)"
         required
       >
         <optgroup>
@@ -860,7 +860,7 @@
         id=""
         placeholder="Provide details about the maintenance task"
         v-model="newSchedule.description"
-        @change="(e) => (newSchedule.description = e.target.value)"
+        @change="(e: Event) => (newSchedule.description = (e.target as HTMLInputElement).value)"
         required
       ></textarea>
     </div>
@@ -871,7 +871,7 @@
         type="text"
         placeholder="Enter staff names or roles"
         v-model="newSchedule.staff_notes"
-        @change="(e) => (newSchedule.staff_notes = e.target.value)"
+        @change="(e: Event) => (newSchedule.staff_notes = (e.target as HTMLInputElement).value)"
         required
       />
     </div>
@@ -932,12 +932,16 @@ const { data: allMaintenances } = useAxios(`${baseApiUrl}/workcentre/maintenance
 })
 const workCentersNames = computed(() => {
   if (!workCenters.value) return []
-  return workCenters.value.map((w) => w.name)
+  return workCenters.value.map((w: { name: string }) => w.name)
 })
-const s = computed(() => workCenters.value.find((w) => w.name === currentWorkCentersNames.value))
+const s = computed(() =>
+  workCenters.value.find((w: { name: string }) => w.name === currentWorkCentersNames.value),
+)
 const workstations = computed(() => {
   if (!allWorkstations.value || !workCenters.value || !s.value) return []
-  return allWorkstations.value.filter((ws) => ws.work_center === s.value.id)
+  return allWorkstations.value.filter(
+    (ws: { work_center: number | null }) => ws.work_center === s.value.id,
+  )
 })
 
 const newWorkstation = reactive({

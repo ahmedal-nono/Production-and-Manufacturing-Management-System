@@ -1,6 +1,6 @@
 # administration/serializers.py
 from rest_framework import serializers
-from .models import User, Department, Role, HealthMetric, BackupConfig, BackupRecord, SystemSetting, ActivityLog, UserProfile
+from .models import User, Department, Role, HealthMetric, BackupConfig, BackupRecord, SystemSetting, ActivityLog, UserProfile, Notification
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 
@@ -40,26 +40,38 @@ class UserSerializer(serializers.ModelSerializer):
         }  
 
     def validate(self, data):
-        # Handle department (free-text)
-        department_name = data.pop('department')
-        department, _ = Department.objects.get_or_create(
-            name=department_name,
-            defaults={'description': ''}
-        )
-        data['department_id'] = department.id
-        
-        # Handle role (must match ROLE_CHOICES)
-        role_name = data.pop('role')
-        if role_name not in dict(Role.ROLE_CHOICES):
-            raise serializers.ValidationError({
-                'role': f"Invalid role. Valid choices: {list(dict(Role.ROLE_CHOICES).keys())}"
-            })
-        role, _ = Role.objects.get_or_create(
-            name=role_name,
-            defaults={'description': ''}
-        )
-        data['role_id'] = role.id
-        
+        # Handle department (free-text) when provided (PATCH may omit it)
+        if 'department' in data:
+            department_name = data.pop('department')
+            if department_name:
+                department, _ = Department.objects.get_or_create(
+                    name=department_name,
+                    defaults={'description': ''}
+                )
+                data['department_id'] = department.id
+            else:
+                data['department_id'] = None
+
+        # Handle role: accept either the key ('production_manager') or the
+        # display label ('Production Manager') so both create (select options)
+        # and edit round-trip (GET returns the label) work.
+        if 'role' in data:
+            role_value = data.pop('role')
+            if role_value:
+                role_key = role_value if role_value in dict(Role.ROLE_CHOICES) else dict(
+                    (label, key) for key, label in Role.ROLE_CHOICES).get(role_value)
+                if not role_key:
+                    raise serializers.ValidationError({
+                        'role': f"Invalid role. Valid choices: {list(dict(Role.ROLE_CHOICES).keys())}"
+                    })
+                role, _ = Role.objects.get_or_create(
+                    name=role_key,
+                    defaults={'description': ''}
+                )
+                data['role_id'] = role.id
+            else:
+                data['role_id'] = None
+
         return data
 
     def create(self, validated_data):
@@ -76,7 +88,7 @@ class UserSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        """Show department/role details in GET responses"""
+        """Show department/role details in GET responses (role as display label)"""
         representation = super().to_representation(instance)
         representation['department'] = instance.department.name if instance.department else None
         representation['role'] = instance.role.get_name_display() if instance.role else None
@@ -123,3 +135,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class PasswordChangeSerializer(serializers.Serializer):
     old_password = serializers.CharField()
     new_password = serializers.CharField(min_length=8)
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'user', 'message', 'is_read', 'created_at', 'url',
+                  'related_model', 'related_id']
+        read_only_fields = ['id', 'created_at']

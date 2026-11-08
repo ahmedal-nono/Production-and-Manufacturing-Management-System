@@ -19,7 +19,7 @@ import os
 import os
 import subprocess
 from pathlib import Path
-from .permissions import IsProductionManager, IsSameUserOrManager
+from .permissions import IsProductionManager, IsSameUserOrManager, IsAdminRole
 from datetime import datetime
 import subprocess
 from .models import BackupConfig, BackupRecord, Department, SystemSetting, HealthMetric, Role, UserProfile
@@ -29,23 +29,23 @@ from .serializers import BackupConfigSerializer, BackupRecordSerializer, Departm
 class BackupConfigViewSet(viewsets.ModelViewSet):
     queryset = BackupConfig.objects.all()
     serializer_class = BackupConfigSerializer
-    permission_classes = []
+    permission_classes = [IsAdminRole]
 
 class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
-    permission_classes = []
+    permission_classes = [IsAdminRole]
 
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
-    permission_classes = []
+    permission_classes = [IsAdminRole]
 MARIADB_BIN_PATH = r"C:\Program Files\MariaDB 11.6\bin"
 MYSQLDUMP_PATH = os.path.join(MARIADB_BIN_PATH, "mysqldump.exe")
 class BackupRecordViewSet(viewsets.ModelViewSet):
     serializer_class = BackupRecordSerializer
     queryset = BackupRecord.objects.all()
-    permission_classes = []
+    permission_classes = [IsAdminRole]
     @action(detail=False, methods=['post'])
     def create_backup(self, request):
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -238,7 +238,7 @@ class BackupRecordViewSet(viewsets.ModelViewSet):
 class SystemSettingViewSet(viewsets.ModelViewSet):
     queryset = SystemSetting.objects.all()
     serializer_class = SystemSettingSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminRole]
 
 
 
@@ -246,7 +246,7 @@ class SystemSettingViewSet(viewsets.ModelViewSet):
 class HealthMetricViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = HealthMetric.objects.all()
     serializer_class = HealthMetricSerializer
-    permission_classes = []
+    permission_classes = [IsAdminRole]
     
     @action(detail=False, methods=['get'])
     def current(self, request):
@@ -327,7 +327,7 @@ from .serializers import ActivityLogSerializer
 
 class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ActivityLog.objects.all()
-    permission_classes= []
+    permission_classes= [IsAdminRole]
     serializer_class = ActivityLogSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['action', 'model', 'timestamp']
@@ -345,6 +345,33 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
                 pass  # Ignore invalid user IDs
                 
         return queryset
+
+
+from .models import Notification
+from .serializers import NotificationSerializer
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['user', 'is_read']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if not (user.is_superuser or (user.role and user.role.name == 'admin')):
+            queryset = queryset.filter(user=user)
+        user_id = self.request.query_params.get('user')
+        if user_id:
+            try:
+                queryset = queryset.filter(user_id=int(user_id))
+            except (ValueError, TypeError):
+                pass
+        return queryset
+
+
 from .models import User
 from .serializers import UserSerializer
 
@@ -358,14 +385,12 @@ class UserViewSet(viewsets.ModelViewSet):
     
 
     def get_permissions(self):
-        if self.action in ['create', 'destroy']:
+        if self.action in ['login', 'logout']:
             permission_classes = [permissions.AllowAny]
-        elif self.action in ['update', 'partial_update']:
-            permission_classes = [permissions.AllowAny]
-        elif self.action == 'logout':
-            permission_classes = [permissions.AllowAny]  # No auth required
+        elif self.action == 'me':
+            permission_classes = [permissions.IsAuthenticated]
         else:
-            permission_classes = [permissions.AllowAny]
+            permission_classes = [IsAdminRole]
         return [permission() for permission in permission_classes]
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
@@ -449,9 +474,17 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response({'error': 'Not authenticated'}, status=401)
 
 
+def _can_manage_user(request, user_id):
+    return (request.user.is_superuser or
+            (request.user.role and request.user.role.name == 'admin') or
+            request.user.id == user_id)
+
+
 @api_view(['GET', 'PUT'])
-@permission_classes([])
+@permission_classes([IsAuthenticated])
 def profile_view(request, user_id):
+    if not _can_manage_user(request, user_id):
+        return Response({'error': 'Not allowed'}, status=status.HTTP_403_FORBIDDEN)
     user = get_object_or_404(User, id=user_id)  # Get user by ID
     profile, _ = UserProfile.objects.get_or_create(user=user)
     
@@ -466,8 +499,10 @@ def profile_view(request, user_id):
         return Response(serializer.data)
 
 @api_view(['POST'])
-@permission_classes([])
+@permission_classes([IsAuthenticated])
 def change_password(request, user_id):
+    if not _can_manage_user(request, user_id):
+        return Response({'error': 'Not allowed'}, status=status.HTTP_403_FORBIDDEN)
     user = get_object_or_404(User, id=user_id)
     serializer = PasswordChangeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)

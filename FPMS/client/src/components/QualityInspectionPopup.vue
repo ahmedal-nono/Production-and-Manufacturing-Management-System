@@ -12,21 +12,30 @@
       <!-- Filters -->
       <div class="mb-4 flex flex-wrap items-center gap-4">
         <input
+          v-model="search"
           type="text"
           placeholder="Search by title, product, or keyword"
           class="w-full flex-1 rounded border px-4 py-2 sm:w-auto"
         />
-        <select class="rounded border px-4 py-2">
+        <select v-model="statusFilter" class="rounded border px-4 py-2">
           <option>All Statuses</option>
+          <option>Pending</option>
+          <option>Approved</option>
+          <option>Rework</option>
+          <option>Rejected</option>
         </select>
       </div>
+
+      <p v-if="listError" class="mb-3 rounded bg-red-50 p-2 text-sm text-red-600">
+        {{ listError }}
+      </p>
 
       <!-- Table -->
       <div class="overflow-x-auto">
         <table class="w-full text-center">
           <thead class="bg-blue-500 text-white">
             <tr>
-              <th class="border border-gray-700 px-4 py-2">Workflow ID</th>
+              <th class="border border-gray-700 px-4 py-2">Work Order</th>
               <th class="border border-gray-700 px-4 py-2">Product Name</th>
               <th class="border border-gray-700 px-4 py-2">Due Date</th>
               <th class="border border-gray-700 px-4 py-2">Status</th>
@@ -35,11 +44,11 @@
           </thead>
           <tbody>
             <tr
-              v-for="(item, index) in instructions"
+              v-for="(item, index) in filteredInstructions"
               :key="index"
               class="border bg-white hover:bg-gray-50"
             >
-              <td class="border border-gray-700 px-4 py-2">{{ item.id }}</td>
+              <td class="border border-gray-700 px-4 py-2">WO-{{ item.id }}</td>
               <td class="border border-gray-700 px-4 py-2">{{ item.product }}</td>
               <td class="border border-gray-700 px-4 py-2">{{ item.dueDate }}</td>
               <td class="border border-gray-700 px-4 py-2">
@@ -51,9 +60,7 @@
                         ? 'bg-yellow-100 text-yellow-700'
                         : item.status === 'Rejected'
                           ? 'bg-red-100 text-red-700'
-                          : item.status === 'Ready for Inspection'
-                            ? 'bg-yellow-200 text-yellow-800'
-                            : 'bg-gray-200 text-gray-600'
+                          : 'bg-gray-200 text-gray-600'
                   "
                   class="rounded-full px-2 py-1 text-xs"
                 >
@@ -69,6 +76,11 @@
                 </button>
               </td>
             </tr>
+            <tr v-if="!filteredInstructions.length">
+              <td colspan="5" class="border border-gray-700 px-4 py-4 text-gray-500">
+                No work orders found
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -82,7 +94,7 @@
 
       <!-- Work Order Info -->
       <div class="mb-6 text-sm">
-        <p><strong>Workflow ID:</strong> {{ selectedInspection?.id }}</p>
+        <p><strong>Work Order:</strong> WO-{{ selectedInspection?.id }}</p>
         <p><strong>Product:</strong> {{ selectedInspection?.product }}</p>
         <p><strong>Production Line:</strong> {{ selectedInspection?.productionLine }}</p>
         <p><strong>Status:</strong> {{ selectedInspection?.status }}</p>
@@ -101,15 +113,15 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, index) in checklist" :key="index">
+            <tr v-for="(item, index) in checklist" :key="item.jobCardId">
               <td class="border border-gray-700 px-4 py-2">{{ item.name }}</td>
               <td class="border border-gray-700 px-4 py-2">
                 <label>
                   <input
                     type="radio"
                     :name="'status' + index"
-                    value="Pass"
-                    v-model="item.status"
+                    value="pass"
+                    v-model="item.state"
                     class="mr-1"
                   />
                   Pass
@@ -118,8 +130,8 @@
                   <input
                     type="radio"
                     :name="'status' + index"
-                    value="Fail"
-                    v-model="item.status"
+                    value="fail"
+                    v-model="item.state"
                     class="mr-1"
                   />
                   Fail
@@ -128,7 +140,7 @@
               <td class="border border-gray-700 px-4 py-2">
                 <input
                   type="text"
-                  v-model="item.notes"
+                  v-model="item.note"
                   class="w-full rounded border p-1"
                   placeholder="Enter notes"
                 />
@@ -136,6 +148,7 @@
               <td class="border border-gray-700 px-4 py-2">
                 <input
                   type="file"
+                  accept="image/*"
                   @change="handleChecklistUpload(index, $event)"
                   class="hidden"
                   :ref="'upload' + index"
@@ -144,7 +157,7 @@
                   @click="($refs['upload' + index] as HTMLInputElement).click()"
                   class="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
                 >
-                  📷 Upload
+                  📷 {{ item.photo ? 'Change' : 'Upload' }}
                 </button>
               </td>
             </tr>
@@ -201,34 +214,54 @@
         <h3 class="mb-2 text-lg font-semibold">Final Decision</h3>
         <div class="space-x-3">
           <button
-            @click="handleApprove"
-            class="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+            @click="decision = 'approve'"
+            :class="
+              decision === 'approve'
+                ? 'bg-green-700 ring-2 ring-green-300'
+                : 'bg-green-500 hover:bg-green-600'
+            "
+            class="rounded px-4 py-2 text-white"
           >
             ✅ Approve
           </button>
           <button
-            @click="handleRework"
-            class="rounded bg-yellow-400 px-4 py-2 text-white hover:bg-yellow-500"
+            @click="decision = 'rework'"
+            :class="
+              decision === 'rework'
+                ? 'bg-yellow-600 ring-2 ring-yellow-300'
+                : 'bg-yellow-400 hover:bg-yellow-500'
+            "
+            class="rounded px-4 py-2 text-white"
           >
             🛠 Rework
           </button>
           <button
-            @click="handleReject"
-            class="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+            @click="decision = 'reject'"
+            :class="
+              decision === 'reject'
+                ? 'bg-red-700 ring-2 ring-red-300'
+                : 'bg-red-500 hover:bg-red-600'
+            "
+            class="rounded px-4 py-2 text-white"
           >
             ❌ Reject
           </button>
         </div>
       </div>
 
+      <p v-if="submitError" class="mb-2 rounded bg-red-50 p-2 text-sm text-red-600">
+        {{ submitError }}
+      </p>
+
       <!-- Actions -->
       <div class="mt-6 flex justify-between">
         <div class="space-x-2">
           <button
             @click="submitInspection"
-            class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            :disabled="submitting"
+            class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            Submit Inspection
+            {{ submitting ? 'Submitting...' : 'Submit Inspection' }}
           </button>
         </div>
       </div>
@@ -237,127 +270,205 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
 import Popup from '@/components/popup.vue'
-import { useWorkflowsStore } from '@/stores/useWorkflows'
-import { useProductionLinesStore } from '@/stores/useProductionLines'
 import { useReworkStore } from '@/stores/useRework'
+import notificationStore from '@/stores/notificationStore'
+import { baseApiUrl } from '@/api'
 
-const workflowsStore = useWorkflowsStore()
-const productionLinesStore = useProductionLinesStore()
+const API_BASE = baseApiUrl
+
 const reworkStore = useReworkStore()
 
 const showStartInspectionPopup = ref(false)
-const selectedInspection = ref<null | {
-  id: string
+
+interface WorkOrderRow {
+  id: number
   product: string
   productionLine: string
   dueDate: string
   status: string
-}>(null)
+}
+
+interface ChecklistRow {
+  jobCardId: number
+  name: string
+  state: '' | 'pass' | 'fail'
+  note: string
+  photo: File | null
+}
+
+const selectedInspection = ref<WorkOrderRow | null>(null)
+
+const workOrderRows = ref<
+  { id: number; name: string; due_date: string | null; production_line_name: string | null; latest_decision: string | null }[]
+>([])
+const listError = ref('')
+
+const search = ref('')
+const statusFilter = ref('All Statuses')
+
+const statusLabel = (decision: string | null): string => {
+  switch (decision) {
+    case 'approve':
+      return 'Approved'
+    case 'rework':
+      return 'Rework'
+    case 'reject':
+      return 'Rejected'
+    default:
+      return 'Pending'
+  }
+}
 
 const instructions = computed(() =>
-  workflowsStore.workflows.map((workflow) => ({
-    id: workflow.id,
-    product: workflow.product,
-    productionLine:
-      productionLinesStore.getProductionLineById(workflow.productionLineId)?.name || 'Unknown',
-    dueDate: '2023-10-01', // Placeholder, replace with actual data if available
-    status: workflow.status || 'Pending', // Default status
+  workOrderRows.value.map((row) => ({
+    id: row.id,
+    product: row.name,
+    productionLine: row.production_line_name || 'Unknown',
+    dueDate: row.due_date ? String(row.due_date).split('T')[0] : '-',
+    status: statusLabel(row.latest_decision),
   })),
 )
 
-const openStartInspectionPopup = (inspection: any) => {
-  selectedInspection.value = inspection
-  showStartInspectionPopup.value = true
-}
+const filteredInstructions = computed(() =>
+  instructions.value.filter((item) => {
+    const q = search.value.trim().toLowerCase()
+    const matchSearch =
+      !q ||
+      item.product.toLowerCase().includes(q) ||
+      String(item.id).includes(q) ||
+      item.productionLine.toLowerCase().includes(q)
+    const matchStatus =
+      statusFilter.value === 'All Statuses' || item.status === statusFilter.value
+    return matchSearch && matchStatus
+  }),
+)
 
-const updateWorkflowStatus = (workflowId: string, status: string) => {
-  workflowsStore.editWorkflow(workflowId, { status })
-}
-
-const handleApprove = () => {
-  if (selectedInspection.value) {
-    selectedInspection.value.status = 'Approved'
-    console.log('Inspection Approved')
+const fetchWorkOrders = async () => {
+  listError.value = ''
+  try {
+    const { data } = await axios.get(`${API_BASE}/workorders/`)
+    workOrderRows.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('Error fetching work orders:', error)
+    listError.value = 'Failed to load work orders'
   }
 }
 
-const handleRework = () => {
-  if (selectedInspection.value) {
-    selectedInspection.value.status = 'Rework'
-    console.log('Inspection marked for Rework')
-  }
-}
+const checklist = ref<ChecklistRow[]>([])
 
-const handleReject = () => {
-  if (selectedInspection.value) {
-    selectedInspection.value.status = 'Rejected'
-    console.log('Inspection Rejected')
-  }
-}
-
-const startNewInspection = (inspectionId: string) => {
-  const inspection = instructions.value.find((item) => item.id === inspectionId)
-  if (inspection) {
-    inspection.status = 'Ready for Inspection'
-    console.log('New inspection started:', inspection)
-  }
-}
-
-const inspectionData = ref({
-  workOrder: '',
-  product: '',
-  defectLevel: 'Minor',
-  defectType: '',
-  affectedComponent: '',
+const defect = ref({
+  type: '',
+  severity: '',
+  component: '',
   description: '',
-  assignedTo: null,
-  dueDate: '',
 })
 
-const submitInspection = () => {
-  if (selectedInspection.value) {
-    console.log('Submitting inspection for:', selectedInspection.value)
+const decision = ref<'' | 'approve' | 'rework' | 'reject'>('')
+const submitting = ref(false)
+const submitError = ref('')
 
-    // Update workflow status
-    updateWorkflowStatus(selectedInspection.value.id, selectedInspection.value.status)
-
-    const defectType =
-      defect.value.severity === 'Critical'
-        ? 'Critical Defect'
-        : defect.value.severity === 'Major'
-          ? 'Major Defect'
-          : 'Minor Defect'
-
-    // Save or update rework
-    reworkStore.saveFromQualityInspection({
-      workOrder: selectedInspection.value.id,
-      product: selectedInspection.value.product,
-      defectLevel: defect.value.severity || 'Minor',
-      defectType: defectType,
-      affectedComponent: defect.value.component || '',
-      description: defect.value.description || '',
-      assignedTo: null,
-      dueDate: new Date().toISOString().split('T')[0],
-    })
-
-    console.log(`Inspection submitted with status: ${selectedInspection.value.status}`)
-    showStartInspectionPopup.value = false
-  } else {
-    console.error('No inspection selected for submission.')
+const openStartInspectionPopup = async (inspection: WorkOrderRow) => {
+  submitError.value = ''
+  decision.value = ''
+  defect.value = { type: '', severity: '', component: '', description: '' }
+  checklist.value = []
+  selectedInspection.value = inspection
+  try {
+    const { data } = await axios.get(`${API_BASE}/workorders/${inspection.id}/`)
+    checklist.value = (data.job_cards || []).map(
+      (card: { id: number; task_name: string }): ChecklistRow => ({
+        jobCardId: card.id,
+        name: card.task_name,
+        state: '',
+        note: '',
+        photo: null,
+      }),
+    )
+    showStartInspectionPopup.value = true
+  } catch (error) {
+    console.error('Error fetching work order details:', error)
+    submitError.value = 'Failed to load job cards for this work order'
   }
 }
 
-watch(
-  () => selectedInspection.value?.status,
-  (newStatus) => {
-    console.log('Inspection status updated:', newStatus)
-    if (newStatus === 'Rework') {
-      submitInspection()
+const handleChecklistUpload = (index: number, event: Event) => {
+  const target = event.target as HTMLInputElement | null
+  if (target && target.files && target.files[0]) {
+    checklist.value[index].photo = target.files[0]
+  }
+}
+
+const submitInspection = async () => {
+  if (!selectedInspection.value) {
+    submitError.value = 'No work order selected'
+    return
+  }
+  if (!decision.value) {
+    submitError.value = 'Please select a final decision (Approve / Rework / Reject)'
+    return
+  }
+
+  submitting.value = true
+  submitError.value = ''
+
+  try {
+    const { data } = await axios.post(`${API_BASE}/inspections/`, {
+      work_order: selectedInspection.value.id,
+      defect_type: defect.value.type,
+      severity: defect.value.severity.toLowerCase(),
+      affected_component: defect.value.component,
+      description: defect.value.description,
+      final_decision: decision.value,
+    })
+
+    const serverItems: { id: number; job_card: { id: number } }[] = data.checklist_items || []
+
+    for (const row of checklist.value) {
+      const serverItem = serverItems.find((item) => item.job_card?.id === row.jobCardId)
+      if (!serverItem) continue
+      if (!row.state && !row.note && !row.photo) continue
+
+      if (row.photo) {
+        const formData = new FormData()
+        if (row.state) formData.append('state', row.state)
+        if (row.note) formData.append('note', row.note)
+        formData.append('photo', row.photo)
+        await axios.patch(`${API_BASE}/checklist/${serverItem.id}/`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+      } else {
+        const payload: Record<string, string> = {}
+        if (row.state) payload.state = row.state
+        if (row.note) payload.note = row.note
+        await axios.patch(`${API_BASE}/checklist/${serverItem.id}/`, payload)
+      }
     }
-  },
-)
+
+    if (decision.value === 'rework') {
+      await reworkStore.fetchReworks()
+    }
+
+    notificationStore.addNotification(
+      `Inspection submitted for WO-${selectedInspection.value.id}`,
+      'success',
+      'manager',
+    )
+    showStartInspectionPopup.value = false
+    await fetchWorkOrders()
+  } catch (error: any) {
+    console.error('Error submitting inspection:', error)
+    const data = error?.response?.data
+    submitError.value =
+      (typeof data === 'object' && data
+        ? Object.values(data).flat().join(' ')
+        : '') || 'Failed to submit inspection'
+  } finally {
+    submitting.value = false
+  }
+}
 
 defineProps<{
   showQualityInspectionPopup: boolean
@@ -365,26 +476,9 @@ defineProps<{
 
 const emitEvent = defineEmits(['close', 'submit', 'update:showQualityInspectionPopup'])
 
-const checklist = ref<{ name: string; status: string; notes: string; photo: File | null }[]>([
-  { name: 'Jobcard 1', status: '', notes: '', photo: null },
-  { name: 'Jobcard 2', status: '', notes: '', photo: null },
-  { name: 'Jobcard 3', status: '', notes: '', photo: null },
-])
-
-const defect = ref({
-  type: '',
-  severity: '',
-  component: 'Gasket-45B-SE',
-  description: '',
+onMounted(() => {
+  fetchWorkOrders()
 })
-
-const handleChecklistUpload = (index: number, event: Event) => {
-  const target = event.target as HTMLInputElement | null
-  if (target && target.files) {
-    const file = target.files[0]
-    checklist.value[index].photo = file
-  }
-}
 </script>
 
 <style>

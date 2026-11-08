@@ -223,6 +223,10 @@ class ProductionLineSerializer(serializers.ModelSerializer):
 
 
 class ProductionOrderSerializer(serializers.ModelSerializer):
+    work_orders = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    work_orders_count = serializers.IntegerField(
+        source='work_orders.count', read_only=True)
+
     class Meta:
         model = ProductionOrder
         fields = [
@@ -234,7 +238,9 @@ class ProductionOrderSerializer(serializers.ModelSerializer):
             'start_date',
             'end_date',
             'production_line',
-            'status'
+            'status',
+            'work_orders',
+            'work_orders_count',
         ]
 
 

@@ -66,7 +66,7 @@ export const useQualityInspectionsStore = defineStore('qualityInspections', {
     async getInspectionCheckpointByWorkflowId(workflowId: string) {
       try {
         const checkpoint = this.inspections.find(
-          (inspection) => inspection.workflowId === workflowId,
+          (inspection) => inspection.workOrderId === workflowId,
         )
         if (!checkpoint) throw new Error('Checkpoint not found')
         return checkpoint

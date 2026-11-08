@@ -413,7 +413,7 @@
     <Popup :visible="showIssueFormPopup" @update:visible="showIssueFormPopup = $event">
       <div class="p-4">
         <h2 class="mb-4 text-xl font-semibold">
-          {{ editingIssueId ? 'Edit Issue' : 'Submit an Issue' }}
+          {{ currentIssueId ? 'Edit Issue' : 'Submit an Issue' }}
         </h2>
 
         <form @submit.prevent="submitIssue" class="space-y-4">
@@ -492,7 +492,7 @@
               class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
               :disabled="submitting"
             >
-              {{ submitting ? 'Saving...' : editingIssueId ? 'Update Issue' : 'Submit Issue' }}
+              {{ submitting ? 'Saving...' : currentIssueId ? 'Update Issue' : 'Submit Issue' }}
             </button>
           </div>
         </form>
@@ -506,7 +506,7 @@
     >
       <div class="p-4">
         <h2 class="mb-4 text-xl font-semibold">
-          {{ editingScheduledReportId ? 'Edit Scheduled Report' : 'New Scheduled Report' }}
+          {{ currentScheduledReportId ? 'Edit Scheduled Report' : 'New Scheduled Report' }}
         </h2>
 
         <form @submit.prevent="submitScheduledReport" class="space-y-4">
@@ -590,7 +590,7 @@
               class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
               :disabled="submitting"
             >
-              {{ submitting ? 'Saving...' : editingScheduledReportId ? 'Update' : 'Create' }}
+              {{ submitting ? 'Saving...' : currentScheduledReportId ? 'Update' : 'Create' }}
             </button>
           </div>
         </form>
@@ -604,8 +604,9 @@ import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
 import { useTimeAgo } from '@vueuse/core'
+import { baseApiUrl } from '@/api'
 // Convert Django duration string to seconds
-const API_BASE_URL = 'http://localhost:8000/api/reports/'
+const API_BASE_URL = `${baseApiUrl}/reports/`
 
 // Props and emits
 const props = defineProps<{

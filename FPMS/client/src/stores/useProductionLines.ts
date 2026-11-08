@@ -30,14 +30,12 @@ export const useProductionLinesStore = defineStore('productionLines', {
         await delay(1500) // Simulate API delay
         this.productionLines.push(line)
         notificationStore.addNotification(
-          Date.now().toString(),
           'Production line created successfully!',
           'success',
           'production_manager',
         )
       } catch (error) {
         notificationStore.addNotification(
-          Date.now().toString(),
           'Failed to create production line.',
           'error',
           'production_manager',
@@ -52,7 +50,6 @@ export const useProductionLinesStore = defineStore('productionLines', {
         if (index !== -1) {
           this.productionLines[index] = { ...this.productionLines[index], ...updatedLine }
           notificationStore.addNotification(
-            Date.now().toString(),
             'Production line updated successfully!',
             'success',
             'production_manager',
@@ -60,7 +57,6 @@ export const useProductionLinesStore = defineStore('productionLines', {
         }
       } catch (error) {
         notificationStore.addNotification(
-          Date.now().toString(),
           'Failed to update production line.',
           'error',
           'production_manager',
@@ -73,14 +69,12 @@ export const useProductionLinesStore = defineStore('productionLines', {
         await delay(1500) // Simulate API delay
         this.productionLines = this.productionLines.filter((line) => line.id !== id)
         notificationStore.addNotification(
-          Date.now().toString(),
           'Production line deleted successfully!',
           'success',
           'production_manager',
         )
       } catch (error) {
         notificationStore.addNotification(
-          Date.now().toString(),
           'Failed to delete production line.',
           'error',
           'production_manager',

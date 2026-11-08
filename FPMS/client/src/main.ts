@@ -1,4 +1,5 @@
 import './main.css'
+import './api/axios'
 
 import { createApp } from 'vue'
 import { plugin, defaultConfig } from '@formkit/vue'

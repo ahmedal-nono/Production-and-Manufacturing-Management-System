@@ -1,29 +1,43 @@
 <template>
   <div class="flex h-fit w-full flex-col pb-2 pl-3">
     <div class="flex w-full justify-end px-2 pt-4">
-      <!-- <div>
+      <div class="relative mr-4 mt-2">
         <img
           src="../assets/noti.png"
           class="size-11 cursor-pointer"
           alt="Notification"
-          @click="showNotificationPopup = true"
+          @click="openNotifications"
         />
+        <span
+          v-if="notificationStore.unreadCount"
+          class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white"
+        >
+          {{ notificationStore.unreadCount }}
+        </span>
         <Popup
           :visible="showNotificationPopup"
           @update:visible="showNotificationPopup = $event"
           title="Notification Received"
         >
-          <template v-for="noti in notifications" :key="noti.id">
+          <p v-if="notificationStore.state.loading" class="text-gray-500">Loading...</p>
+          <p v-else-if="notificationStore.state.error" class="text-red-500">
+            {{ notificationStore.state.error }}
+          </p>
+          <p v-else-if="!notificationStore.notifications.length" class="text-gray-500">
+            No notifications yet
+          </p>
+          <template v-for="noti in notificationStore.notifications" :key="noti.id">
             <NotificationCard
               :isRead="noti.isRead"
               :time="noti.time"
-              :title="noti.message"
-              :body="noti.type"
-              @mark-as-read="notificationStore.markNotificationAsRead(noti.id)"
+              :title="noti.title"
+              :body="noti.body"
+              :id="noti.id"
+              @mark-as-read="notificationStore.markAsRead(noti.id)"
             ></NotificationCard>
           </template>
         </Popup>
-      </div> -->
+      </div>
       <div class="flex flex-row space-x-6">
         <button class="mt-2 h-fit rounded-xl bg-red-500 px-6 py-1 text-white" @click="logout">
           Logout
@@ -185,7 +199,7 @@ import { useUserStore } from '@/stores/user'
 import notificationStore from '@/stores/notificationStore'
 import router from '@/router'
 import type { UserType } from '@/stores/user'
-import useNotificationStore from '@/stores/notificationStore'
+import { apiOrigin } from '@/api'
 
 interface ProfileData {
   profile_pic: string | null
@@ -201,7 +215,7 @@ const currentUser = computed(() => userStore.user)
 const userId = computed(() => currentUser.value?.id)
 const profileImageUrl = computed(() => {
   if (currentProfilePic.value) {
-    return `http://localhost:8000${currentProfilePic.value}`
+    return `${apiOrigin}${currentProfilePic.value}`
   }
   return '../assets/avatar.png'
 })
@@ -212,9 +226,12 @@ const showAvatarPopup = ref(false)
 const currentPassword = ref('')
 // Duplicate declaration removed
 // Notifications
-const notifications = computed(() =>
-  notificationStore.getNotificationsForRole(currentUser.value?.role || ''),
-)
+const openNotifications = () => {
+  showNotificationPopup.value = true
+  if (userId.value) {
+    notificationStore.fetchServerNotifications(userId.value)
+  }
+}
 
 // Profile image
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -222,7 +239,7 @@ const uploadedImage = ref<string | null>(null)
 const selectedFile = ref<File | null>(null)
 const currentProfilePic = ref<string | null>(null)
 const fullProfilePicUrl = computed(() =>
-  currentProfilePic.value ? `http://localhost:8000${currentProfilePic.value}` : '',
+  currentProfilePic.value ? `${apiOrigin}${currentProfilePic.value}` : '',
 )
 const isUpdatingProfile = ref(false)
 
@@ -253,7 +270,7 @@ onMounted(async () => {
 async function fetchProfileData() {
   try {
     const response = await axios.get<ProfileData>(
-      `http://localhost:8000/profile/${userId.value}/`,
+      `${apiOrigin}/profile/${userId.value}/`,
       {
         headers: {
           Authorization: `Bearer ${userStore.access}`,
@@ -298,7 +315,7 @@ const updateProfilePicture = async () => {
   formData.append('profile_pic', selectedFile.value)
 
   try {
-    const response = await axios.put(`http://localhost:8000/profile/${userId.value}/`, formData, {
+    const response = await axios.put(`${apiOrigin}/profile/${userId.value}/`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${userStore.access}`,
@@ -359,7 +376,7 @@ const changePassword = async () => {
 
   try {
     const response = await axios.post(
-      `http://localhost:8000/change-password/${userId.value}/`,
+      `${apiOrigin}/change-password/${userId.value}/`,
       {
         old_password: currentPassword.value,
         new_password: newPassword.value,
@@ -414,7 +431,7 @@ const updateSecurityQuestion = async () => {
 
   try {
     await axios.put(
-      `http://localhost:8000/profile/${userId.value}/`,
+      `${apiOrigin}/profile/${userId.value}/`,
       {
         security_question: selectedSecurityQuestion.value,
         security_answer: securityAnswer.value,

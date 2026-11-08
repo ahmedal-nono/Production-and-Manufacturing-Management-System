@@ -43,6 +43,13 @@ class WorkOrder(models.Model):
     production_line = models.ForeignKey(
         ProductionLine, on_delete=models.SET_NULL, null=True, blank=True
     )  # Linking work order to a production line
+    production_order = models.ForeignKey(
+        'workflow.ProductionOrder',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='work_orders'
+    )
 
     def __str__(self):
         return f"Work Order {self.name} - {self.priority}"

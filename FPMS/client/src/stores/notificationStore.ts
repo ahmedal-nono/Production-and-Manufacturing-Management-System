@@ -1,52 +1,114 @@
-import { ref } from 'vue'
-import { useUserStore } from '@/stores/user'
+import { reactive, computed } from 'vue'
+import axios from 'axios'
+import { notificationsUrl } from '@/api'
 
-type Notification = {
-  id: string // Unique identifier for each notification
-  title: string // Title of the notification
-  body: string // Body of the notification
+type LocalNotification = {
+  id: string
+  title: string
+  body: string
   type: 'success' | 'error' | 'info'
-  role: string // Role of the user
-  isRead: boolean // Track read status
+  role: string
+  isRead: boolean
+  time: string
 }
 
-export default function useNotificationStore() {
-  const notifications = ref<Notification[]>([]) // Reactive array to store notifications
+type ServerNotification = {
+  id: number
+  message: string
+  is_read: boolean
+  created_at: string
+  url: string | null
+}
 
-  // Add a notification
-  const addNotification = (
-    id: string,
-    title: string,
-    body: string,
-    type: 'success' | 'error' | 'info',
-  ) => {
-    const userRole = useUserStore().role // Fetch the role from user store
-    notifications.value.push({ id, title, body, type, role: userRole, isRead: false })
+const API_BASE = `${notificationsUrl}/`
+
+const state = reactive({
+  local: [] as LocalNotification[],
+  server: [] as ServerNotification[],
+  loading: false,
+  error: '',
+})
+
+// Call signature used across the stores:
+// notificationStore.addNotification(message, type, role)
+const addNotification = (
+  message: string,
+  type: 'success' | 'error' | 'info' = 'info',
+  role = '',
+): void => {
+  state.local.unshift({
+    id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    title: message,
+    body: '',
+    type,
+    role,
+    isRead: false,
+    time: new Date().toLocaleTimeString(),
+  })
+}
+
+const fetchServerNotifications = async (userId: number | string): Promise<void> => {
+  state.loading = true
+  state.error = ''
+  try {
+    const { data } = await axios.get(`${API_BASE}?user=${userId}`)
+    state.server = Array.isArray(data) ? data : []
+  } catch {
+    state.error = 'Failed to load notifications'
+  } finally {
+    state.loading = false
   }
+}
 
-  // Get notifications for a specific role
-  const getNotificationsForRole = (role: string): Notification[] => {
-    return notifications.value.filter((notification) => notification.role === role)
-  }
-
-  // Mark a notification as read
-  const markNotificationAsRead = (id: string): void => {
-    const notification = notifications.value.find((notification) => notification.id === id)
-    if (notification) {
-      notification.isRead = true
+const markAsRead = async (id: string | number): Promise<void> => {
+  const serverItem = state.server.find((n) => String(n.id) === String(id))
+  if (serverItem) {
+    serverItem.is_read = true
+    try {
+      await axios.patch(`${API_BASE}${serverItem.id}/`, { is_read: true })
+    } catch {
+      // keep the local read state even if the request fails
     }
+    return
   }
-
-  // Clear notifications (optional)
-  const clearNotifications = (): void => {
-    notifications.value = []
-  }
-
-  return {
-    notifications,
-    addNotification,
-    getNotificationsForRole,
-    markNotificationAsRead,
-    clearNotifications,
+  const localItem = state.local.find((n) => n.id === id)
+  if (localItem) {
+    localItem.isRead = true
   }
 }
+
+const notifications = computed(() => [
+  ...state.server.map((n) => ({
+    id: String(n.id),
+    title: n.message,
+    body: n.url ?? '',
+    type: 'info' as const,
+    isRead: n.is_read,
+    time: new Date(n.created_at).toLocaleString(),
+  })),
+  ...state.local,
+])
+
+const unreadCount = computed(
+  () => notifications.value.filter((n) => !n.isRead).length,
+)
+
+const clearLocal = (): void => {
+  state.local = []
+}
+
+const notificationStore = {
+  state,
+  addNotification,
+  fetchServerNotifications,
+  markAsRead,
+  get notifications() {
+    return notifications.value
+  },
+  get unreadCount() {
+    return unreadCount.value
+  },
+  clearLocal,
+}
+
+export default notificationStore

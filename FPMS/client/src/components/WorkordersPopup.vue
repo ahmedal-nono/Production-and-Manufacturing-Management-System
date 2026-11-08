@@ -49,6 +49,7 @@
               <th class="border border-gray-700 px-4 py-2">Quantity</th>
               <th class="border border-gray-700 px-4 py-2">Due Date</th>
               <th class="border border-gray-700 px-4 py-2">Priority</th>
+              <th class="border border-gray-700 px-4 py-2">Production Order</th>
               <th class="border border-gray-700 px-4 py-2">Status</th>
               <th class="border border-gray-700 px-4 py-2">Actions</th>
             </tr>
@@ -65,6 +66,9 @@
               <td class="border border-gray-700 px-4 py-2">{{ formatDate(order.due_date) }}</td>
               <td class="border border-gray-700 px-4 py-2">
                 <span :class="getPriorityClass(order.priority)"> ● {{ order.priority }} </span>
+              </td>
+              <td class="border border-gray-700 px-4 py-2">
+                {{ getProductionOrderName(order.production_order) }}
               </td>
               <td class="border border-gray-700 px-4 py-2">
                 <span
@@ -148,6 +152,23 @@
             </div>
 
             <div>
+              <label class="font-semibold">Link to Production Order (optional)</label>
+              <select
+                v-model="form.production_order"
+                class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
+              >
+                <option value="">No linked production order</option>
+                <option
+                  v-for="order in productionOrders"
+                  :key="order.id"
+                  :value="order.id"
+                >
+                  {{ order.order_name }}
+                </option>
+              </select>
+            </div>
+
+            <div>
               <label class="font-semibold">Quantity</label>
               <input
                 v-model.number="form.quantity_required"
@@ -197,44 +218,33 @@
           <div class="h-full w-full rounded border bg-white p-4 text-xl">
             <h3 class="mb-2 font-semibold">Work Instruction Preview</h3>
             <p class="">Steps</p>
-            <ul class="mb-4 list-decimal pl-5 text-sm text-gray-700">
-              <li>
+            <ul
+              v-if="previewSteps.length"
+              class="mb-4 list-decimal pl-5 text-sm text-gray-700"
+            >
+              <li v-for="(step, index) in previewSteps" :key="index">
                 <input
                   class="m-1 w-full rounded border border-gray-300 px-2 py-1"
                   type="text"
                   readonly
-                  value="Prepare materials"
-                />
-              </li>
-              <li>
-                <input
-                  class="m-1 w-full rounded border border-gray-300 px-2 py-1"
-                  type="text"
-                  readonly
-                  value="Assemble components"
-                />
-              </li>
-              <li>
-                <input
-                  class="m-1 w-full rounded border border-gray-300 px-2 py-1"
-                  type="text"
-                  readonly
-                  value="Quality inspection"
+                  :value="step"
                 />
               </li>
             </ul>
+            <p v-else class="mb-4 text-sm text-gray-500">
+              Select a work instruction to preview its steps.
+            </p>
 
-            <p class="mb-1 font-medium">Attachments</p>
-            <div class="mb-4 flex gap-2">
-              <button class="rounded bg-gray-100 px-3 py-1 text-sm">PDF Icon</button>
-              <button class="rounded bg-gray-100 px-3 py-1 text-sm">Video Icon</button>
-            </div>
+            <p class="mb-1 font-medium">Tools required</p>
+            <p class="mb-3 text-sm text-gray-700">{{ previewTools || '—' }}</p>
 
-            <p class="font-medium">Linked BOM</p>
-            <ul class="list-disc pl-5 text-sm">
-              <li>Steel Sheets (20)</li>
-              <li>Electrical Components (45)</li>
-            </ul>
+            <p class="mb-1 font-medium">Materials required</p>
+            <p class="mb-3 text-sm text-gray-700">{{ previewMaterials || '—' }}</p>
+
+            <p class="font-medium">Linked Production Order</p>
+            <p class="text-sm text-gray-700">
+              {{ getProductionOrderName(previewProductionOrder) }}
+            </p>
           </div>
         </div>
       </div>
@@ -276,8 +286,25 @@
                 class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
               >
                 <option disabled value="">Select Production Line</option>
-                <option v-for="line in productionLines" :key="line.id" :value="line.line_name">
+                <option v-for="line in productionLines" :key="line.id" :value="line.id">
                   {{ line.line_name }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="font-semibold">Link to Production Order (optional)</label>
+              <select
+                v-model="form.production_order"
+                class="mt-1 w-full rounded border border-gray-300 px-2 py-1"
+              >
+                <option value="">No linked production order</option>
+                <option
+                  v-for="order in productionOrders"
+                  :key="order.id"
+                  :value="order.id"
+                >
+                  {{ order.order_name }}
                 </option>
               </select>
             </div>
@@ -332,44 +359,33 @@
           <div class="h-full w-full rounded border bg-white p-4 text-xl">
             <h3 class="mb-2 font-semibold">Work Instruction Preview</h3>
             <p class="">Steps</p>
-            <ul class="mb-4 list-decimal pl-5 text-sm text-gray-700">
-              <li>
+            <ul
+              v-if="previewSteps.length"
+              class="mb-4 list-decimal pl-5 text-sm text-gray-700"
+            >
+              <li v-for="(step, index) in previewSteps" :key="index">
                 <input
                   class="m-1 w-full rounded border border-gray-300 px-2 py-1"
                   type="text"
                   readonly
-                  value="Prepare materials"
-                />
-              </li>
-              <li>
-                <input
-                  class="m-1 w-full rounded border border-gray-300 px-2 py-1"
-                  type="text"
-                  readonly
-                  value="Assemble components"
-                />
-              </li>
-              <li>
-                <input
-                  class="m-1 w-full rounded border border-gray-300 px-2 py-1"
-                  type="text"
-                  readonly
-                  value="Quality inspection"
+                  :value="step"
                 />
               </li>
             </ul>
+            <p v-else class="mb-4 text-sm text-gray-500">
+              Select a work instruction to preview its steps.
+            </p>
 
-            <p class="mb-1 font-medium">Attachments</p>
-            <div class="mb-4 flex gap-2">
-              <button class="rounded bg-gray-100 px-3 py-1 text-sm">PDF Icon</button>
-              <button class="rounded bg-gray-100 px-3 py-1 text-sm">Video Icon</button>
-            </div>
+            <p class="mb-1 font-medium">Tools required</p>
+            <p class="mb-3 text-sm text-gray-700">{{ previewTools || '—' }}</p>
 
-            <p class="font-medium">Linked BOM</p>
-            <ul class="list-disc pl-5 text-sm">
-              <li>Steel Sheets (20)</li>
-              <li>Electrical Components (45)</li>
-            </ul>
+            <p class="mb-1 font-medium">Materials required</p>
+            <p class="mb-3 text-sm text-gray-700">{{ previewMaterials || '—' }}</p>
+
+            <p class="font-medium">Linked Production Order</p>
+            <p class="text-sm text-gray-700">
+              {{ getProductionOrderName(previewProductionOrder) }}
+            </p>
           </div>
         </div>
       </div>
@@ -449,44 +465,33 @@
           <div class="h-full w-full rounded border bg-white p-4 text-xl">
             <h3 class="mb-2 font-semibold">Work Instruction Preview</h3>
             <p class="">Steps</p>
-            <ul class="mb-4 list-decimal pl-5 text-sm text-gray-700">
-              <li>
+            <ul
+              v-if="previewSteps.length"
+              class="mb-4 list-decimal pl-5 text-sm text-gray-700"
+            >
+              <li v-for="(step, index) in previewSteps" :key="index">
                 <input
                   class="m-1 w-full rounded border border-gray-300 px-2 py-1"
                   type="text"
                   readonly
-                  value="Prepare materials"
-                />
-              </li>
-              <li>
-                <input
-                  class="m-1 w-full rounded border border-gray-300 px-2 py-1"
-                  type="text"
-                  readonly
-                  value="Assemble components"
-                />
-              </li>
-              <li>
-                <input
-                  class="m-1 w-full rounded border border-gray-300 px-2 py-1"
-                  type="text"
-                  readonly
-                  value="Quality inspection"
+                  :value="step"
                 />
               </li>
             </ul>
+            <p v-else class="mb-4 text-sm text-gray-500">
+              Select a work instruction to preview its steps.
+            </p>
 
-            <p class="mb-1 font-medium">Attachments</p>
-            <div class="mb-4 flex gap-2">
-              <button class="rounded bg-gray-100 px-3 py-1 text-sm">PDF Icon</button>
-              <button class="rounded bg-gray-100 px-3 py-1 text-sm">Video Icon</button>
-            </div>
+            <p class="mb-1 font-medium">Tools required</p>
+            <p class="mb-3 text-sm text-gray-700">{{ previewTools || '—' }}</p>
 
-            <p class="font-medium">Linked BOM</p>
-            <ul class="list-disc pl-5 text-sm">
-              <li>Steel Sheets (20)</li>
-              <li>Electrical Components (45)</li>
-            </ul>
+            <p class="mb-1 font-medium">Materials required</p>
+            <p class="mb-3 text-sm text-gray-700">{{ previewMaterials || '—' }}</p>
+
+            <p class="font-medium">Linked Production Order</p>
+            <p class="text-sm text-gray-700">
+              {{ getProductionOrderName(previewProductionOrder) }}
+            </p>
           </div>
         </div>
       </div>
@@ -498,9 +503,10 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
+import { baseApiUrl } from '@/api'
 
 // API configuration
-const API_BASE_URL = 'http://localhost:8000/api'
+const API_BASE_URL = baseApiUrl
 const PRODUCTION_LINES_ENDPOINT = `${API_BASE_URL}/production-lines/`
 const WORK_ORDERS_ENDPOINT = `${API_BASE_URL}/work_orders/`
 
@@ -531,6 +537,7 @@ const filters = reactive({
 // Work orders data
 const orders = ref<WorkOrder[]>([])
 const productionLines = ref<ProductionLine[]>([])
+const productionOrders = ref<ProductionOrder[]>([])
 const currentWorkOrder = ref<WorkOrder | null>(null)
 
 // Form data
@@ -542,6 +549,7 @@ const form = reactive({
   priority: 'Medium',
   work_instruction: '',
   production_line: '',
+  production_order: '',
 })
 
 // Type definitions
@@ -553,7 +561,13 @@ interface WorkOrder {
   priority: string
   work_instruction: number
   production_line: number
+  production_order?: number | null
   status?: string
+}
+
+interface ProductionOrder {
+  id: number
+  order_name: string
 }
 
 interface ProductionLine {
@@ -590,6 +604,9 @@ const createWorkOrder = async () => {
       priority: form.priority,
       work_instruction: parseInt(form.work_instruction as string),
       production_line: parseInt(form.production_line as string),
+      production_order: form.production_order
+        ? parseInt(form.production_order as string)
+        : null,
     }
 
     const response = await axios.post(WORK_ORDERS_ENDPOINT, payload)
@@ -626,6 +643,9 @@ const editWorkOrder = async (id: number) => {
     form.priority = order.priority
     form.work_instruction = order.work_instruction.toString()
     form.production_line = order.production_line.toString()
+    form.production_order = order.production_order
+      ? order.production_order.toString()
+      : ''
 
     showEditWorkOrderPopup.value = true
   } catch (error) {
@@ -645,6 +665,9 @@ const updateWorkOrder = async () => {
       priority: form.priority,
       work_instruction: parseInt(form.work_instruction as string),
       production_line: parseInt(form.production_line as string),
+      production_order: form.production_order
+        ? parseInt(form.production_order as string)
+        : null,
     }
 
     const response = await axios.put(`${WORK_ORDERS_ENDPOINT}${form.id}/`, payload)
@@ -683,6 +706,7 @@ const resetForm = () => {
   form.priority = 'Medium'
   form.work_instruction = ''
   form.production_line = ''
+  form.production_order = ''
 }
 
 // Format date for display
@@ -745,6 +769,59 @@ const fetchProductionLines = async () => {
     console.error('Error fetching production lines:', error)
   }
 }
+
+const PRODUCTION_ORDERS_ENDPOINT = `${API_BASE_URL}/production-orders/`
+
+const fetchProductionOrders = async () => {
+  try {
+    const response = await axios.get(PRODUCTION_ORDERS_ENDPOINT)
+    productionOrders.value = response.data
+  } catch (error) {
+    console.error('Error fetching production orders:', error)
+  }
+}
+
+const getProductionOrderName = (id?: number | null) => {
+  if (!id) return '—'
+  const order = productionOrders.value.find((o) => o.id === id)
+  return order ? order.order_name : `#${id}`
+}
+
+// Which work instruction to preview: the viewed order when the view popup
+// is open, otherwise the instruction selected in the create/edit form.
+const previewInstructionId = computed(() => {
+  if (showViewWorkOrderPopup.value && currentWorkOrder.value) {
+    return currentWorkOrder.value.work_instruction
+  }
+  return form.work_instruction
+})
+
+const previewProductionOrder = computed(() => {
+  if (showViewWorkOrderPopup.value && currentWorkOrder.value) {
+    return currentWorkOrder.value.production_order
+  }
+  return form.production_order ? parseInt(form.production_order as string) : null
+})
+
+const findInstruction = (id?: number | string) => {
+  if (id === undefined || id === null || id === '') return null
+  const numericId = typeof id === 'string' ? parseInt(id) : id
+  return workInstructions.value.find((instruction) => instruction.id === numericId) ?? null
+}
+
+const previewInstruction = computed(() => findInstruction(previewInstructionId.value))
+
+const previewSteps = computed(() => {
+  const steps = previewInstruction.value?.task_steps
+  if (!steps) return []
+  return steps
+    .split('\n')
+    .map((step) => step.trim())
+    .filter((step) => step.length > 0)
+})
+
+const previewTools = computed(() => previewInstruction.value?.tools_required ?? '')
+const previewMaterials = computed(() => previewInstruction.value?.materials_required ?? '')
 // Fetch work orders when component mounts
 onMounted(() => {
   fetchWorkOrders()
@@ -756,8 +833,10 @@ const WORK_INSTRUCTIONS_ENDPOINT = `${API_BASE_URL}/work_instructions/`
 // Add this interface
 interface WorkInstruction {
   id: number
-  name: string
-  // Add other fields if your API returns more
+  title: string
+  task_steps?: string
+  tools_required?: string
+  materials_required?: string
 }
 
 // Add this reactive property
@@ -777,6 +856,7 @@ const fetchWorkInstructions = async () => {
 onMounted(() => {
   fetchWorkOrders()
   fetchWorkInstructions() // Add this line
+  fetchProductionOrders()
 })
 </script>
 

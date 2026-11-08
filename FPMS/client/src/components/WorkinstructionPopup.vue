@@ -466,7 +466,7 @@ const viewWorkInstruction = async (id: number) => {
     const response = await axios.get(`${BASE_URL}/work_instructions/${id}/`)
     currentWorkInstruction.value = {
       ...response.data,
-      task_steps_array: response.data.task_steps.split('\n').filter((step) => step.trim()),
+      task_steps_array: response.data.task_steps.split('\n').filter((step: string) => step.trim()),
     }
     showViewWorkinstructionPopup.value = true
   } catch (error) {
@@ -480,7 +480,7 @@ const editWorkInstruction = async (id: number) => {
     const response = await axios.get(`${BASE_URL}/work_instructions/${id}/`)
     currentWorkInstruction.value = {
       ...response.data,
-      task_steps_array: response.data.task_steps.split('\n').filter((step) => step.trim()),
+      task_steps_array: response.data.task_steps.split('\n').filter((step: string) => step.trim()),
     }
     showEditWorkinstructionPopup.value = true
     showViewWorkinstructionPopup.value = false

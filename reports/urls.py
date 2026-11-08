@@ -21,6 +21,6 @@ urlpatterns = [
         name='stage-durations'),
     path('stages/durations/<int:workflow_id>/', views.StageDurationReportAPI.as_view(), 
         name='workflow-stage-durations'),
-    path('export/production/<str:format>/', views.ExportProductionReportAPI.as_view(), 
+    path('export/production/<str:report_format>/', views.ExportProductionReportAPI.as_view(), 
         name='export-production'),
 ]

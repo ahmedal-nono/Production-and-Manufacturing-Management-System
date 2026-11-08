@@ -32,10 +32,8 @@
 import { ref } from 'vue'
 import QualityInspectionPopup from '@/components/QualityInspectionPopup.vue'
 import ReworkPopup from '@/components/ReworkPopup.vue'
-import { useOrdersStore } from '@/stores/useOrders'
 import { useUserStore } from '@/stores/user'
 
-const ordersStore = useOrdersStore()
 const userStore = useUserStore()
 const userRole = userStore.user?.role
 

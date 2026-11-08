@@ -91,8 +91,9 @@
 import { ref } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
+import { baseApiUrl } from '@/api'
 
-const API_BASE_URL = 'http://localhost:8000/api'
+const API_BASE_URL = baseApiUrl
 
 const props = defineProps({
   jobCard: {

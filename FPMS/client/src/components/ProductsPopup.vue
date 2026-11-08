@@ -81,7 +81,7 @@
                       Edit
                     </button>
                     <button
-                      @click="deleteProduct(product.id)"
+                      @click="deleteProduct(product.id!)"
                       class="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700"
                     >
                       Delete
@@ -316,8 +316,9 @@ import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
 import { useUserStore } from '@/stores/user'
+import { baseApiUrl } from '@/api'
 
-const API_BASE_URL = 'http://localhost:8000/api/'
+const API_BASE_URL = `${baseApiUrl}/`
 
 interface Product {
   id?: number

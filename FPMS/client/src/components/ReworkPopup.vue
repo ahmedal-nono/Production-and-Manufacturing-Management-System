@@ -21,8 +21,9 @@
           <label class="block font-medium">Defect Type:</label>
           <select v-model="filters.defectType" class="rounded border p-1">
             <option>All</option>
-            <option>Material Defect</option>
-            <option>Assembly Defect</option>
+            <option>Material Flaw</option>
+            <option>Dimension Error</option>
+            <option>Assembly Fault</option>
           </select>
         </div>
 
@@ -136,12 +137,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import Popup from '@/components/popup.vue'
-import { useReworkStore } from '@/stores/useRework'
+import { useReworkStore, type Rework } from '@/stores/useRework'
 import { useEmployeeStore } from '@/stores/useEmployee'
-import { useOrdersStore } from '@/stores/useOrders'
 import { useUserStore } from '@/stores/user'
 
-const ordersStore = useOrdersStore()
 const userStore = useUserStore()
 const userRole = userStore.user?.role
 
@@ -183,18 +182,9 @@ const rowClass = (level: 'Critical' | 'Major' | 'Minor') => {
   )
 }
 
-const toggleStatus = async (item: { id: string; status: string }) => {
-  const newStatus = item.status === 'Open' ? 'Completed' : 'Open'
+const toggleStatus = async (item: Rework) => {
+  const newStatus: Rework['status'] = item.status === 'Open' ? 'Completed' : 'Open'
   await reworkStore.updateRework(item.id, { status: newStatus })
-}
-
-const assignRework = async (reworkId: string, assignedTo: string) => {
-  try {
-    await reworkStore.updateRework(reworkId, { assignedTo })
-    console.log(`Rework ${reworkId} assigned to ${assignedTo}`)
-  } catch (error) {
-    console.error('Failed to assign rework:', error)
-  }
 }
 
 const updateRework = async (id: string, updates: Partial<Rework>) => {
@@ -224,11 +214,7 @@ watch(
 )
 
 onMounted(() => {
-  if (reworks.value.length === 0) {
-    fetchReworks()
-  } else {
-    console.log('Reworks already loaded, skipping fetch.')
-  }
+  fetchReworks()
 })
 
 const filteredReworks = computed(() => {

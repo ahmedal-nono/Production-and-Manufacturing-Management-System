@@ -3,6 +3,27 @@ from rest_framework_simplejwt.exceptions import TokenError
 from django.http import JsonResponse
 from django.conf import settings
 
+from .context import set_current_request, clear_current_request
+
+
+class ActivityLogMiddleware:
+    """Expose the in-flight request to ``log_activity`` via thread-local storage.
+
+    This lets model signals record *who* performed a change, even though the
+    signal receivers do not have access to the request object.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        set_current_request(request)
+        try:
+            return self.get_response(request)
+        finally:
+            clear_current_request()
+
+
 class JWTAutoRefreshMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response

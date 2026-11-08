@@ -279,6 +279,9 @@
               <option value="admin">Admin</option>
               <option value="production_planner">Production Planner</option>
               <option value="production_manager" selected>Production Manager</option>
+              <option value="quality_control_manager">Quality Control Manager</option>
+              <option value="quality_control_inspector">Quality Control Inspector</option>
+              <option value="supervisor">Supervisor</option>
               <option value="operator" selected>Operator</option>
             </select>
           </div>
@@ -381,6 +384,7 @@ import { ref, onMounted } from 'vue'
 import { useAxios } from '@vueuse/integrations/useAxios'
 import Popup from '@/components/popup.vue'
 import { useUserStore } from '@/stores/user'
+import { adminApiUrl } from '@/api'
 
 // Types
 interface User {
@@ -464,7 +468,7 @@ const togglePasswordVisibility = () => {
 }
 
 // API Configuration
-const baseURL = 'http://localhost:8000/api/admin'
+const baseURL = adminApiUrl
 
 // Formatting functions
 const formatDate = (dateString: string) => {
@@ -709,6 +713,16 @@ const fetchHealthMetrics = async () => {
   }
 }
 // Helper functions
+const ROLE_KEY_BY_LABEL: Record<string, string> = {
+  Admin: 'admin',
+  Supervisor: 'supervisor',
+  Operator: 'operator',
+  'Production Planner': 'production_planner',
+  'Production Manager': 'production_manager',
+  'Quality Control Manager': 'quality_control_manager',
+  'Quality Control Inspector': 'quality_control_inspector',
+}
+
 const resetUserForm = () => {
   userForm.value = {
     full_name: '',
@@ -733,7 +747,7 @@ const openEditUserPopup = (user: User) => {
     email: user.email,
     contact_number: user.contact_number,
     department: user.department,
-    role: user.role,
+    role: ROLE_KEY_BY_LABEL[user.role] ?? user.role,
     account_status: user.account_status,
     password: '',
   }

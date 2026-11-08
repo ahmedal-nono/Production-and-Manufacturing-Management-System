@@ -17,7 +17,8 @@ class Workstation(models.Model):
     status = models.CharField(max_length=50, default='Active')
     capacity = models.IntegerField()
     description = models.TextField(blank=True, null=True)
-    work_center =models.TextField(blank=True, null=True)
+    work_center = models.ForeignKey(
+        WorkCenter, on_delete=models.SET_NULL, null=True, blank=True)
     machines = models.JSONField( max_length=255 , blank=True, null=True)  # List of machine names
     tools = models.JSONField(max_length=255 )   # List of tool names
 

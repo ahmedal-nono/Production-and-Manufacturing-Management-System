@@ -11,20 +11,25 @@ from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import BOM, Product, Workflow, Stage, InspectionCheckpoint, WorkCenter
 from .serializers import BOMSerializer, ProductSerializer, WorkflowSerializer, StageSerializer, InspectionCheckpointSerializer
+from administration.permissions import RoleWritePermission
+
+PRODUCTION_ROLES = ('admin', 'production_manager', 'production_planner')
 
 
 
 class InspectionCheckpointViewSet(viewsets.ModelViewSet):
     queryset = InspectionCheckpoint.objects.all()
     serializer_class = InspectionCheckpointSerializer
-    permission_classes = []  # No permission required for this viewset
+    permission_classes = [RoleWritePermission]
+    required_roles = PRODUCTION_ROLES
 
 class BOMViewSet(viewsets.ModelViewSet):
     queryset = BOM.objects.all()
     serializer_class = BOMSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     search_fields = ['name', 'product_code', 'version']
-    permission_classes = [] 
+    permission_classes = [RoleWritePermission]
+    required_roles = PRODUCTION_ROLES
 
 # Workflow ViewSet (Searchable Workflow)
 class WorkflowViewSet(viewsets.ModelViewSet):
@@ -32,7 +37,8 @@ class WorkflowViewSet(viewsets.ModelViewSet):
     serializer_class = WorkflowSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     search_fields = ['name', 'description']
-    permission_classes = [] 
+    permission_classes = [RoleWritePermission]
+    required_roles = PRODUCTION_ROLES
 
     def create(self, request, *args, **kwargs):
         """
@@ -56,7 +62,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['category', 'bom__status']
-    permission_classes = [] 
+    permission_classes = [RoleWritePermission]
+    required_roles = PRODUCTION_ROLES
 
     # Single endpoint to create the Product with BOM and Workflow
     def create(self, request, *args, **kwargs):
@@ -89,7 +96,8 @@ class StageViewSet(viewsets.ModelViewSet):
     serializer_class = StageSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)  # Enable filtering and searching
     search_fields = ['name', 'assigned_work_center__name', 'work_order']
-    permission_classes = [] 
+    permission_classes = [RoleWritePermission]
+    required_roles = PRODUCTION_ROLES
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -101,18 +109,21 @@ class StageViewSet(viewsets.ModelViewSet):
 class ProductionLineViewSet(viewsets.ModelViewSet):
     queryset = ProductionLine.objects.all()
     serializer_class = ProductionLineSerializer
-    permission_classes = [] 
+    permission_classes = [RoleWritePermission]
+    required_roles = PRODUCTION_ROLES
 
 
 
 class ProductionOrderViewSet(viewsets.ModelViewSet):
     queryset = ProductionOrder.objects.all()
     serializer_class = ProductionOrderSerializer
-    permission_classes = [] 
+    permission_classes = [RoleWritePermission]
+    required_roles = PRODUCTION_ROLES
 
 
 
 class ReschedulingViewSet(viewsets.ModelViewSet):
     queryset = Rescheduling.objects.all()
     serializer_class = ReschedulingSerializer
-    permission_classes = [] 
+    permission_classes = [RoleWritePermission]
+    required_roles = PRODUCTION_ROLES

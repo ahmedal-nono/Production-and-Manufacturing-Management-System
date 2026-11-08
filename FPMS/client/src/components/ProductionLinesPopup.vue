@@ -338,6 +338,7 @@ import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
 import { useUserStore } from '@/stores/user'
+import { baseApiUrl } from '@/api'
 
 interface ProductionLine {
   id: number
@@ -360,7 +361,7 @@ interface WorkCenter {
 }
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api/',
+  baseURL: `${baseApiUrl}/`,
   headers: {
     'Content-Type': 'application/json',
   },

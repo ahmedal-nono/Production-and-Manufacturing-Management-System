@@ -15,10 +15,12 @@ class Inspection(models.Model):
     ]
 
     work_order = models.ForeignKey(WorkOrder, on_delete=models.CASCADE)
-    defect_type = models.CharField(max_length=100)
-    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES)
-    affected_component = models.CharField(max_length=100)
-    description = models.TextField()
+    defect_type = models.CharField(max_length=100, blank=True, default='')
+    severity = models.CharField(
+        max_length=20, choices=SEVERITY_CHOICES, blank=True, default='')
+    affected_component = models.CharField(
+        max_length=100, blank=True, default='')
+    description = models.TextField(blank=True, default='')
     final_decision = models.CharField(max_length=20, choices=DECISION_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
