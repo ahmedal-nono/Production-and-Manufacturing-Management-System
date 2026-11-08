@@ -2,7 +2,7 @@
   <section class="bg-[#F0F0F0]">
     <div class="mx-auto flex flex-col items-center justify-center px-6 py-8 md:h-screen lg:py-0">
       <a href="#" class="mb-6 flex items-center text-2xl font-semibold text-black">
-        <img class="mr-2 h-8 w-8" src="../assets/FPMS.png" alt="logo" />
+        <img class="mr-2 h-8 w-8" src="../assets/FPMS.webp" alt="logo" />
         FPMS
       </a>
       <div

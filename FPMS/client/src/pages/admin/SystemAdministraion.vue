@@ -71,7 +71,7 @@
       class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
       @click="showUserMngtPopup = true"
     >
-      <img src="@/assets/user_manage.png" class="size-20" alt="" />
+      <img src="@/assets/user_manage.webp" class="size-20" alt="" />
       <p class="pt-2 text-[13px] font-bold">User Management</p>
     </div>
     <div class="flex justify-end gap-10 py-2">
@@ -79,7 +79,7 @@
         class="flex w-fit cursor-pointer flex-col items-center justify-evenly rounded-xl border bg-[#bee8ea] p-2 shadow-md shadow-gray-500"
         @click="showBackupPopup = true"
       >
-        <img src="@/assets/backup.png" class="size-12" alt="" />
+        <img src="@/assets/backup.webp" class="size-12" alt="" />
         <p class="pt-2 text-[13px] font-bold">Backup & Restore</p>
       </div>
     </div>

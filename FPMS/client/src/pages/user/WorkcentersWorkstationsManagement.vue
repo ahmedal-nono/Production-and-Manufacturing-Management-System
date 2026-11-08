@@ -6,21 +6,21 @@
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         @click="showWorkCenterPopup = true"
       >
-        <img src="@/assets/wokrcenter.png" class="size-20" alt="" />
+        <img src="@/assets/wokrcenter.webp" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">WorkCenters</p>
       </div>
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         @click="showRealTimePerformancePopup = true"
       >
-        <img src="@/assets/performance.png" class="size-20" alt="" />
+        <img src="@/assets/performance.webp" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Performance</p>
       </div>
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         @click="showMaintenanceTablePopup = true"
       >
-        <img src="@/assets/maintenance.png" class="size-20" alt="" />
+        <img src="@/assets/maintenance.webp" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Maintenance</p>
       </div>
     </div>
@@ -64,7 +64,7 @@
         class="flex w-fit cursor-pointer flex-col items-center justify-evenly rounded-xl border bg-[#bee8ea] p-2 shadow-md shadow-gray-500"
         @click="showCreateWorkCenterPopup = true"
       >
-        <img src="@/assets/add.png" class="size-12" alt="" />
+        <img src="@/assets/add.webp" class="size-12" alt="" />
       </div>
     </div>
   </Popup>

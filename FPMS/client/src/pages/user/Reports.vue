@@ -6,7 +6,7 @@
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         @click="showReportedIssuesPopup = true"
       >
-        <img src="@/assets/reported_issues.png" class="size-20" alt="" />
+        <img src="@/assets/reported_issues.webp" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Reported Issues</p>
       </div>
     </div>

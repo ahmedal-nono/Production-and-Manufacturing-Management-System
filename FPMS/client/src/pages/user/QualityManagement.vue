@@ -7,14 +7,14 @@
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         @click="showQualityInspectionPopup = true"
       >
-        <img src="@/assets/quality_inspection.png" class="size-20" alt="" />
+        <img src="@/assets/quality_inspection.webp" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Quality Inspection</p>
       </div>
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         @click="showReworkPopup = true"
       >
-        <img src="@/assets/rework.png" class="size-20" alt="" />
+        <img src="@/assets/rework.webp" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Rework</p>
       </div>
     </div>

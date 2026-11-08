@@ -16,12 +16,12 @@
 </template>
 
 <script setup lang="ts">
-import systemImg from '@/assets/system_admin.png'
-import wrkcntr from '@/assets/wokrcenters.png'
-import production from '@/assets/production.png'
-import workorder from '@/assets/workorder.png'
-import quality from '@/assets/quality.png'
-import reports from '@/assets/reports.png'
+import systemImg from '@/assets/system_admin.webp'
+import wrkcntr from '@/assets/wokrcenters.webp'
+import production from '@/assets/production.webp'
+import workorder from '@/assets/workorder.webp'
+import quality from '@/assets/quality.webp'
+import reports from '@/assets/reports.webp'
 import { useUserStore } from '@/stores/user'
 import { computed } from 'vue'
 

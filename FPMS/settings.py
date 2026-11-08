@@ -56,6 +56,11 @@ MEDIA_URL = '/media/'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.gzip.GZipMiddleware',
+    # Must sit below GZipMiddleware so the ETag is hashed from the plain
+    # body (Django pads gzip output with random bytes to prevent BREACH,
+    # which would otherwise change the hash on every response).
+    'django.middleware.http.ConditionalGetMiddleware',
+    'FPMS.middleware.ApiRevalidateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'administration.middleware.JWTAutoRefreshMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -192,6 +197,10 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
+    # Pagination is opt-in: clients that send "page" or "page_size" get the
+    # paginated {"count", "next", "previous", "results"} shape, while every
+    # existing call keeps receiving a plain list.
+    'DEFAULT_PAGINATION_CLASS': 'FPMS.pagination.OptInPagination',
 }
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=60),

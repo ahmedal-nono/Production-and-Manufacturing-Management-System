@@ -6,21 +6,21 @@
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         @click="showWorkordersPopup = true"
       >
-        <img src="@/assets/workorders.png" class="size-20" alt="" />
+        <img src="@/assets/workorders.webp" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Workorders</p>
       </div>
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         @click="showJobCardsPopup = true"
       >
-        <img src="@/assets/job_cards.png" class="size-20" alt="" />
+        <img src="@/assets/job_cards.webp" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Job Cards</p>
       </div>
       <div
         class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
         @click="showWorkinstructionPopup = true"
       >
-        <img src="@/assets/work_instructions.png" class="size-20" alt="" />
+        <img src="@/assets/work_instructions.webp" class="size-20" alt="" />
         <p class="pt-2 text-[13px] font-bold">Work Instructions</p>
       </div>
     </div>

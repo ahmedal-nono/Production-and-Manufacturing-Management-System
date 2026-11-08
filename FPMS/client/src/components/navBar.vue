@@ -3,7 +3,7 @@
     <div class="flex w-full justify-end px-2 pt-4">
       <div class="relative mr-4 mt-2">
         <img
-          src="../assets/noti.png"
+          src="../assets/noti.webp"
           class="size-11 cursor-pointer"
           alt="Notification"
           @click="openNotifications"
@@ -60,7 +60,7 @@
             />
             <img
               v-else
-              src="../assets/avatar.png"
+              src="../assets/avatar.webp"
               alt="Default Avatar"
               class="ml-2 size-32 rounded-full border"
             />
@@ -200,6 +200,7 @@ import notificationStore from '@/stores/notificationStore'
 import router from '@/router'
 import type { UserType } from '@/stores/user'
 import { apiOrigin } from '@/api'
+import avatarImg from '@/assets/avatar.webp'
 
 interface ProfileData {
   profile_pic: string | null
@@ -217,7 +218,7 @@ const profileImageUrl = computed(() => {
   if (currentProfilePic.value) {
     return `${apiOrigin}${currentProfilePic.value}`
   }
-  return '../assets/avatar.png'
+  return avatarImg
 })
 
 // Popup states
