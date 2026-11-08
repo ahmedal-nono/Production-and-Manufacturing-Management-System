@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from rest_framework import generics
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAuthenticated
@@ -16,13 +17,22 @@ QUALITY_ROLES = (
 
 
 class WorkOrderListView(generics.ListAPIView):
-    queryset = WorkOrder.objects.all()
+    queryset = WorkOrder.objects.select_related('production_line').prefetch_related(
+        Prefetch(
+            'inspection_set',
+            queryset=Inspection.objects.order_by('-updated_at'),
+            to_attr='ordered_inspections',
+        )
+    )
     serializer_class = WorkOrderSerializer
     permission_classes = [IsAuthenticated]
 
 
 class WorkOrderDetailView(generics.RetrieveAPIView):
-    queryset = WorkOrder.objects.all()
+    queryset = WorkOrder.objects.select_related('production_line').prefetch_related(
+        'job_cards',
+        'job_cards__assigned_to',
+    )
     serializer_class = WorkOrderDetailSerializer
     permission_classes = [IsAuthenticated]
 
@@ -35,7 +45,10 @@ class InspectionCreateView(generics.CreateAPIView):
 
 
 class InspectionDetailView(generics.RetrieveUpdateAPIView):
-    queryset = Inspection.objects.all()
+    queryset = Inspection.objects.select_related('work_order').prefetch_related(
+        'checklist_items',
+        'checklist_items__job_card',
+    )
     serializer_class = InspectionSerializer
     permission_classes = [RoleWritePermission]
     required_roles = QUALITY_ROLES
@@ -55,13 +68,17 @@ class InspectionChecklistUpdateView(generics.UpdateAPIView):
 
 
 class ReworkRequestListView(generics.ListAPIView):
-    queryset = ReworkRequest.objects.all()
+    queryset = ReworkRequest.objects.select_related(
+        'inspection', 'inspection__work_order'
+    ).prefetch_related('inspection__checklist_items')
     serializer_class = ReworkRequestSerializer
     permission_classes = [IsAuthenticated]
 
 
 class ReworkRequestUpdateView(generics.UpdateAPIView):
-    queryset = ReworkRequest.objects.all()
+    queryset = ReworkRequest.objects.select_related(
+        'inspection', 'inspection__work_order'
+    ).prefetch_related('inspection__checklist_items')
     serializer_class = ReworkRequestSerializer
     fields = ['status']
     permission_classes = [RoleWritePermission]

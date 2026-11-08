@@ -20,19 +20,27 @@
     </div>
   </div>
   <QualityInspectionPopup
-    @update:showQualityInspectionPopup="(v) => (showQualityInspectionPopup = v)"
+    v-if="showQualityInspectionPopup"
+    @update:showQualityInspectionPopup="(v: boolean) => (showQualityInspectionPopup = v)"
     :showQualityInspectionPopup
   >
   </QualityInspectionPopup>
-  <ReworkPopup @update:showReworkPopup="(v) => (showReworkPopup = v)" :showReworkPopup>
+  <ReworkPopup
+    v-if="showReworkPopup"
+    @update:showReworkPopup="(v: boolean) => (showReworkPopup = v)"
+    :showReworkPopup
+  >
   </ReworkPopup>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import QualityInspectionPopup from '@/components/QualityInspectionPopup.vue'
-import ReworkPopup from '@/components/ReworkPopup.vue'
+import { defineAsyncComponent, ref } from 'vue'
 import { useUserStore } from '@/stores/user'
+
+const QualityInspectionPopup = defineAsyncComponent(
+  () => import('@/components/QualityInspectionPopup.vue'),
+)
+const ReworkPopup = defineAsyncComponent(() => import('@/components/ReworkPopup.vue'))
 
 const userStore = useUserStore()
 const userRole = userStore.user?.role

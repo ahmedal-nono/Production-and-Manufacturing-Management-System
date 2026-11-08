@@ -26,23 +26,34 @@
     </div>
   </div>
   <WorkordersPopup
-    @update:showWorkordersPopup="(v) => (showWorkordersPopup = v)"
+    v-if="showWorkordersPopup"
+    @update:showWorkordersPopup="(v: boolean) => (showWorkordersPopup = v)"
     :showWorkordersPopup
   ></WorkordersPopup>
-  <JobCardsPopup @update:showJobCardsPopup="(v) => (showJobCardsPopup = v)" :showJobCardsPopup>
+  <JobCardsPopup
+    v-if="showJobCardsPopup"
+    @update:showJobCardsPopup="(v: boolean) => (showJobCardsPopup = v)"
+    :showJobCardsPopup
+  >
   </JobCardsPopup>
   <WorkinstructionPopup
-    @update:showWorkinstructionPopup="(v) => (showWorkinstructionPopup = v)"
+    v-if="showWorkinstructionPopup"
+    @update:showWorkinstructionPopup="(v: boolean) => (showWorkinstructionPopup = v)"
     :showWorkinstructionPopup
   >
   </WorkinstructionPopup>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import WorkordersPopup from '@/components/WorkordersPopup.vue'
-import JobCardsPopup from '@/components/JobCardsPopup.vue'
-import WorkinstructionPopup from '@/components/WorkinstructionPopup.vue'
+import { defineAsyncComponent, ref } from 'vue'
+
+const WorkordersPopup = defineAsyncComponent(
+  () => import('@/components/WorkordersPopup.vue'),
+)
+const JobCardsPopup = defineAsyncComponent(() => import('@/components/JobCardsPopup.vue'))
+const WorkinstructionPopup = defineAsyncComponent(
+  () => import('@/components/WorkinstructionPopup.vue'),
+)
 const showWorkordersPopup = ref(false)
 const showJobCardsPopup = ref(false)
 const showWorkinstructionPopup = ref(false)

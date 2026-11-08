@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Count, Avg, Sum, F, Min, Max, Q
+from django.db.models import Count, Avg, Sum, F, Min, Max, Q, Prefetch
 from django.db.models.functions import Cast
 from django.db import models
 from datetime import timedelta
@@ -109,15 +109,23 @@ class WorkflowAnalysisReportAPI(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            workflows = Workflow.objects.annotate(
+            stage_queryset = Stage.objects.select_related(
+                'assigned_work_center'
+            ).prefetch_related('inspection_checkpoints').order_by('-duration')
+
+            workflows = Workflow.objects.select_related(
+                'product', 'assigned_work_center'
+            ).annotate(
                 total_stages=Count('stages'),
                 avg_stage_duration=Avg('stages__duration'),
                 total_inspection_points=Count('stages__inspection_checkpoints')
-            ).prefetch_related('stages')
+            ).prefetch_related(Prefetch('stages', queryset=stage_queryset))
             
             report_data = []
             for workflow in workflows:
-                longest_stage = workflow.stages.order_by('-duration').first()
+                # Uses the prefetched, already ordered stage list instead of
+                # issuing a new ORDER BY query for every workflow.
+                longest_stage = next(iter(workflow.stages.all()), None)
                 
                 # Prepare context as a dictionary
                 context = {

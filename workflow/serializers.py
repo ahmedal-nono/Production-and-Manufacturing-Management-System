@@ -224,8 +224,13 @@ class ProductionLineSerializer(serializers.ModelSerializer):
 
 class ProductionOrderSerializer(serializers.ModelSerializer):
     work_orders = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    work_orders_count = serializers.IntegerField(
-        source='work_orders.count', read_only=True)
+    work_orders_count = serializers.SerializerMethodField()
+
+    def get_work_orders_count(self, obj):
+        annotated = getattr(obj, 'work_orders_total', None)
+        if annotated is not None:
+            return annotated
+        return obj.work_orders.count()
 
     class Meta:
         model = ProductionOrder

@@ -43,9 +43,10 @@ class WorkstationViewSet(viewsets.ViewSet):  # Using ViewSet instead of ModelVie
         work_center = request.query_params.get('work_center', None)
         
         if work_center:
-            queryset = Workstation.objects.filter(work_center=work_center)
+            queryset = Workstation.objects.select_related(
+                'work_center').filter(work_center=work_center)
         else:
-            queryset = Workstation.objects.all()
+            queryset = Workstation.objects.select_related('work_center').all()
             
         serializer = WorkstationSerializer(queryset, many=True)
         return Response(serializer.data)
@@ -53,7 +54,8 @@ class WorkstationViewSet(viewsets.ViewSet):  # Using ViewSet instead of ModelVie
     def retrieve(self, request, pk=None):
         # Custom retrieve logic
         try:
-            workstation = Workstation.objects.get(pk=pk)
+            workstation = Workstation.objects.select_related(
+                'work_center').get(pk=pk)
             serializer = WorkstationSerializer(workstation)
             return Response(serializer.data)
         except Workstation.DoesNotExist:
@@ -222,7 +224,7 @@ class WorkstationViewSet(viewsets.ViewSet):  # Using ViewSet instead of ModelVie
 #             raise ValidationError("This workstation is protected and cannot be deleted")
 #         instance.delete()
 class MaintenanceViewSet(viewsets.ModelViewSet):
-    queryset = Maintenance.objects.all()
+    queryset = Maintenance.objects.select_related('workstation').all()
     serializer_class = MaintenanceSerializer
     permission_classes = [RoleWritePermission]
     required_roles = WORKCENTRE_ROLES

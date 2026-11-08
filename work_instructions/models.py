@@ -57,6 +57,11 @@ class WorkOrder(models.Model):
     class Meta:
         verbose_name = 'Work Order'
         verbose_name_plural = 'Work Orders'
+        indexes = [
+            models.Index(fields=['production_order', 'due_date']),
+            models.Index(fields=['production_line', 'due_date']),
+            models.Index(fields=['priority', 'due_date']),
+        ]
 
 
 # Job Card Model (Generated from Work Order)
@@ -82,4 +87,8 @@ class JobCard(models.Model):
     class Meta:
         verbose_name = 'Job Card'
         verbose_name_plural = 'Job Cards'
+        indexes = [
+            models.Index(fields=['work_order', 'status']),
+            models.Index(fields=['assigned_to', 'status']),
+        ]
         

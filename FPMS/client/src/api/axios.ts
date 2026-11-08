@@ -5,6 +5,9 @@ import { useUserStore } from '@/stores/user'
 const apiOrigin = baseApiUrl.replace(/\/api\/?$/, '')
 const refreshUrl = `${apiOrigin}/token/refresh/`
 
+// Never leave the UI waiting forever on a stalled network request.
+axios.defaults.timeout = 15000
+
 let refreshPromise: Promise<string | null> | null = null
 
 async function refreshAccessToken(refresh: string): Promise<string | null> {

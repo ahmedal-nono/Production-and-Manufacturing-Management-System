@@ -55,6 +55,7 @@ MEDIA_URL = '/media/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'administration.middleware.JWTAutoRefreshMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -123,6 +124,9 @@ else:
             'PASSWORD': os.environ.get('DB_PASSWORD', 'root'),
             'HOST': os.environ.get('DB_HOST', 'localhost'),
             'PORT': os.environ.get('DB_PORT', '3306'),
+            # Reuse database connections instead of opening one per request.
+            'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '60')),
+            'CONN_HEALTH_CHECKS': True,
         }
     }
 

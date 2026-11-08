@@ -63,38 +63,56 @@
   </Popup>
 
   <ProductionSchedulePopup
-    @update:showProductionSchedulePopup="(v) => (showProductionSchedulePopup = v)"
+    v-if="showProductionSchedulePopup"
+    @update:showProductionSchedulePopup="(v: boolean) => (showProductionSchedulePopup = v)"
     :showProductionSchedulePopup
   ></ProductionSchedulePopup>
 
   <ProductionOrdersPopup
-    @update:showProductionOrdersPopup="(v) => (showProductionOrdersPopup = v)"
+    v-if="showProductionOrdersPopup"
+    @update:showProductionOrdersPopup="(v: boolean) => (showProductionOrdersPopup = v)"
     :showProductionOrdersPopup
   ></ProductionOrdersPopup>
   <ProductsPopup
-    @update:showProductsPopup="(v) => (showProductsPopup = v)"
+    v-if="showProductsPopup"
+    @update:showProductsPopup="(v: boolean) => (showProductsPopup = v)"
     :showProductsPopup
   ></ProductsPopup>
   <WorkflowPopup
-    @update:showWorkflowsPopup="(v) => (showWorkflowsPopup = v)"
+    v-if="showWorkflowsPopup"
+    @update:showWorkflowsPopup="(v: boolean) => (showWorkflowsPopup = v)"
     :showWorkflowsPopup
   ></WorkflowPopup>
   <ProductionLinesPopup
-    @update:showProductionLinesPopup="(v) => (showProductionLinesPopup = v)"
+    v-if="showProductionLinesPopup"
+    @update:showProductionLinesPopup="(v: boolean) => (showProductionLinesPopup = v)"
     :showProductionLinesPopup
   ></ProductionLinesPopup>
-  <BOMsPopup @update:showBOMsPopup="(v) => (showBOMsPopup = v)" :showBOMsPopup></BOMsPopup>
+  <BOMsPopup
+    v-if="showBOMsPopup"
+    @update:showBOMsPopup="(v: boolean) => (showBOMsPopup = v)"
+    :showBOMsPopup
+  ></BOMsPopup>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { defineAsyncComponent, ref } from 'vue'
 import Popup from '@/components/popup.vue'
-import ProductionSchedulePopup from '@/components/ProductionSchedulePopup.vue'
-import ProductionOrdersPopup from '@/components/ProductionOrdersPopup.vue'
-import ProductsPopup from '@/components/ProductsPopup.vue'
-import WorkflowPopup from '@/components/WorkflowPopup.vue'
-import ProductionLinesPopup from '@/components/ProductionLinesPopup.vue'
-import BOMsPopup from '@/components/BOMsPopup.vue'
+
+// Popups are loaded and mounted only when the user opens them, so the
+// production page no longer fires every popup's API calls on page load.
+const ProductionSchedulePopup = defineAsyncComponent(
+  () => import('@/components/ProductionSchedulePopup.vue'),
+)
+const ProductionOrdersPopup = defineAsyncComponent(
+  () => import('@/components/ProductionOrdersPopup.vue'),
+)
+const ProductsPopup = defineAsyncComponent(() => import('@/components/ProductsPopup.vue'))
+const WorkflowPopup = defineAsyncComponent(() => import('@/components/WorkflowPopup.vue'))
+const ProductionLinesPopup = defineAsyncComponent(
+  () => import('@/components/ProductionLinesPopup.vue'),
+)
+const BOMsPopup = defineAsyncComponent(() => import('@/components/BOMsPopup.vue'))
 
 const showProductionPopup = ref(false)
 const showProductionSchedulePopup = ref(false)

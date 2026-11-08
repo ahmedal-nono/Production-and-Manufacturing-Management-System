@@ -11,7 +11,9 @@ WORKORDER_ROLES = ('admin', 'production_manager')
 
 
 class WorkOrderViewSet(viewsets.ModelViewSet):
-    queryset = WorkOrder.objects.all()
+    queryset = WorkOrder.objects.select_related(
+        'work_instruction', 'production_line', 'production_order'
+    ).all()
     serializer_class = WorkOrderSerializer
     permission_classes = [RoleWritePermission]
     required_roles = WORKORDER_ROLES
@@ -62,16 +64,23 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
         })
 
 class JobCardViewSet(viewsets.ModelViewSet):
-    queryset = JobCard.objects.all()
+    queryset = JobCard.objects.select_related(
+        'work_order',
+        'work_order__work_instruction',
+        'work_order__production_line',
+        'work_order__production_order',
+        'assigned_to',
+    ).all()
     serializer_class = JobCardSerializer
     permission_classes = [RoleWritePermission]
     required_roles = WORKORDER_ROLES
 
     def get_queryset(self):
+        queryset = super().get_queryset()
         work_order_id = self.request.query_params.get('work_order_id')
         if work_order_id:
-            return JobCard.objects.filter(work_order_id=work_order_id)
-        return JobCard.objects.all()
+            return queryset.filter(work_order_id=work_order_id)
+        return queryset
 
 class WorkInstructionViewSet(viewsets.ModelViewSet):
     queryset = WorkInstruction.objects.all()

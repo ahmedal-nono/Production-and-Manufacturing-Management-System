@@ -103,7 +103,7 @@
             v-model="logSearch"
             placeholder="Search..."
             class="rounded-md border p-1 text-sm"
-            @input="fetchActivityLogs(1)"
+            @input="onSearchInput"
           />
         </div>
       </div>
@@ -380,7 +380,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useAxios } from '@vueuse/integrations/useAxios'
 import Popup from '@/components/popup.vue'
 import { useUserStore } from '@/stores/user'
@@ -489,11 +489,13 @@ const fetchUsers = async () => {
   users.value = data.value || []
 }
 
+const ACTIVITY_LOG_PAGE_SIZE = 3
+
 const fetchActivityLogs = async (page = 1) => {
   try {
     const params: any = {
       page: page,
-      page_size: 3,
+      page_size: ACTIVITY_LOG_PAGE_SIZE,
     }
 
     if (logFilter.value !== 'all') {
@@ -510,8 +512,12 @@ const fetchActivityLogs = async (page = 1) => {
 
     if (data.value) {
       activityLogs.value = data.value.results || data.value
+      currentPage.value = page
       if (data.value.count) {
-        totalPages.value = Math.ceil(data.value.count / 10)
+        totalPages.value = Math.max(
+          1,
+          Math.ceil(data.value.count / ACTIVITY_LOG_PAGE_SIZE),
+        )
       }
     }
   } catch (err) {
@@ -766,6 +772,15 @@ onMounted(() => {
 })
 const logFilter = ref('all')
 const logSearch = ref('')
+
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+const onSearchInput = () => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => fetchActivityLogs(1), 300)
+}
+onBeforeUnmount(() => {
+  if (searchTimer) clearTimeout(searchTimer)
+})
 </script>
 
 <style>

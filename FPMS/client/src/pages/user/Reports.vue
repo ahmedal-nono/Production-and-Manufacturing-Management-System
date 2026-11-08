@@ -13,14 +13,18 @@
   </div>
 
   <ReportedIssuesPopup
+    v-if="showReportedIssuesPopup"
     :showReportedIssuesPopup="showReportedIssuesPopup"
     @update:showReportedIssuesPopup="(value: boolean) => (showReportedIssuesPopup = value)"
   ></ReportedIssuesPopup>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import ReportedIssuesPopup from '@/components/ReportedIssuesPopup.vue'
+import { defineAsyncComponent, ref } from 'vue'
+
+const ReportedIssuesPopup = defineAsyncComponent(
+  () => import('@/components/ReportedIssuesPopup.vue'),
+)
 
 const showReportedIssuesPopup = ref(false)
 </script>

@@ -132,6 +132,9 @@ class HealthMetric(models.Model):
     
     class Meta:
         ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['-timestamp']),
+        ]
     
     def __str__(self):
         return f"Metrics at {self.timestamp}"
@@ -158,6 +161,12 @@ class ActivityLog(models.Model):
     
     class Meta:
         ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['-timestamp']),
+            models.Index(fields=['user', '-timestamp']),
+            models.Index(fields=['action', '-timestamp']),
+            models.Index(fields=['model', '-timestamp']),
+        ]
     
     def __str__(self):
         return f"{self.user} {self.get_action_display()} at {self.timestamp}"
@@ -174,6 +183,9 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_read', '-created_at']),
+        ]
 
     def __str__(self):
         return f"Notification for {self.user_id}: {self.message}"

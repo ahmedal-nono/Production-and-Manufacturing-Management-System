@@ -1,3 +1,4 @@
+from django.db.models import Count
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
@@ -24,7 +25,7 @@ class InspectionCheckpointViewSet(viewsets.ModelViewSet):
     required_roles = PRODUCTION_ROLES
 
 class BOMViewSet(viewsets.ModelViewSet):
-    queryset = BOM.objects.all()
+    queryset = BOM.objects.prefetch_related('components').all()
     serializer_class = BOMSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     search_fields = ['name', 'product_code', 'version']
@@ -33,7 +34,13 @@ class BOMViewSet(viewsets.ModelViewSet):
 
 # Workflow ViewSet (Searchable Workflow)
 class WorkflowViewSet(viewsets.ModelViewSet):
-    queryset = Workflow.objects.all()
+    queryset = Workflow.objects.select_related(
+        'assigned_work_center', 'product'
+    ).prefetch_related(
+        'stages',
+        'stages__inspection_checkpoints',
+        'stages__assigned_work_center',
+    ).all()
     serializer_class = WorkflowSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     search_fields = ['name', 'description']
@@ -92,7 +99,9 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 # Stage ViewSet (Handles Stage creation with Inspection Checkpoints)
 class StageViewSet(viewsets.ModelViewSet):
-    queryset = Stage.objects.all()
+    queryset = Stage.objects.select_related(
+        'assigned_work_center', 'workflow'
+    ).prefetch_related('inspection_checkpoints').all()
     serializer_class = StageSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)  # Enable filtering and searching
     search_fields = ['name', 'assigned_work_center__name', 'work_order']
@@ -107,7 +116,7 @@ class StageViewSet(viewsets.ModelViewSet):
 
 
 class ProductionLineViewSet(viewsets.ModelViewSet):
-    queryset = ProductionLine.objects.all()
+    queryset = ProductionLine.objects.prefetch_related('work_centers').all()
     serializer_class = ProductionLineSerializer
     permission_classes = [RoleWritePermission]
     required_roles = PRODUCTION_ROLES
@@ -115,7 +124,11 @@ class ProductionLineViewSet(viewsets.ModelViewSet):
 
 
 class ProductionOrderViewSet(viewsets.ModelViewSet):
-    queryset = ProductionOrder.objects.all()
+    queryset = ProductionOrder.objects.select_related(
+        'product', 'production_line'
+    ).prefetch_related('work_orders').annotate(
+        work_orders_total=Count('work_orders')
+    ).all()
     serializer_class = ProductionOrderSerializer
     permission_classes = [RoleWritePermission]
     required_roles = PRODUCTION_ROLES
@@ -123,7 +136,7 @@ class ProductionOrderViewSet(viewsets.ModelViewSet):
 
 
 class ReschedulingViewSet(viewsets.ModelViewSet):
-    queryset = Rescheduling.objects.all()
+    queryset = Rescheduling.objects.select_related('production_order').all()
     serializer_class = ReschedulingSerializer
     permission_classes = [RoleWritePermission]
     required_roles = PRODUCTION_ROLES

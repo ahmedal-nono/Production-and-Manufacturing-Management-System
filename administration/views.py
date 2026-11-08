@@ -10,6 +10,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework import permissions
+from rest_framework.filters import SearchFilter
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.http import FileResponse
 from django.conf import settings
@@ -250,8 +252,9 @@ class HealthMetricViewSet(viewsets.ReadOnlyModelViewSet):
     
     @action(detail=False, methods=['get'])
     def current(self, request):
-        # Calculate CPU usage
-        cpu_usage = psutil.cpu_percent(interval=1)
+        # Non-blocking: return usage since the previous call instead of
+        # freezing the worker for a full second on every dashboard load.
+        cpu_usage = psutil.cpu_percent(interval=None)
         
         # Calculate memory usage
         memory = psutil.virtual_memory()
@@ -325,12 +328,23 @@ from .serializers import ActivityLogSerializer
 
 
 
+class ActivityLogPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
 class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = ActivityLog.objects.all()
+    queryset = ActivityLog.objects.select_related('user').all()
     permission_classes= [IsAdminRole]
     serializer_class = ActivityLogSerializer
-    filter_backends = [DjangoFilterBackend]
+    pagination_class = ActivityLogPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['action', 'model', 'timestamp']
+    search_fields = [
+        'user__full_name', 'user__email', 'action', 'model',
+        'object_id', 'ip_address',
+    ]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -380,7 +394,7 @@ from .serializers import UserSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+    queryset = User.objects.select_related('department', 'role').all()
     serializer_class = UserSerializer
     
 

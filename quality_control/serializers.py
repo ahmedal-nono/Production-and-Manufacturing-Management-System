@@ -22,6 +22,10 @@ class WorkOrderSerializer(serializers.ModelSerializer):
         return obj.production_line.line_name if obj.production_line else None
 
     def get_latest_decision(self, obj):
+        # Prefetched by the list view; fall back for detail/single-object use.
+        inspections = getattr(obj, 'ordered_inspections', None)
+        if inspections is not None:
+            return inspections[0].final_decision if inspections else None
         inspection = obj.inspection_set.order_by('-updated_at').first()
         return inspection.final_decision if inspection else None
 

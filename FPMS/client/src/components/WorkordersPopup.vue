@@ -822,11 +822,6 @@ const previewSteps = computed(() => {
 
 const previewTools = computed(() => previewInstruction.value?.tools_required ?? '')
 const previewMaterials = computed(() => previewInstruction.value?.materials_required ?? '')
-// Fetch work orders when component mounts
-onMounted(() => {
-  fetchWorkOrders()
-  fetchProductionLines() // Add this line
-})
 
 const WORK_INSTRUCTIONS_ENDPOINT = `${API_BASE_URL}/work_instructions/`
 
@@ -852,10 +847,11 @@ const fetchWorkInstructions = async () => {
   }
 }
 
-// Update your onMounted hook
+// Load all reference data once, in parallel.
 onMounted(() => {
   fetchWorkOrders()
-  fetchWorkInstructions() // Add this line
+  fetchProductionLines()
+  fetchWorkInstructions()
   fetchProductionOrders()
 })
 </script>

@@ -571,11 +571,6 @@ const totalCost = computed(() => {
   }, 0)
 })
 
-// Lifecycle hook
-onMounted(() => {
-  fetchBOMs()
-})
-
 // API functions
 async function fetchBOMs() {
   try {

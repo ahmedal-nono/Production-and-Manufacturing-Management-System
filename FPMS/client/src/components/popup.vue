@@ -28,7 +28,7 @@
 // })
 const { visible, title = '' } = defineProps<{
   visible: boolean
-  title: string
+  title?: string
 }>()
 
 const emit = defineEmits()

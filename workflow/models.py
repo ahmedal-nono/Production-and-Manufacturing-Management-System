@@ -27,6 +27,11 @@ class Stage(models.Model):
     duration = models.IntegerField(help_text="Duration in minutes")
     workflow = models.ForeignKey('Workflow', on_delete=models.CASCADE,related_name='stages')
     inspection_checkpoints = models.ManyToManyField(InspectionCheckpoint, blank=True)  # Many-to-many relation to Inspection Checkpoints
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['workflow', 'duration']),
+        ]
     
     def __str__(self):
         return self.name
@@ -60,7 +65,11 @@ class BOM(models.Model):
     version = models.CharField(max_length=50)
     status = models.CharField(max_length=20, choices=[('Approved', 'Approved'), ('Draft', 'Draft')], default='Draft')
     last_updated = models.DateTimeField(auto_now=True)
-    
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['product_code']),
+        ]
 
     def __str__(self):
         return self.name
@@ -115,6 +124,12 @@ class ProductionOrder(models.Model):
     end_date = models.DateTimeField()
     production_line = models.ForeignKey(ProductionLine, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='Pending')
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['status', '-start_date']),
+            models.Index(fields=['production_line', 'status']),
+        ]
 
     def __str__(self):
         return self.order_name
