@@ -91,6 +91,7 @@
 import { ref } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
+import notificationStore from '@/stores/notificationStore'
 import { baseApiUrl } from '@/api'
 
 const API_BASE_URL = baseApiUrl
@@ -128,6 +129,13 @@ const getStatusClass = (status: string) => {
 }
 
 const updateStatus = async () => {
+  const previousStatus = props.jobCard.status
+  const optimisticCard = { ...props.jobCard, status: newStatus.value }
+
+  // Apply the change optimistically and close the modal right away.
+  emit('status-updated', optimisticCard)
+  emit('close')
+
   isLoading.value = true
   errorMessage.value = ''
 
@@ -156,9 +164,12 @@ const updateStatus = async () => {
       },
     })
 
+    // Sync the card with the canonical server response.
     emit('status-updated', response.data)
-    emit('close')
   } catch (error: any) {
+    // Roll back to the previous status if the update fails.
+    emit('status-updated', { ...props.jobCard, status: previousStatus })
+    notificationStore.addNotification('Failed to update job card status.', 'error', 'manager')
     console.error('Error updating job card status:', error)
 
     if (error.response) {

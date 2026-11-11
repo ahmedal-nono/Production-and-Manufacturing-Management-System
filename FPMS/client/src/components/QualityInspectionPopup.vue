@@ -43,8 +43,10 @@
             </tr>
           </thead>
           <tbody>
+            <SkeletonRows v-if="listLoading" :rows="4" :cols="5" />
             <tr
               v-for="(item, index) in filteredInstructions"
+              v-show="!listLoading"
               :key="index"
               class="border bg-white hover:bg-gray-50"
             >
@@ -273,6 +275,7 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
+import SkeletonRows from '@/components/SkeletonRows.vue'
 import { useReworkStore } from '@/stores/useRework'
 import notificationStore from '@/stores/notificationStore'
 import { baseApiUrl } from '@/api'
@@ -304,6 +307,7 @@ const selectedInspection = ref<WorkOrderRow | null>(null)
 const workOrderRows = ref<
   { id: number; name: string; due_date: string | null; production_line_name: string | null; latest_decision: string | null }[]
 >([])
+const listLoading = ref(false)
 const listError = ref('')
 
 const search = ref('')
@@ -348,12 +352,15 @@ const filteredInstructions = computed(() =>
 
 const fetchWorkOrders = async () => {
   listError.value = ''
+  listLoading.value = true
   try {
     const { data } = await axios.get(`${API_BASE}/workorders/`)
     workOrderRows.value = Array.isArray(data) ? data : []
   } catch (error) {
     console.error('Error fetching work orders:', error)
     listError.value = 'Failed to load work orders'
+  } finally {
+    listLoading.value = false
   }
 }
 

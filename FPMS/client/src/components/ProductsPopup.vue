@@ -52,9 +52,11 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="loading">
-                  <td colspan="6" class="py-4 text-center">Loading data...</td>
-                </tr>
+                <SkeletonRows
+                  v-if="loading"
+                  :rows="4"
+                  :cols="userRole === 'Production Manager' ? 6 : 5"
+                />
                 <tr v-else-if="filteredProducts.length === 0">
                   <td colspan="6" class="py-4 text-center">No products found</td>
                 </tr>
@@ -315,6 +317,7 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
+import SkeletonRows from '@/components/SkeletonRows.vue'
 import { useUserStore } from '@/stores/user'
 import { baseApiUrl } from '@/api'
 
@@ -593,10 +596,15 @@ const editProduct = async () => {
 const deleteProduct = async (id: number) => {
   if (!confirm('Are you sure you want to delete this product?')) return
 
+  const index = products.value.findIndex((product) => product.id === id)
+  if (index === -1) return
+  const removed = products.value[index]
+  products.value.splice(index, 1) // optimistic removal
+
   try {
     await axios.delete(`${API_BASE_URL}products/${id}/`)
-    products.value = products.value.filter(product => product.id !== id)
   } catch (err) {
+    products.value.splice(index, 0, removed) // rollback on failure
     error.value = 'Failed to delete product'
     console.error('Error deleting product:', err)
   }

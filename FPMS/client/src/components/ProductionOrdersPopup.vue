@@ -40,6 +40,11 @@
               </tr>
             </thead>
             <tbody>
+              <SkeletonRows
+                v-if="ordersLoading"
+                :rows="4"
+                :cols="userRole === 'Production Manager' ? 9 : 8"
+              />
               <tr v-for="order in orders" :key="order.id" class="border border-gray-700 px-4 py-2">
                 <td class="border border-gray-700 px-4 py-2">{{ order.id }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ order.order_name }}</td>
@@ -342,6 +347,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
+import SkeletonRows from '@/components/SkeletonRows.vue'
 import { useUserStore } from '@/stores/user'
 import { baseApiUrl } from '@/api'
 
@@ -381,6 +387,7 @@ const userRole = userStore.user?.role
 const showCreateProductionOrdersPopup = ref(false)
 const showEditProductionOrdersPopup = ref(false)
 const orders = ref<Order[]>([])
+const ordersLoading = ref(false)
 const products = ref<Product[]>([])
 const selectedOrderId = ref<number | null>(null)
 const productionLines = ref<any[]>([])
@@ -439,11 +446,14 @@ const getProductName = (productId: number) => {
 
 // Fetch all production orders
 const fetchOrders = async () => {
+  ordersLoading.value = true
   try {
     const response = await axios.get(`${API_BASE_URL}production-orders/`)
     orders.value = response.data
   } catch (error) {
     console.error('Error fetching production orders:', error)
+  } finally {
+    ordersLoading.value = false
   }
 }
 
@@ -531,10 +541,14 @@ const editOrder = async () => {
 
 // Delete a production order
 const deleteOrder = async (id: number) => {
+  const index = orders.value.findIndex((order) => order.id === id)
+  if (index === -1) return
+  const removed = orders.value[index]
+  orders.value.splice(index, 1) // optimistic removal
   try {
     await axios.delete(`${API_BASE_URL}production-orders/${id}/`)
-    orders.value = orders.value.filter((order) => order.id !== id)
   } catch (error) {
+    orders.value.splice(index, 0, removed) // rollback on failure
     console.error('Error deleting production order:', error)
   }
 }

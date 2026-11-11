@@ -30,6 +30,14 @@
     <div>
       <h3 class="mb-4 text-center text-2xl font-bold">Work Centers</h3>
       <div class="grid grid-cols-5 gap-6">
+        <template v-if="workCentersLoading">
+          <div
+            v-for="i in 5"
+            :key="'wc-skeleton-' + i"
+            class="h-28 w-full animate-pulse rounded-xl border bg-gray-200 shadow-md shadow-gray-500"
+            aria-hidden="true"
+          ></div>
+        </template>
         <div
           v-for="(workcenter, index) in workCenters"
           :key="index"
@@ -104,8 +112,10 @@
             </tr>
           </thead>
           <tbody>
+            <SkeletonRows v-if="workstationsLoading" :rows="4" :cols="5" />
             <tr
               v-for="(station, index) in allWorkstations"
+              v-show="!workstationsLoading"
               :key="index"
               class="border border-gray-700 px-4 py-2"
             >
@@ -386,7 +396,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(station, index) in allWorkstations" :key="index">
+            <SkeletonRows v-if="workstationsLoading" :rows="3" :cols="3" />
+            <tr
+              v-for="(station, index) in allWorkstations"
+              v-show="!workstationsLoading"
+              :key="index"
+            >
               <td>{{ station.name }}</td>
               <td>{{ station.status }}</td>
               <td>
@@ -422,7 +437,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(station, index) in workstations" :key="index">
+          <SkeletonRows v-if="workstationsLoading" :rows="3" :cols="3" />
+          <tr v-for="(station, index) in workstations" v-show="!workstationsLoading" :key="index">
             <td>{{ station.name }}</td>
             <td>{{ station.status }}</td>
             <td>
@@ -512,8 +528,10 @@
             </tr>
           </thead>
           <tbody>
+            <SkeletonRows v-if="workstationsLoading" :rows="4" :cols="4" />
             <tr
               v-for="(station, index) in allWorkstations"
+              v-show="!workstationsLoading"
               class="border border-gray-700 px-4 py-2"
             >
               <td class="border border-gray-700 px-4 py-2">{{ station.name }}</td>
@@ -770,7 +788,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(main, index) in allMaintenances">
+          <SkeletonRows v-if="maintenancesLoading" :rows="4" :cols="6" />
+          <tr v-for="(main, index) in allMaintenances" v-show="!maintenancesLoading">
             <td class="border border-gray-700 px-4 py-2">
               {{ main.workstation }}
             </td>
@@ -887,6 +906,8 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
 import Popup from '@/components/popup.vue'
+import SkeletonRows from '@/components/SkeletonRows.vue'
+import SkeletonList from '@/components/SkeletonList.vue'
 import { baseApiUrl } from '@/api.ts'
 import { useAxios } from '@vueuse/integrations/useAxios'
 
@@ -923,13 +944,22 @@ interface Workstation {
   time: string
 }
 const currentWorkCentersNames = defineModel('currentWorkCentersNames', { default: '' })
-const { data: workCenters } = useAxios(`${baseApiUrl}/workcentre/workcenters/`, { method: 'GET' })
-const { data: allWorkstations } = useAxios(`${baseApiUrl}/workcentre/workstations/`, {
-  method: 'GET',
-})
-const { data: allMaintenances } = useAxios(`${baseApiUrl}/workcentre/maintenances/`, {
-  method: 'GET',
-})
+const { data: workCenters, isLoading: workCentersLoading } = useAxios(
+  `${baseApiUrl}/workcentre/workcenters/`,
+  { method: 'GET' },
+)
+const { data: allWorkstations, isLoading: workstationsLoading } = useAxios(
+  `${baseApiUrl}/workcentre/workstations/`,
+  {
+    method: 'GET',
+  },
+)
+const { data: allMaintenances, isLoading: maintenancesLoading } = useAxios(
+  `${baseApiUrl}/workcentre/maintenances/`,
+  {
+    method: 'GET',
+  },
+)
 const workCentersNames = computed(() => {
   if (!workCenters.value) return []
   return workCenters.value.map((w: { name: string }) => w.name)

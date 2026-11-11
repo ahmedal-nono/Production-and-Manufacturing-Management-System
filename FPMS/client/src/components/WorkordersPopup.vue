@@ -55,6 +55,7 @@
             </tr>
           </thead>
           <tbody>
+            <SkeletonRows v-if="ordersLoading" :rows="4" :cols="8" />
             <tr
               v-for="(order, index) in filteredOrders"
               :key="index"
@@ -503,6 +504,7 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
+import SkeletonRows from '@/components/SkeletonRows.vue'
 import { baseApiUrl } from '@/api'
 
 // API configuration
@@ -536,6 +538,7 @@ const filters = reactive({
 
 // Work orders data
 const orders = ref<WorkOrder[]>([])
+const ordersLoading = ref(false)
 const productionLines = ref<ProductionLine[]>([])
 const productionOrders = ref<ProductionOrder[]>([])
 const currentWorkOrder = ref<WorkOrder | null>(null)
@@ -586,11 +589,14 @@ const activeProductionLines = computed(() => {
 
 // Fetch all work orders
 const fetchWorkOrders = async () => {
+  ordersLoading.value = true
   try {
     const response = await axios.get(WORK_ORDERS_ENDPOINT)
     orders.value = response.data
   } catch (error) {
     console.error('Error fetching work orders:', error)
+  } finally {
+    ordersLoading.value = false
   }
 }
 
@@ -688,10 +694,14 @@ const updateWorkOrder = async () => {
 // Delete a work order
 const deleteWorkOrder = async (id: number) => {
   if (confirm('Are you sure you want to delete this work order?')) {
+    const index = orders.value.findIndex((order) => order.id === id)
+    if (index === -1) return
+    const removed = orders.value[index]
+    orders.value.splice(index, 1) // optimistic removal
     try {
       await axios.delete(`${WORK_ORDERS_ENDPOINT}${id}/`)
-      orders.value = orders.value.filter((order) => order.id !== id)
     } catch (error) {
+      orders.value.splice(index, 0, removed) // rollback on failure
       console.error('Error deleting work order:', error)
     }
   }

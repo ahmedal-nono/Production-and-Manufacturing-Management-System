@@ -26,10 +26,7 @@
           </div>
         </div>
 
-        <div v-if="loading" class="py-8 text-center">
-          <span class="animate-pulse">Loading production lines...</span>
-        </div>
-        <div v-else-if="error" class="py-4 text-center text-red-500">{{ error }}</div>
+        <div v-if="error" class="py-4 text-center text-red-500">{{ error }}</div>
         <div v-else class="overflow-x-auto">
           <table class="w-full text-center">
             <thead class="bg-blue-500 text-white">
@@ -50,7 +47,17 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="line in filteredLines" :key="line.id" class="border-t hover:bg-gray-100">
+              <SkeletonRows
+                v-if="loading"
+                :rows="4"
+                :cols="userRole === 'Production Manager' ? 8 : 7"
+              />
+              <tr
+                v-for="line in filteredLines"
+                v-show="!loading"
+                :key="line.id"
+                class="border-t hover:bg-gray-100"
+              >
                 <td class="border border-gray-700 px-4 py-2">{{ line.line_name }}</td>
                 <td class="border border-gray-700 px-4 py-2">
                   <span
@@ -337,6 +344,7 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
+import SkeletonRows from '@/components/SkeletonRows.vue'
 import { useUserStore } from '@/stores/user'
 import { baseApiUrl } from '@/api'
 
@@ -533,10 +541,15 @@ const handleEditProductionLine = async () => {
 const deleteProductionLine = async (id: number) => {
   if (!confirm('Are you sure you want to delete this production line?')) return
 
+  const index = productionLines.value.findIndex((line) => line.id === id)
+  if (index === -1) return
+  const removed = productionLines.value[index]
+  productionLines.value.splice(index, 1) // optimistic removal
+
   try {
     await api.delete(`production-lines/${id}/`)
-    productionLines.value = productionLines.value.filter(line => line.id !== id)
   } catch (err) {
+    productionLines.value.splice(index, 0, removed) // rollback on failure
     error.value = 'Failed to delete production line'
     console.error(err)
   }

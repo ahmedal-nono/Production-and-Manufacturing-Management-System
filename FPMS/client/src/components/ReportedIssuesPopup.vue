@@ -122,8 +122,10 @@
                 </tr>
               </thead>
               <tbody>
+                <SkeletonRows v-if="issuesLoading" :rows="4" :cols="7" />
                 <tr
                   v-for="item in filteredIssues"
+                  v-show="!issuesLoading"
                   :key="item.id"
                   class="border bg-white hover:bg-gray-50"
                 >
@@ -195,8 +197,10 @@
                 </tr>
               </thead>
               <tbody>
+                <SkeletonRows v-if="productionLoading" :rows="4" :cols="6" />
                 <tr
                   v-for="item in productionData"
+                  v-show="!productionLoading"
                   :key="item.production_line"
                   class="border bg-white hover:bg-gray-50"
                 >
@@ -236,8 +240,10 @@
                 </tr>
               </thead>
               <tbody>
+                <SkeletonRows v-if="workflowLoading" :rows="4" :cols="5" />
                 <tr
                   v-for="item in workflowData"
+                  v-show="!workflowLoading"
                   :key="item.workflow.id"
                   class="border bg-white hover:bg-gray-50"
                 >
@@ -272,8 +278,10 @@
                 </tr>
               </thead>
               <tbody>
+                <SkeletonRows v-if="orderLoading" :rows="4" :cols="3" />
                 <tr
                   v-for="item in orderData"
+                  v-show="!orderLoading"
                   :key="item.status"
                   class="border bg-white hover:bg-gray-50"
                 >
@@ -309,8 +317,10 @@
                 </tr>
               </thead>
               <tbody>
+                <SkeletonRows v-if="stageLoading" :rows="4" :cols="5" />
                 <tr
                   v-for="item in filteredStageData"
+                  v-show="!stageLoading"
                   :key="item.workflow_name + item.stage_name"
                   class="border bg-white hover:bg-gray-50"
                 >
@@ -364,8 +374,10 @@
                 </tr>
               </thead>
               <tbody>
+                <SkeletonRows v-if="scheduledLoading" :rows="4" :cols="6" />
                 <tr
                   v-for="item in scheduledData"
+                  v-show="!scheduledLoading"
                   :key="item.id"
                   class="border bg-white hover:bg-gray-50"
                 >
@@ -603,6 +615,7 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
+import SkeletonRows from '@/components/SkeletonRows.vue'
 import { useTimeAgo } from '@vueuse/core'
 import { baseApiUrl } from '@/api'
 // Convert Django duration string to seconds
@@ -765,10 +778,15 @@ const confirmDeleteIssue = (id: number) => {
 }
 
 const deleteIssue = async (id: number) => {
+  const index = issues.value.findIndex((issue) => issue.id === id)
+  if (index === -1) return
+  const removed = issues.value[index]
+  issues.value.splice(index, 1) // optimistic removal
+
   try {
     await axios.delete(`${API_BASE_URL}issues/${id}/`)
-    issues.value = issues.value.filter((issue) => issue.id !== id)
   } catch (err) {
+    issues.value.splice(index, 0, removed) // rollback on failure
     issuesError.value = 'Failed to delete issue'
     console.error('Error deleting issue:', err)
   }
@@ -955,10 +973,15 @@ const confirmDeleteScheduledReport = (id: number) => {
 }
 
 const deleteScheduledReport = async (id: number) => {
+  const index = scheduledData.value.findIndex((r) => r.id === id)
+  if (index === -1) return
+  const removed = scheduledData.value[index]
+  scheduledData.value.splice(index, 1) // optimistic removal
+
   try {
     await axios.delete(`${API_BASE_URL}scheduled/${id}/`)
-    scheduledData.value = scheduledData.value.filter((r) => r.id !== id)
   } catch (err) {
+    scheduledData.value.splice(index, 0, removed) // rollback on failure
     scheduledError.value = 'Failed to delete scheduled report'
     console.error('Error deleting scheduled report:', err)
   }

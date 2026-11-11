@@ -23,6 +23,11 @@
               </tr>
             </thead>
             <tbody>
+              <SkeletonRows
+                v-if="bomsLoading"
+                :rows="4"
+                :cols="userRole === 'Production Manager' ? 5 : 4"
+              />
               <tr v-for="bom in filteredBOMs" :key="bom.id" class="border-t">
                 <td class="border border-gray-700 px-4 py-2">{{ bom.name }}</td>
                 <td class="border border-gray-700 px-4 py-2">{{ bom.productCode }}</td>
@@ -489,6 +494,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import Popup from '@/components/popup.vue'
+import SkeletonRows from '@/components/SkeletonRows.vue'
 import axios from 'axios'
 import { useUserStore } from '@/stores/user'
 import { baseApiUrl } from '@/api'
@@ -502,6 +508,7 @@ defineProps<{
 }>()
 const emitEvent = defineEmits(['update:showBOMsPopup']) // State for BOMs and UI
 const boms = ref<any[]>([])
+const bomsLoading = ref(false)
 const products = ref<any[]>([]) // Define products as a reactive property
 const showEditBOMsPopup = ref(false)
 const showAddBOMsPopup = ref(false)
@@ -573,6 +580,7 @@ const totalCost = computed(() => {
 
 // API functions
 async function fetchBOMs() {
+  bomsLoading.value = true
   try {
     const response = await axios.get(API_BASE_URL)
     boms.value = response.data.map((bom: any) => ({
@@ -581,6 +589,8 @@ async function fetchBOMs() {
     }))
   } catch (error) {
     console.error('Error fetching BOMs:', error)
+  } finally {
+    bomsLoading.value = false
   }
 }
 
@@ -637,10 +647,14 @@ async function saveBOM() {
 
 async function deleteBOM(id: number) {
   if (confirm('Are you sure you want to delete this BOM?')) {
+    const index = boms.value.findIndex((bom) => bom.id === id)
+    if (index === -1) return
+    const removed = boms.value[index]
+    boms.value.splice(index, 1) // optimistic removal
     try {
       await axios.delete(`${API_BASE_URL}${id}/`)
-      boms.value = boms.value.filter((bom) => bom.id !== id)
     } catch (error) {
+      boms.value.splice(index, 0, removed) // rollback on failure
       console.error(`Error deleting BOM with ID ${id}:`, error)
     }
   }

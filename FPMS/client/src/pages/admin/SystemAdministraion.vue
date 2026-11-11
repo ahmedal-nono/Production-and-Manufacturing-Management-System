@@ -121,7 +121,13 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="activity in activityLogs" :key="activity.id" class="overflow-y-auto">
+            <SkeletonRows v-if="logsLoading" :rows="3" :cols="6" />
+            <tr
+              v-for="activity in activityLogs"
+              v-show="!logsLoading"
+              :key="activity.id"
+              class="overflow-y-auto"
+            >
               <td class="border border-gray-700 px-4 py-2">{{ activity.id }}</td>
               <td class="border border-gray-700 px-4 py-2">
                 {{ activity.user || 'N/A' }}
@@ -190,8 +196,10 @@
             </tr>
           </thead>
           <tbody>
+            <SkeletonRows v-if="usersLoading" :rows="4" :cols="6" />
             <tr
               v-for="(user, index) in users"
+              v-show="!usersLoading"
               :key="index"
               class="border border-gray-700 text-center"
             >
@@ -349,7 +357,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="backup in backups" :key="backup.id">
+            <SkeletonRows v-if="backupLoading" :rows="3" :cols="4" />
+            <tr v-for="backup in backups" v-show="!backupLoading" :key="backup.id">
               <td class="border border-gray-700 px-4 py-2">{{ backup.id }}</td>
               <td class="border border-gray-700 px-4 py-2">
                 {{ formatDateTime(backup.created_at) }}
@@ -383,6 +392,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useAxios } from '@vueuse/integrations/useAxios'
 import Popup from '@/components/popup.vue'
+import SkeletonRows from '@/components/SkeletonRows.vue'
 import { useUserStore } from '@/stores/user'
 import { adminApiUrl } from '@/api'
 
@@ -443,7 +453,9 @@ const showBackupPopup = ref(false)
 const backupLoading = ref(false) // Define the missing variable
 
 const users = ref<User[]>([])
+const usersLoading = ref(false)
 const activityLogs = ref<ActivityLog[]>([])
+const logsLoading = ref(false)
 // const backups = ref<Backup[]>([])
 const selectedBackupFile = ref<File | null>(null)
 
@@ -485,13 +497,19 @@ const formatDateTime = (dateString: string) => {
 
 // API Functions
 const fetchUsers = async () => {
-  const { data } = await useAxios(`${baseURL}/users/`, { method: 'GET' })
-  users.value = data.value || []
+  usersLoading.value = true
+  try {
+    const { data } = await useAxios(`${baseURL}/users/`, { method: 'GET' })
+    users.value = data.value || []
+  } finally {
+    usersLoading.value = false
+  }
 }
 
 const ACTIVITY_LOG_PAGE_SIZE = 3
 
 const fetchActivityLogs = async (page = 1) => {
+  logsLoading.value = true
   try {
     const params: any = {
       page: page,
@@ -522,6 +540,8 @@ const fetchActivityLogs = async (page = 1) => {
     }
   } catch (err) {
     console.error('Failed to fetch activity logs:', err)
+  } finally {
+    logsLoading.value = false
   }
 }
 // const fetchBackups = async () => {
@@ -567,12 +587,17 @@ const updateUser = async () => {
 
 const deleteUser = async (userId: number) => {
   if (confirm('Are you sure you want to delete this user?')) {
+    const index = users.value.findIndex((user) => user.id === userId)
+    if (index === -1) return
+    const removed = users.value[index]
+    users.value.splice(index, 1) // optimistic removal
+
     const { error } = await useAxios(`${baseURL}/users/${userId}/`, {
       method: 'DELETE',
     })
 
-    if (!error.value) {
-      await fetchUsers()
+    if (error.value) {
+      users.value.splice(index, 0, removed) // rollback on failure
     }
   }
 }

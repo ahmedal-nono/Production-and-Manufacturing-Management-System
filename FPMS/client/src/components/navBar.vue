@@ -19,7 +19,7 @@
           @update:visible="showNotificationPopup = $event"
           title="Notification Received"
         >
-          <p v-if="notificationStore.state.loading" class="text-gray-500">Loading...</p>
+          <SkeletonList v-if="notificationStore.state.loading" :rows="4" compact />
           <p v-else-if="notificationStore.state.error" class="text-red-500">
             {{ notificationStore.state.error }}
           </p>
@@ -194,6 +194,7 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
+import SkeletonList from '@/components/SkeletonList.vue'
 import NotificationCard from '@/components/NotificationCard.vue'
 import { useUserStore } from '@/stores/user'
 import notificationStore from '@/stores/notificationStore'

@@ -63,11 +63,12 @@ const fetchServerNotifications = async (userId: number | string): Promise<void> 
 const markAsRead = async (id: string | number): Promise<void> => {
   const serverItem = state.server.find((n) => String(n.id) === String(id))
   if (serverItem) {
-    serverItem.is_read = true
+    const wasRead = serverItem.is_read
+    serverItem.is_read = true // optimistic update
     try {
       await axios.patch(`${API_BASE}${serverItem.id}/`, { is_read: true })
     } catch {
-      // keep the local read state even if the request fails
+      serverItem.is_read = wasRead // rollback on failure
     }
     return
   }

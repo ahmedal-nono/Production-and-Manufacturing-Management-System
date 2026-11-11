@@ -45,7 +45,16 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="order in filteredOrders" :key="order.id">
+            <SkeletonRows
+              v-if="ordersLoading"
+              :rows="4"
+              :cols="userRole === 'Production Manager' ? 9 : 8"
+            />
+            <tr
+              v-for="order in filteredOrders"
+              v-show="!ordersLoading"
+              :key="order.id"
+            >
               <td @click="showProductInfo(order)" class="border px-4 py-2 cursor-pointer">
                 {{ order.id }}
               </td>
@@ -175,6 +184,7 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
+import SkeletonRows from '@/components/SkeletonRows.vue'
 import { useUserStore } from '@/stores/user'
 import { baseApiUrl } from '@/api'
 
@@ -244,6 +254,7 @@ const showReschedulePopup = ref(false)
 const showProductInfoPopup = ref(false)
 const currentOrder = ref<ProductionOrder | null>(null)
 const isLoading = ref(false)
+const ordersLoading = ref(false)
 
 // Filters
 const selectedStatus = ref('All Statuses')
@@ -384,11 +395,14 @@ const submitReschedule = async () => {
 
 // API Calls
 const fetchOrders = async () => {
+  ordersLoading.value = true
   try {
     const response = await axios.get(`${API_BASE_URL}production-orders/`)
     orders.value = response.data
   } catch (error) {
     console.error('Error fetching production orders:', error)
+  } finally {
+    ordersLoading.value = false
   }
 }
 

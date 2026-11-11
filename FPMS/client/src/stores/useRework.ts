@@ -77,16 +77,20 @@ export const useReworkStore = defineStore('rework', {
         console.error(`Rework with ID ${id} not found`)
         return
       }
+      const previous = this.reworks[index]
+      // Apply the change immediately so the UI responds instantly.
+      this.reworks[index] = { ...previous, ...updates }
       if (updates.status) {
         try {
           await axios.patch(`${API_URL}${id}/`, { status: toApiStatus(updates.status) })
         } catch (error) {
+          // Roll back to the previous state when the server rejects the change.
+          this.reworks[index] = previous
           notificationStore.addNotification('Failed to update rework.', 'error', 'manager')
           console.error('Failed to update rework status:', error)
           throw error
         }
       }
-      this.reworks[index] = { ...this.reworks[index], ...updates }
       notificationStore.addNotification('Rework updated successfully!', 'success', 'manager')
     },
     async saveFromQualityInspection() {

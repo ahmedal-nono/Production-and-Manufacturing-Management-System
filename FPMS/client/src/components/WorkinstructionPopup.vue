@@ -36,15 +36,8 @@
         </select>
       </div>
 
-      <!-- Loading state -->
-      <div v-if="loading" class="flex justify-center py-8">
-        <div
-          class="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"
-        ></div>
-      </div>
-
       <!-- Table -->
-      <div v-else class="overflow-x-auto">
+      <div class="overflow-x-auto">
         <table class="w-full text-center">
           <thead class="bg-blue-500 text-white">
             <tr>
@@ -56,8 +49,10 @@
             </tr>
           </thead>
           <tbody>
+            <SkeletonRows v-if="loading" :rows="4" :cols="5" />
             <tr
               v-for="(item, index) in workInstructions"
+              v-show="!loading"
               :key="index"
               class="border bg-white hover:bg-gray-50"
             >
@@ -388,6 +383,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import axios from 'axios'
 import Popup from '@/components/popup.vue'
+import SkeletonRows from '@/components/SkeletonRows.vue'
 
 interface WorkInstruction {
   id: number
@@ -596,10 +592,15 @@ const updateWorkInstruction = async () => {
 const deleteWorkInstruction = async (id: number) => {
   if (!confirm('Are you sure you want to delete this work instruction?')) return
 
+  const index = workInstructions.value.findIndex((item) => item.id === id)
+  if (index === -1) return
+  const removed = workInstructions.value[index]
+  workInstructions.value.splice(index, 1) // optimistic removal
+
   try {
     await axios.delete(`${BASE_URL}/work_instructions/${id}/`)
-    fetchWorkInstructions()
   } catch (error) {
+    workInstructions.value.splice(index, 0, removed) // rollback on failure
     console.error('Error deleting work instruction:', error)
   }
 }

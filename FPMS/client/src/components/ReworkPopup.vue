@@ -59,8 +59,14 @@
           </tr>
         </thead>
         <tbody>
+          <SkeletonRows
+            v-if="reworksLoading"
+            :rows="4"
+            :cols="userRole === 'Production Manager' ? 9 : 7"
+          />
           <tr
             v-for="(rework, index) in filteredReworks"
+            v-show="!reworksLoading"
             :key="index"
             :class="rowClass(rework.defectLevel)"
           >
@@ -137,6 +143,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import Popup from '@/components/popup.vue'
+import SkeletonRows from '@/components/SkeletonRows.vue'
 import { useReworkStore, type Rework } from '@/stores/useRework'
 import { useEmployeeStore } from '@/stores/useEmployee'
 import { useUserStore } from '@/stores/user'
@@ -161,6 +168,7 @@ const filters = ref({
 })
 
 const reworks = computed(() => reworkStore.reworks)
+const reworksLoading = ref(false)
 
 const badgeClass = (level: 'Critical' | 'Major' | 'Minor') => {
   return (
@@ -197,11 +205,14 @@ const updateRework = async (id: string, updates: Partial<Rework>) => {
 }
 
 const fetchReworks = async () => {
+  reworksLoading.value = true
   try {
     await reworkStore.fetchReworks()
     console.log('Reworks fetched successfully:', reworks.value)
   } catch (error) {
     console.error('Failed to fetch reworks:', error)
+  } finally {
+    reworksLoading.value = false
   }
 }
 

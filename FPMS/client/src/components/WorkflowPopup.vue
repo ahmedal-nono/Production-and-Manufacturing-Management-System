@@ -35,6 +35,11 @@
               </tr>
             </thead>
             <tbody>
+              <SkeletonRows
+                v-if="workflowsLoading"
+                :rows="4"
+                :cols="userRole === 'Production Manager' ? 3 : 2"
+              />
               <tr v-for="workflow in filteredWorkflows" :key="workflow.id" class="border-t">
                 <td class="border border-gray-700 px-4 py-2">{{ workflow.name }}</td>
                 <td class="border border-gray-700 px-4 py-2">
@@ -506,6 +511,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import Popup from '@/components/popup.vue'
+import SkeletonRows from '@/components/SkeletonRows.vue'
 import { useWorkflowsStore } from '@/stores/useWorkflows'
 import { baseApiUrl } from '@/api.ts'
 import { useUserStore } from '@/stores/user'
@@ -530,6 +536,7 @@ const showCreateQualityInspectionCheckpointPopup = ref(false)
 
 // Data
 const workflows = ref<any[]>([])
+const workflowsLoading = ref(false)
 const apiProducts = ref<any[]>([])
 const workCenters = ref<any[]>([])
 const inspectionCheckpoints = ref<any[]>([])
@@ -591,11 +598,14 @@ function removeStage(index: number) {
 }
 
 async function fetchWorkflows() {
+  workflowsLoading.value = true
   try {
     const response = await axios.get(`${baseApiUrl}/workflows/`)
     workflows.value = response.data
   } catch (error) {
     console.error('Error fetching workflows:', error)
+  } finally {
+    workflowsLoading.value = false
   }
 }
 
@@ -676,10 +686,14 @@ async function viewWorkflow(id: number) {
 }
 
 async function deleteWorkflow(id: number) {
+  const index = workflows.value.findIndex((workflow) => workflow.id === id)
+  if (index === -1) return
+  const removed = workflows.value[index]
+  workflows.value.splice(index, 1) // optimistic removal
   try {
     await axios.delete(`${baseApiUrl}/workflows/${id}/`)
-    await fetchWorkflows()
   } catch (error) {
+    workflows.value.splice(index, 0, removed) // rollback on failure
     console.error('Error deleting workflow:', error)
   }
 }
