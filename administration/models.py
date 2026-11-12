@@ -189,3 +189,59 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user_id}: {self.message}"
+
+
+class RumMetric(models.Model):
+    """One real-user-monitoring sample reported by the browser."""
+
+    name = models.CharField(max_length=32)
+    value = models.FloatField()
+    rating = models.CharField(max_length=16, blank=True)
+    page_path = models.CharField(max_length=200)
+    device = models.CharField(max_length=16, blank=True)
+    connection = models.CharField(max_length=16, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['name', '-created_at']),
+            models.Index(fields=['-created_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.name}={self.value} on {self.page_path}'
+
+
+class BackgroundJob(models.Model):
+    """Database-backed background job processed by ``manage.py run_worker``."""
+
+    STATUS_CHOICES = [
+        ('queued', 'Queued'),
+        ('running', 'Running'),
+        ('succeeded', 'Succeeded'),
+        ('failed', 'Failed'),
+    ]
+
+    job_type = models.CharField(max_length=64)
+    payload = models.JSONField(default=dict, blank=True)
+    status = models.CharField(
+        max_length=16, choices=STATUS_CHOICES, default='queued')
+    result = models.JSONField(default=dict, blank=True)
+    error = models.TextField(blank=True)
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='background_jobs')
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['-created_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.job_type} [{self.status}]'

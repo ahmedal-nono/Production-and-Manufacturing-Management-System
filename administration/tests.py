@@ -261,3 +261,96 @@ class ActivityLogActorTests(TestCase):
             app_label='administration', model='activitylogprobe')
         self.assertFalse(
             ActivityLog.objects.filter(model='ContentType').exists())
+
+import tempfile
+
+from django.test import override_settings
+
+from .models import BackgroundJob, BackupRecord, RumMetric
+from .jobs import enqueue, run_pending
+
+
+class RumMetricApiTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_anonymous_can_post_bulk_metrics(self):
+        response = self.client.post(
+            '/api/admin/rum/',
+            {
+                'metrics': [
+                    {'name': 'LCP', 'value': 1234.5, 'rating': 'good',
+                     'page_path': '/production', 'device': 'desktop',
+                     'connection': '4g'},
+                    {'name': 'CLS', 'value': 0.05, 'rating': 'good',
+                     'page_path': '/production', 'device': 'desktop',
+                     'connection': '4g'},
+                ]
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(response.json()['received'], 2)
+        self.assertEqual(RumMetric.objects.count(), 2)
+
+    def test_invalid_metric_name_is_rejected(self):
+        response = self.client.post(
+            '/api/admin/rum/',
+            {'name': 'NOPE', 'value': 1, 'page_path': '/'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_listing_requires_admin(self):
+        self.assertEqual(self.client.get('/api/admin/rum/').status_code, 401)
+
+
+class BackgroundJobTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        admin_role = Role.objects.create(name='admin')
+        self.admin = User.objects.create_user(
+            email='jobs-admin@example.com',
+            full_name='Jobs Admin',
+            password='secret1234',
+            role=admin_role,
+        )
+        self.client.force_authenticate(user=self.admin)
+
+    def test_enqueue_and_run_echo_job(self):
+        job = enqueue('system.echo', {'hello': 'world'}, user=self.admin)
+        self.assertEqual(job.status, 'queued')
+        self.assertEqual(run_pending(limit=1), 1)
+        job.refresh_from_db()
+        self.assertEqual(job.status, 'succeeded', job.error)
+        self.assertEqual(job.result, {'echo': {'hello': 'world'}})
+        self.assertIsNotNone(job.started_at)
+        self.assertIsNotNone(job.finished_at)
+
+    def test_failing_handler_marks_job_failed(self):
+        job = enqueue('missing.handler')
+        run_pending(limit=1)
+        job.refresh_from_db()
+        self.assertEqual(job.status, 'failed')
+        self.assertIn('No handler', job.error)
+
+    def test_enqueue_backup_endpoint_returns_queued_job(self):
+        response = self.client.post(
+            '/api/admin/backups/enqueue_backup/', {}, format='json')
+        self.assertEqual(response.status_code, 202, response.content)
+        body = response.json()
+        self.assertEqual(body['status'], 'queued')
+        self.assertTrue(BackgroundJob.objects.filter(pk=body['id']).exists())
+
+    def test_backup_job_creates_record(self):
+        media_root = tempfile.mkdtemp()
+        with override_settings(MEDIA_ROOT=media_root):
+            job = enqueue(
+                'backup.create', {'created_by_id': self.admin.id},
+                user=self.admin)
+            run_pending(limit=1)
+            job.refresh_from_db()
+            self.assertEqual(job.status, 'succeeded', job.error)
+            record = BackupRecord.objects.get(pk=job.result['backup_id'])
+            self.assertGreater(record.file_size, 0)
+            self.assertTrue(record.backup_file.storage.exists(record.backup_file.name))

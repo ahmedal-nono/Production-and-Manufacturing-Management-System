@@ -61,6 +61,7 @@ MIDDLEWARE = [
     # which would otherwise change the hash on every response).
     'django.middleware.http.ConditionalGetMiddleware',
     'FPMS.middleware.ApiRevalidateCacheMiddleware',
+    'FPMS.middleware.StaticCacheHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'administration.middleware.JWTAutoRefreshMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -170,7 +171,54 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+# Point STATIC_URL at a CDN origin in production, e.g.
+#   STATIC_URL=https://cdn.example.com/static/
+STATIC_URL = os.environ.get('STATIC_URL', '/static/')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# When set, collected assets use hashed names so they can be cached forever.
+if os.environ.get('USE_MANIFEST_STATIC', '').lower() in ('1', 'true', 'yes'):
+    STORAGES = {
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+        },
+    }
+
+# ---------------------------------------------------------------------------
+# Cache: LocMemCache by default, Redis when REDIS_URL is provided.
+# Example: REDIS_URL=redis://127.0.0.1:6379/1
+# ---------------------------------------------------------------------------
+CACHE_TTL = int(os.environ.get('CACHE_TTL', '60'))
+REDIS_URL = os.environ.get('REDIS_URL')
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+            'TIMEOUT': CACHE_TTL,
+            'OPTIONS': {'db': int(os.environ.get('REDIS_DB', '0'))},
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'fpms-locmem',
+            'TIMEOUT': CACHE_TTL,
+            'OPTIONS': {'MAX_ENTRIES': 2000},
+        }
+    }
+
+# ---------------------------------------------------------------------------
+# Background jobs: database-backed queue (see administration.jobs).
+# Run `python manage.py run_worker` next to the web process.
+# Set BACKGROUND_JOBS_EAGER=1 to execute queued jobs inline (tests/demo).
+# ---------------------------------------------------------------------------
+BACKGROUND_JOBS_EAGER = os.environ.get(
+    'BACKGROUND_JOBS_EAGER', '').lower() in ('1', 'true', 'yes')
+BACKGROUND_JOBS_POLL_INTERVAL = float(
+    os.environ.get('BACKGROUND_JOBS_POLL_INTERVAL', '2'))
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

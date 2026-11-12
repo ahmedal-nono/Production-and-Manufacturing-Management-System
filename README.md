@@ -68,6 +68,60 @@ order can be traced back to the planning production order:
 * `GET /api/production-orders/<id>/` includes `work_orders` (ids) and
   `work_orders_count`.
 
+## Cache, background jobs, CDN and RUM
+
+### Cache
+
+* `CACHES` uses `LocMemCache` by default, so the app runs with no extra
+  services. Set `REDIS_URL` (e.g. `redis://127.0.0.1:6379/1`) to switch to
+  Redis automatically.
+* `CACHE_TTL` (seconds, default `60`) bounds how long report aggregates are
+  served from cache.
+* Report caches are dropped immediately by `post_save`/`post_delete` on
+  `ProductionLine`, `ProductionOrder`, `Workflow` and `Stage`, so a write is
+  never masked by a stale entry.
+
+### Background jobs
+
+Slow work (database backups, scheduled tasks) is queued in
+`administration_backgroundjob` instead of blocking the request:
+
+* `POST /api/admin/backups/enqueue_backup/` returns `202 Accepted` with the
+  job (`id`, `status`).
+* `GET /api/admin/jobs/<id>/` returns the same job, including `result` or
+  `error` once it finishes.
+* Run the worker next to the web process:
+
+```powershell
+python manage.py run_worker              # poll forever
+python manage.py run_worker --once       # drain the queue and exit (cron)
+```
+
+* `BACKGROUND_JOBS_EAGER=1` executes jobs inline as soon as they are queued
+  (useful for demos and tests without a worker).
+* `python manage.py run_scheduled_backups` now only queues the due backups;
+  the worker performs them.
+
+### Static files and CDN
+
+* `STATIC_URL` can be overridden with an environment variable, e.g.
+  `STATIC_URL=https://cdn.example.com/static/`.
+* `USE_MANIFEST_STATIC=1` enables `ManifestStaticFilesStorage` so every
+  collected asset gets a content hash in its name.
+* `StaticCacheHeadersMiddleware` adds
+  `Cache-Control: public, max-age=31536000, immutable` for hashed assets and
+  `max-age=3600` for the rest. It applies whenever Django serves `/static/`
+  itself (e.g. behind WhiteNoise); with a CDN the request never reaches Django.
+
+### Real user monitoring (RUM)
+
+* The Vue client reports Core Web Vitals (LCP, CLS, INP) plus FCP and TTFB
+  once per page load to `POST /api/admin/rum/` as
+  `{ "metrics": [{ "name": "LCP", "value": 1234.5, "rating": "good", "page_path": "/production" }] }`.
+  The beacon needs no authentication.
+* Set `VITE_RUM=false` to disable collection.
+* Admins can read the samples at `GET /api/admin/rum/`.
+
 ## Tests
 
 ```powershell

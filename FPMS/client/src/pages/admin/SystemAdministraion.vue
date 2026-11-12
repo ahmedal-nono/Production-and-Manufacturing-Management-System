@@ -664,16 +664,38 @@ const fetchBackups = async () => {
   }
 }
 
+const waitForJob = async (jobId: number, attempts = 40) => {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    const { data, error } = await useAxios(`${baseURL}/jobs/${jobId}/`, { method: 'GET' })
+    if (error.value) throw error.value
+    const job = data.value
+    if (job?.status === 'succeeded' || job?.status === 'failed') return job
+  }
+  throw new Error('Backup is still running. Start `manage.py run_worker` and try again.')
+}
+
 const createBackup = async () => {
   try {
     backupLoading.value = true
-    const { data } = await useAxios(`${baseURL}/backups/create_backup/`, {
+    const { data, error } = await useAxios(`${baseURL}/backups/enqueue_backup/`, {
       method: 'POST',
     })
+    if (error.value) throw error.value
+    if (!data.value?.id) throw new Error('The server did not return a job id.')
 
-    if (data.value?.status === 'success') {
-      alert(`Backup created successfully!\nFile: ${data.value.file_path}`)
+    let job = data.value
+    if (job.status !== 'succeeded' && job.status !== 'failed') {
+      job = await waitForJob(job.id)
+    }
+
+    if (job.status === 'succeeded') {
+      alert(
+        `Backup created successfully!\nFile: ${job.result?.file_path || job.result?.filename || 'backup'}`,
+      )
       await fetchBackups()
+    } else {
+      alert(`Backup failed: ${job.error || 'unknown error'}`)
     }
   } catch (err) {
     console.error('Backup creation failed:', err)

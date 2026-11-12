@@ -24,9 +24,10 @@ from pathlib import Path
 from .permissions import IsProductionManager, IsSameUserOrManager, IsAdminRole
 from datetime import datetime
 import subprocess
-from .models import BackupConfig, BackupRecord, Department, SystemSetting, HealthMetric, Role, UserProfile
+from .models import BackupConfig, BackupRecord, Department, SystemSetting, HealthMetric, Role, UserProfile, RumMetric, BackgroundJob
 from django.contrib.auth.models import User
-from .serializers import BackupConfigSerializer, BackupRecordSerializer, DepartmentSerializer, SystemSettingSerializer, HealthMetricSerializer, RoleSerializer, UserSerializer, LoginSerializer, UserProfileSerializer, PasswordChangeSerializer
+from .serializers import BackupConfigSerializer, BackupRecordSerializer, DepartmentSerializer, SystemSettingSerializer, HealthMetricSerializer, RoleSerializer, UserSerializer, LoginSerializer, UserProfileSerializer, PasswordChangeSerializer, RumMetricSerializer, BackgroundJobSerializer
+from .jobs import enqueue, run_job
 
 class BackupConfigViewSet(viewsets.ModelViewSet):
     queryset = BackupConfig.objects.all()
@@ -48,6 +49,25 @@ class BackupRecordViewSet(viewsets.ModelViewSet):
     serializer_class = BackupRecordSerializer
     queryset = BackupRecord.objects.all()
     permission_classes = [IsAdminRole]
+    @action(detail=False, methods=['post'])
+    def enqueue_backup(self, request):
+        """Queue a backup instead of blocking the request.
+
+        Returns 202 with the job payload; the client polls
+        ``/api/admin/jobs/<id>/`` until ``status`` is terminal.
+        """
+        job = enqueue(
+            'backup.create',
+            {'automated': False, 'created_by_id': request.user.id},
+            user=request.user,
+        )
+        if settings.BACKGROUND_JOBS_EAGER:
+            job = run_job(job)
+        return Response(
+            BackgroundJobSerializer(job).data,
+            status=status.HTTP_202_ACCEPTED,
+        )
+
     @action(detail=False, methods=['post'])
     def create_backup(self, request):
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -389,6 +409,42 @@ class NotificationViewSet(viewsets.ModelViewSet):
 from .models import User
 from .serializers import UserSerializer
 
+
+class RumMetricViewSet(viewsets.ModelViewSet):
+    """Capture browser performance samples and expose them to admins.
+
+    ``POST`` is open (the browser beacon has no credentials) while listing is
+    restricted to admins.
+    """
+
+    queryset = RumMetric.objects.all()
+    serializer_class = RumMetricSerializer
+    http_method_names = ['get', 'post', 'head', 'options']
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [AllowAny()]
+        return [IsAdminRole()]
+
+    def create(self, request, *args, **kwargs):
+        payload = request.data
+        if isinstance(payload, dict) and 'metrics' in payload:
+            payload = payload['metrics']
+        items = payload if isinstance(payload, list) else [payload]
+        items = [item for item in items if isinstance(item, dict)]
+        serializer = self.get_serializer(data=items, many=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(
+            {'received': len(serializer.validated_data)},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class BackgroundJobViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = BackgroundJob.objects.all()
+    serializer_class = BackgroundJobSerializer
+    permission_classes = [IsAdminRole]
 
 
 

@@ -14,6 +14,13 @@ from io import BytesIO
 import pandas as pd
 
 from administration.permissions import RoleWritePermission
+from .cache import (
+    PRODUCTION_PERFORMANCE_KEY,
+    WORKFLOW_ANALYSIS_KEY,
+    ORDER_STATUS_KEY,
+    cached,
+    stage_durations_key,
+)
 from .models import Issue, Report, ReportTemplate, ScheduledReport
 from .serializers import (
     IssueListSerializer, IssueDetailSerializer,
@@ -66,40 +73,43 @@ class ProductionPerformanceReportAPI(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            now = timezone.now()
-            lines = ProductionLine.objects.annotate(
-                total_orders=Count('productionorder'),
-                completed_orders=Count('productionorder', filter=Q(productionorder__status='Completed')),
-                average_duration=Avg(Cast(
-                    F('productionorder__end_date') - F('productionorder__start_date'),
-                    output_field=models.DurationField()
-                )),
-                delayed_orders=Count('productionorder',
-                                   filter=Q(productionorder__end_date__lt=now) &
-                                           ~Q(productionorder__status='Completed'))
-            )
+            def build_report():
+                now = timezone.now()
+                lines = ProductionLine.objects.annotate(
+                    total_orders=Count('productionorder'),
+                    completed_orders=Count('productionorder', filter=Q(productionorder__status='Completed')),
+                    average_duration=Avg(Cast(
+                        F('productionorder__end_date') - F('productionorder__start_date'),
+                        output_field=models.DurationField()
+                    )),
+                    delayed_orders=Count('productionorder',
+                                       filter=Q(productionorder__end_date__lt=now) &
+                                               ~Q(productionorder__status='Completed'))
+                )
 
-            report_data = []
-            for line in lines:
-                total = line.total_orders or 0
-                completed = line.completed_orders or 0
-                average_duration = line.average_duration
-                if isinstance(average_duration, str):
-                    average_duration = parse_duration(average_duration)
-                elif isinstance(average_duration, (int, float)):
-                    average_duration = timedelta(microseconds=average_duration)
-                report_data.append({
-                    'production_line': line.line_name,
-                    'total_orders': total,
-                    'completed_orders': completed,
-                    'completion_rate': round(completed * 100.0 / total, 2) if total else 0,
-                    'average_duration': average_duration,
-                    'delayed_orders': line.delayed_orders or 0
-                })
+                report_data = []
+                for line in lines:
+                    total = line.total_orders or 0
+                    completed = line.completed_orders or 0
+                    average_duration = line.average_duration
+                    if isinstance(average_duration, str):
+                        average_duration = parse_duration(average_duration)
+                    elif isinstance(average_duration, (int, float)):
+                        average_duration = timedelta(microseconds=average_duration)
+                    report_data.append({
+                        'production_line': line.line_name,
+                        'total_orders': total,
+                        'completed_orders': completed,
+                        'completion_rate': round(completed * 100.0 / total, 2) if total else 0,
+                        'average_duration': average_duration,
+                        'delayed_orders': line.delayed_orders or 0
+                    })
 
-            serializer = ProductionPerformanceReportSerializer(
-                report_data, many=True)
-            return Response(serializer.data)
+                serializer = ProductionPerformanceReportSerializer(
+                    report_data, many=True)
+                return serializer.data
+
+            return Response(cached(PRODUCTION_PERFORMANCE_KEY, build_report))
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -109,39 +119,42 @@ class WorkflowAnalysisReportAPI(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            stage_queryset = Stage.objects.select_related(
-                'assigned_work_center'
-            ).prefetch_related('inspection_checkpoints').order_by('-duration')
+            def build_report():
+                stage_queryset = Stage.objects.select_related(
+                    'assigned_work_center'
+                ).prefetch_related('inspection_checkpoints').order_by('-duration')
 
-            workflows = Workflow.objects.select_related(
-                'product', 'assigned_work_center'
-            ).annotate(
-                total_stages=Count('stages'),
-                avg_stage_duration=Avg('stages__duration'),
-                total_inspection_points=Count('stages__inspection_checkpoints')
-            ).prefetch_related(Prefetch('stages', queryset=stage_queryset))
-            
-            report_data = []
-            for workflow in workflows:
-                # Uses the prefetched, already ordered stage list instead of
-                # issuing a new ORDER BY query for every workflow.
-                longest_stage = next(iter(workflow.stages.all()), None)
-                
-                # Prepare context as a dictionary
-                context = {
-                    'workflow': workflow,
-                    'total_stages': workflow.total_stages or 0,
-                    'avg_stage_duration': int(workflow.avg_stage_duration) if workflow.avg_stage_duration else 0,
-                    'total_inspection_points': workflow.total_inspection_points or 0,
-                    'longest_stage': longest_stage
-                }
-                
-                # Initialize serializer with the context dictionary
-                serializer = WorkflowAnalysisReportSerializer(context)
-                report_data.append(serializer.data)
-                
-            return Response(report_data)
-        
+                workflows = Workflow.objects.select_related(
+                    'product', 'assigned_work_center'
+                ).annotate(
+                    total_stages=Count('stages'),
+                    avg_stage_duration=Avg('stages__duration'),
+                    total_inspection_points=Count('stages__inspection_checkpoints')
+                ).prefetch_related(Prefetch('stages', queryset=stage_queryset))
+
+                report_data = []
+                for workflow in workflows:
+                    # Uses the prefetched, already ordered stage list instead of
+                    # issuing a new ORDER BY query for every workflow.
+                    longest_stage = next(iter(workflow.stages.all()), None)
+
+                    # Prepare context as a dictionary
+                    context = {
+                        'workflow': workflow,
+                        'total_stages': workflow.total_stages or 0,
+                        'avg_stage_duration': int(workflow.avg_stage_duration) if workflow.avg_stage_duration else 0,
+                        'total_inspection_points': workflow.total_inspection_points or 0,
+                        'longest_stage': longest_stage
+                    }
+
+                    # Initialize serializer with the context dictionary
+                    serializer = WorkflowAnalysisReportSerializer(context)
+                    report_data.append(serializer.data)
+
+                return report_data
+
+            return Response(cached(WORKFLOW_ANALYSIS_KEY, build_report))
+
         except Exception as e:
             return Response(
                 {'error': f"Report generation failed: {str(e)}"},
@@ -153,17 +166,18 @@ class ProductionOrderStatusReportAPI(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            status_data = ProductionOrder.objects.values('status').annotate(
-                count=Count('id'),
-                total_quantity=Sum('quantity')
-            ).order_by('-count')
-            
-            # Convert QuerySet to list of dicts
-            data_list = list(status_data)
-            
-            serializer = ProductionOrderStatusSerializer(data_list, many=True)
-            return Response(serializer.data)
-        
+            def build_report():
+                status_data = ProductionOrder.objects.values('status').annotate(
+                    count=Count('id'),
+                    total_quantity=Sum('quantity')
+                ).order_by('-count')
+
+                serializer = ProductionOrderStatusSerializer(
+                    list(status_data), many=True)
+                return serializer.data
+
+            return Response(cached(ORDER_STATUS_KEY, build_report))
+
         except Exception as e:
             return Response(
                 {'error': f"Failed to generate order status report: {str(e)}"},
@@ -175,25 +189,26 @@ class StageDurationReportAPI(APIView):
 
     def get(self, request, workflow_id=None, *args, **kwargs):
         try:
-            queryset = Stage.objects.all()
-            if workflow_id:
-                queryset = queryset.filter(workflow_id=workflow_id)
-                
-            duration_data = queryset.values(
-                'workflow__name', 
-                'name'
-            ).annotate(
-                avg_duration=Avg('duration'),
-                min_duration=Min('duration'),
-                max_duration=Max('duration')
-            ).order_by('workflow__name', 'avg_duration')
-            
-            # Convert ValuesQuerySet to list of dicts
-            data_list = list(duration_data)
-            
-            serializer = StageDurationSerializer(data_list, many=True)
-            return Response(serializer.data)
-        
+            def build_report():
+                queryset = Stage.objects.all()
+                if workflow_id:
+                    queryset = queryset.filter(workflow_id=workflow_id)
+
+                duration_data = queryset.values(
+                    'workflow__name',
+                    'name'
+                ).annotate(
+                    avg_duration=Avg('duration'),
+                    min_duration=Min('duration'),
+                    max_duration=Max('duration')
+                ).order_by('workflow__name', 'avg_duration')
+
+                serializer = StageDurationSerializer(
+                    list(duration_data), many=True)
+                return serializer.data
+
+            return Response(cached(stage_durations_key(workflow_id), build_report))
+
         except Exception as e:
             return Response(
                 {'error': f"Failed to generate stage durations report: {str(e)}"},

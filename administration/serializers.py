@@ -1,6 +1,6 @@
 # administration/serializers.py
 from rest_framework import serializers
-from .models import User, Department, Role, HealthMetric, BackupConfig, BackupRecord, SystemSetting, ActivityLog, UserProfile, Notification
+from .models import User, Department, Role, HealthMetric, BackupConfig, BackupRecord, SystemSetting, ActivityLog, UserProfile, Notification, RumMetric, BackgroundJob
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 
@@ -143,3 +143,31 @@ class NotificationSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'message', 'is_read', 'created_at', 'url',
                   'related_model', 'related_id']
         read_only_fields = ['id', 'created_at']
+
+
+class RumMetricSerializer(serializers.ModelSerializer):
+    ALLOWED_NAMES = {'LCP', 'CLS', 'INP', 'FCP', 'TTFB'}
+
+    class Meta:
+        model = RumMetric
+        fields = ['id', 'name', 'value', 'rating', 'page_path', 'device',
+                  'connection', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+    def validate_name(self, value):
+        if value not in self.ALLOWED_NAMES:
+            raise serializers.ValidationError('Unsupported metric name')
+        return value
+
+    def validate_value(self, value):
+        if value < 0 or value > 600000:
+            raise serializers.ValidationError('Metric value out of range')
+        return value
+
+
+class BackgroundJobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BackgroundJob
+        fields = ['id', 'job_type', 'status', 'result', 'error',
+                  'created_at', 'started_at', 'finished_at']
+        read_only_fields = fields

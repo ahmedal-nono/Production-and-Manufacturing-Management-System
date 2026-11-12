@@ -1,5 +1,6 @@
 import './main.css'
 import './api/axios'
+import './rum'
 
 import { createApp } from 'vue'
 

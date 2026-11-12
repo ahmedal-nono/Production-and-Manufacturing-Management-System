@@ -19,6 +19,8 @@ router.register(r'settings', views.SystemSettingViewSet)
 router.register(r'health-metrics', views.HealthMetricViewSet)
 router.register(r'activity-logs', views.ActivityLogViewSet)
 router.register(r'notifications', views.NotificationViewSet)
+router.register(r'rum', views.RumMetricViewSet, basename='rum')
+router.register(r'jobs', views.BackgroundJobViewSet, basename='backgroundjob')
 
 urlpatterns = [
     path('', include(router.urls)),

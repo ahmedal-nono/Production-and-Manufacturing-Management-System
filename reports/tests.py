@@ -133,3 +133,37 @@ class OtherReportApiTests(TestCase):
         self.assertEqual(response.status_code, 200, response.content)
         response = self.client.get('/api/reports/export/production/excel/')
         self.assertEqual(response.status_code, 200, response.content)
+
+
+class ReportCacheTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.client = APIClient()
+        self.client.force_authenticate(user=make_user())
+
+    def test_production_report_is_cached(self):
+        from django.core.cache import cache
+        from reports.cache import PRODUCTION_PERFORMANCE_KEY
+
+        make_line('Cached line')
+        first = self.client.get('/api/reports/production/performance/')
+        self.assertEqual(first.status_code, 200, first.content)
+        self.assertIsNotNone(cache.get(PRODUCTION_PERFORMANCE_KEY))
+
+        second = self.client.get('/api/reports/production/performance/')
+        self.assertEqual(second.json(), first.json())
+
+    def test_write_invalidates_report_cache(self):
+        from django.core.cache import cache
+        from reports.cache import PRODUCTION_PERFORMANCE_KEY
+
+        make_line('Cache line')
+        self.client.get('/api/reports/production/performance/')
+        self.assertIsNotNone(cache.get(PRODUCTION_PERFORMANCE_KEY))
+
+        make_line('Another line')
+        self.assertIsNone(cache.get(PRODUCTION_PERFORMANCE_KEY))
+
+        response = self.client.get('/api/reports/production/performance/')
+        self.assertEqual(len(response.json()), 2)
