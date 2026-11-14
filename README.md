@@ -102,16 +102,49 @@ python manage.py run_worker --once       # drain the queue and exit (cron)
 * `python manage.py run_scheduled_backups` now only queues the due backups;
   the worker performs them.
 
+**Reliability**
+
+* Failed jobs are retried with exponential backoff (2 s, 4 s, 8 s … capped at
+  five minutes) until `BACKGROUND_JOBS_MAX_ATTEMPTS` runs (default `3`).
+  `GET /api/admin/jobs/<id>/` exposes `attempts`, `max_attempts`,
+  `available_at` and `error`.
+* A job left `running` by a crashed worker is recovered automatically:
+  `run_worker` re-queues it when `BACKGROUND_JOBS_STALE_AFTER` seconds pass
+  (default `900`), or marks it failed once attempts are exhausted.
+  Use `run_worker --stale-after 300` / `--no-recover` to tune this per run.
+* `python manage.py prune_jobs --days 30` deletes old finished jobs
+  (`BACKGROUND_JOBS_RETENTION_DAYS`, default `30`).
+
+### Measuring report performance
+
+`manage.py benchmark_reports` runs every report endpoint with a cold and a warm
+cache and prints the median latency of each:
+
+```powershell
+python manage.py benchmark_reports --runs 5
+python manage.py benchmark_reports --runs 10 --json benchmark.json
+```
+
 ### Static files and CDN
 
 * `STATIC_URL` can be overridden with an environment variable, e.g.
   `STATIC_URL=https://cdn.example.com/static/`.
-* `USE_MANIFEST_STATIC=1` enables `ManifestStaticFilesStorage` so every
-  collected asset gets a content hash in its name.
+* WhiteNoise ships in `requirements.txt` and serves collected files straight
+  from the WSGI process (with gzip/Brotli), so `/static/` works with
+  `DEBUG=False` without a separate web server:
+
+```powershell
+python manage.py collectstatic --noinput
+```
+
+  Set `USE_WHITENOISE=0` to opt out.
+* `USE_MANIFEST_STATIC=1` switches to `CompressedManifestStaticFilesStorage`
+  (`whitenoise.storage.CompressedManifestStaticFilesStorage`) so every
+  collected asset gets a content hash in its name and `staticfiles.json`.
 * `StaticCacheHeadersMiddleware` adds
   `Cache-Control: public, max-age=31536000, immutable` for hashed assets and
-  `max-age=3600` for the rest. It applies whenever Django serves `/static/`
-  itself (e.g. behind WhiteNoise); with a CDN the request never reaches Django.
+  `max-age=3600` for the rest. It wraps WhiteNoise, so the policy also applies
+  to files WhiteNoise serves; with a pure CDN the request never reaches Django.
 
 ### Real user monitoring (RUM)
 
@@ -120,7 +153,11 @@ python manage.py run_worker --once       # drain the queue and exit (cron)
   `{ "metrics": [{ "name": "LCP", "value": 1234.5, "rating": "good", "page_path": "/production" }] }`.
   The beacon needs no authentication.
 * Set `VITE_RUM=false` to disable collection.
-* Admins can read the samples at `GET /api/admin/rum/`.
+* Admins can read the samples at `GET /api/admin/rum/` and the aggregated
+  percentiles at `GET /api/admin/rum/summary/?days=7` (median/p75/p95, rating
+  buckets and the top pages by sample count).
+* The same summary is shown on the System Administration page as a
+  "Web Vitals" card.
 
 ## Tests
 

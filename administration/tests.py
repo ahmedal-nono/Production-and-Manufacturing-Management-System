@@ -263,11 +263,21 @@ class ActivityLogActorTests(TestCase):
             ActivityLog.objects.filter(model='ContentType').exists())
 
 import tempfile
+from datetime import timedelta
 
 from django.test import override_settings
+from django.utils import timezone
 
 from .models import BackgroundJob, BackupRecord, RumMetric
-from .jobs import enqueue, run_pending
+from .jobs import enqueue, prune, recover_stale, register, run_pending
+
+
+@register('test.flaky')
+def _flaky_handler(job):
+    """Fails ``fail_times`` attempts, then succeeds (used by the tests)."""
+    if job.attempts <= job.payload.get('fail_times', 0):
+        raise RuntimeError('temporary failure')
+    return {'attempts': job.attempts}
 
 
 class RumMetricApiTests(TestCase):
@@ -304,6 +314,50 @@ class RumMetricApiTests(TestCase):
     def test_listing_requires_admin(self):
         self.assertEqual(self.client.get('/api/admin/rum/').status_code, 401)
 
+    def test_summary_requires_admin(self):
+        self.assertEqual(
+            self.client.get('/api/admin/rum/summary/').status_code, 401)
+
+    def test_summary_reports_percentiles_and_pages(self):
+        admin_role = Role.objects.create(name='admin')
+        admin = User.objects.create_user(
+            email='rum-admin@example.com',
+            full_name='RUM Admin',
+            password='secret1234',
+            role=admin_role,
+        )
+        self.client.force_authenticate(user=admin)
+
+        for value in (1000, 2000, 3000, 4000):
+            RumMetric.objects.create(
+                name='LCP', value=value, rating='good',
+                page_path='/production', device='desktop',
+                connection='4g')
+        RumMetric.objects.create(
+            name='CLS', value=0.05, rating='good',
+            page_path='/production', device='desktop', connection='4g')
+
+        response = self.client.get('/api/admin/rum/summary/?days=7')
+        self.assertEqual(response.status_code, 200, response.content)
+        data = response.json()
+        self.assertEqual(data['sample_count'], 5)
+        self.assertEqual(data['window_days'], 7)
+
+        metrics = {row['name']: row for row in data['metrics']}
+        self.assertEqual(metrics['LCP']['p75'], 3000)
+        self.assertEqual(metrics['LCP']['p95'], 4000)
+        self.assertEqual(metrics['LCP']['ratings']['good'], 2)
+        self.assertEqual(metrics['LCP']['ratings']['needs_improvement'], 2)
+        self.assertEqual(metrics['LCP']['ratings']['poor'], 0)
+        self.assertEqual(metrics['CLS']['count'], 1)
+
+        self.assertEqual(len(data['pages']), 1)
+        self.assertEqual(data['pages'][0]['page_path'], '/production')
+        self.assertEqual(data['pages'][0]['count'], 5)
+        self.assertEqual(data['pages'][0]['lcp_p75'], 3000)
+        # No INP samples on that page: report null so the UI shows a dash.
+        self.assertIsNone(data['pages'][0]['inp_p75'])
+
 
 class BackgroundJobTests(TestCase):
     def setUp(self):
@@ -328,11 +382,76 @@ class BackgroundJobTests(TestCase):
         self.assertIsNotNone(job.finished_at)
 
     def test_failing_handler_marks_job_failed(self):
-        job = enqueue('missing.handler')
+        job = enqueue('missing.handler', max_attempts=1)
         run_pending(limit=1)
         job.refresh_from_db()
         self.assertEqual(job.status, 'failed')
         self.assertIn('No handler', job.error)
+
+    def test_failed_job_is_retried_with_backoff(self):
+        job = enqueue('test.flaky', {'fail_times': 1}, max_attempts=3)
+        run_pending(limit=1)
+        job.refresh_from_db()
+        self.assertEqual(job.status, 'queued')
+        self.assertEqual(job.attempts, 1)
+        self.assertIn('temporary failure', job.error)
+        self.assertGreater(job.available_at, timezone.now())
+
+        BackgroundJob.objects.filter(pk=job.pk).update(
+            available_at=timezone.now())
+        run_pending(limit=1)
+        job.refresh_from_db()
+        self.assertEqual(job.status, 'succeeded', job.error)
+        self.assertEqual(job.attempts, 2)
+        self.assertEqual(job.result, {'attempts': 2})
+
+    def test_job_fails_after_max_attempts(self):
+        job = enqueue('test.flaky', {'fail_times': 99}, max_attempts=2)
+        for _ in range(2):
+            BackgroundJob.objects.filter(pk=job.pk).update(
+                available_at=timezone.now())
+            run_pending(limit=1)
+        job.refresh_from_db()
+        self.assertEqual(job.status, 'failed')
+        self.assertEqual(job.attempts, 2)
+        self.assertIn('temporary failure', job.error)
+
+    def test_job_scheduled_in_the_future_is_not_run(self):
+        job = enqueue('system.echo', delay=60)
+        self.assertEqual(run_pending(limit=1), 0)
+        job.refresh_from_db()
+        self.assertEqual(job.status, 'queued')
+
+    def test_recover_stale_requeues_orphaned_job(self):
+        job = enqueue('system.echo', max_attempts=3)
+        BackgroundJob.objects.filter(pk=job.pk).update(
+            status='running', attempts=1,
+            started_at=timezone.now() - timedelta(seconds=1200))
+        report = recover_stale(age_seconds=600)
+        self.assertEqual(report, {'requeued': 1, 'failed': 0})
+        job.refresh_from_db()
+        self.assertEqual(job.status, 'queued')
+        self.assertIn('Worker stopped', job.error)
+
+    def test_recover_stale_fails_exhausted_job(self):
+        job = enqueue('system.echo', max_attempts=1)
+        BackgroundJob.objects.filter(pk=job.pk).update(
+            status='running', attempts=1,
+            started_at=timezone.now() - timedelta(seconds=1200))
+        report = recover_stale(age_seconds=600)
+        self.assertEqual(report, {'requeued': 0, 'failed': 1})
+        job.refresh_from_db()
+        self.assertEqual(job.status, 'failed')
+
+    def test_prune_deletes_only_old_finished_jobs(self):
+        old = enqueue('system.echo')
+        BackgroundJob.objects.filter(pk=old.pk).update(
+            status='succeeded',
+            created_at=timezone.now() - timedelta(days=40))
+        fresh = enqueue('system.echo')
+        self.assertEqual(prune(days=30), 1)
+        self.assertFalse(BackgroundJob.objects.filter(pk=old.pk).exists())
+        self.assertTrue(BackgroundJob.objects.filter(pk=fresh.pk).exists())
 
     def test_enqueue_backup_endpoint_returns_queued_job(self):
         response = self.client.post(

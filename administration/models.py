@@ -1,6 +1,7 @@
 # administration/models.py
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.utils import timezone
 
 class Department(models.Model):
     name = models.CharField(max_length=100)
@@ -229,6 +230,9 @@ class BackgroundJob(models.Model):
         max_length=16, choices=STATUS_CHOICES, default='queued')
     result = models.JSONField(default=dict, blank=True)
     error = models.TextField(blank=True)
+    attempts = models.PositiveIntegerField(default=0)
+    max_attempts = models.PositiveIntegerField(default=3)
+    available_at = models.DateTimeField(default=timezone.now)
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='background_jobs')
@@ -239,7 +243,7 @@ class BackgroundJob(models.Model):
     class Meta:
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['status', 'available_at']),
             models.Index(fields=['-created_at']),
         ]
 

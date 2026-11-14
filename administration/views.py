@@ -17,6 +17,7 @@ from django.http import FileResponse
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import logout, authenticate
+from django.utils import timezone
 import os
 import os
 import subprocess
@@ -410,16 +411,34 @@ from .models import User
 from .serializers import UserSerializer
 
 
+def _percentile(values, ratio):
+    """Nearest-rank percentile; returns 0 for an empty sample."""
+    if not values:
+        return 0
+    ordered = sorted(values)
+    index = int(round(ratio * (len(ordered) - 1)))
+    return ordered[min(len(ordered) - 1, max(0, index))]
+
+
 class RumMetricViewSet(viewsets.ModelViewSet):
     """Capture browser performance samples and expose them to admins.
 
-    ``POST`` is open (the browser beacon has no credentials) while listing is
-    restricted to admins.
+    ``POST`` is open (the browser beacon has no credentials) while listing and
+    aggregation are restricted to admins.
     """
 
     queryset = RumMetric.objects.all()
     serializer_class = RumMetricSerializer
     http_method_names = ['get', 'post', 'head', 'options']
+
+    # (good, poor) thresholds per Core Web Vital.
+    THRESHOLDS = {
+        'LCP': (2500, 4000),
+        'CLS': (0.1, 0.25),
+        'INP': (200, 500),
+        'FCP': (1800, 3000),
+        'TTFB': (800, 1800),
+    }
 
     def get_permissions(self):
         if self.action == 'create':
@@ -439,6 +458,84 @@ class RumMetricViewSet(viewsets.ModelViewSet):
             {'received': len(serializer.validated_data)},
             status=status.HTTP_201_CREATED,
         )
+
+    @action(detail=False, methods=['get'])
+    def summary(self, request):
+        """Aggregate samples into p75/p95 per metric and top pages.
+
+        ``?days=7`` bounds the window (1-90 days). Percentiles are computed on
+        the raw samples of that window; the most recent 20k rows are used so a
+        busy install cannot make this endpoint expensive.
+        """
+        try:
+            days = int(request.query_params.get('days', 7))
+        except (TypeError, ValueError):
+            days = 7
+        days = max(1, min(days, 90))
+        since = timezone.now() - timedelta(days=days)
+
+        rows = list(
+            RumMetric.objects.filter(created_at__gte=since)
+            .values('name', 'value', 'page_path')[:20000]
+        )
+
+        values_by_name = {}
+        values_by_page = {}
+        for row in rows:
+            values_by_name.setdefault(row['name'], []).append(row['value'])
+            page = values_by_page.setdefault(
+                row['page_path'], {'count': 0, 'metrics': {}})
+            page['count'] += 1
+            page['metrics'].setdefault(row['name'], []).append(row['value'])
+
+        metrics = []
+        for name, (good, poor) in self.THRESHOLDS.items():
+            values = values_by_name.get(name, [])
+            metrics.append({
+                'name': name,
+                'count': len(values),
+                'median': round(_percentile(values, 0.50), 2),
+                'p75': round(_percentile(values, 0.75), 2),
+                'p95': round(_percentile(values, 0.95), 2),
+                'average': round(sum(values) / len(values), 2) if values else 0,
+                'ratings': {
+                    'good': sum(1 for value in values if value <= good),
+                    'needs_improvement': sum(
+                        1 for value in values if good < value <= poor),
+                    'poor': sum(1 for value in values if value > poor),
+                },
+            })
+
+        pages = []
+        for path, bucket in sorted(
+                values_by_page.items(),
+                key=lambda item: item[1]['count'], reverse=True)[:10]:
+            pages.append({
+                'page_path': path,
+                'count': bucket['count'],
+                'lcp_p75': self._page_percentile(bucket, 'LCP', 2),
+                'cls_p75': self._page_percentile(bucket, 'CLS', 3),
+                'inp_p75': self._page_percentile(bucket, 'INP', 2),
+            })
+
+        return Response({
+            'window_days': days,
+            'sample_count': len(rows),
+            'metrics': metrics,
+            'pages': pages,
+            'thresholds': {
+                name: {'good': good, 'poor': poor}
+                for name, (good, poor) in self.THRESHOLDS.items()
+            },
+        })
+
+    @staticmethod
+    def _page_percentile(bucket, metric, digits):
+        """p75 for one metric on a page, or ``None`` when it has no samples."""
+        values = bucket['metrics'].get(metric)
+        if not values:
+            return None
+        return round(_percentile(values, 0.75), digits)
 
 
 class BackgroundJobViewSet(viewsets.ReadOnlyModelViewSet):

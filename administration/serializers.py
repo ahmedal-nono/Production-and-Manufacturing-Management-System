@@ -168,6 +168,7 @@ class RumMetricSerializer(serializers.ModelSerializer):
 class BackgroundJobSerializer(serializers.ModelSerializer):
     class Meta:
         model = BackgroundJob
-        fields = ['id', 'job_type', 'status', 'result', 'error',
-                  'created_at', 'started_at', 'finished_at']
+        fields = ['id', 'job_type', 'status', 'result', 'error', 'attempts',
+                  'max_attempts', 'available_at', 'created_at', 'started_at',
+                  'finished_at']
         read_only_fields = fields

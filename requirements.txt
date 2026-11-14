@@ -9,3 +9,4 @@ psutil>=5.9
 pandas>=2.0
 xlsxwriter>=3.1
 mysqlclient>=2.2
+whitenoise>=6.6

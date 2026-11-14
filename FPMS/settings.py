@@ -1,5 +1,6 @@
 
 from pathlib import Path
+import importlib.util
 import os
 from datetime import timedelta
 # settings.py
@@ -55,13 +56,15 @@ MEDIA_URL = '/media/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Sits outside WhiteNoise so it controls the cache policy of the static
+    # bytes WhiteNoise serves.
+    'FPMS.middleware.StaticCacheHeadersMiddleware',
     'django.middleware.gzip.GZipMiddleware',
     # Must sit below GZipMiddleware so the ETag is hashed from the plain
     # body (Django pads gzip output with random bytes to prevent BREACH,
     # which would otherwise change the hash on every response).
     'django.middleware.http.ConditionalGetMiddleware',
     'FPMS.middleware.ApiRevalidateCacheMiddleware',
-    'FPMS.middleware.StaticCacheHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'administration.middleware.JWTAutoRefreshMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -73,6 +76,20 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # Should be at the top
     'django.middleware.common.CommonMiddleware',  # After CorsMiddleware
 ]
+
+# ---------------------------------------------------------------------------
+# Static file serving: WhiteNoise is optional. When the package is installed
+# (see requirements.txt) it serves collected static files straight from the
+# WSGI process and compresses them, so `/static/` works with DEBUG=False and
+# without a separate web server. Set USE_WHITENOISE=0 to opt out.
+# ---------------------------------------------------------------------------
+_WHITENOISE_AVAILABLE = importlib.util.find_spec('whitenoise') is not None
+_USE_WHITENOISE_ENV = os.environ.get('USE_WHITENOISE')
+_WHITENOISE_ENABLED = _WHITENOISE_AVAILABLE and (
+    _USE_WHITENOISE_ENV is None
+    or _USE_WHITENOISE_ENV.lower() in ('1', 'true', 'yes'))
+if _WHITENOISE_ENABLED:
+    MIDDLEWARE.insert(2, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 # 3. Configure allowed origins (choose one option below)
 # Option A: Allow all origins (for development only)
@@ -177,13 +194,23 @@ STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # When set, collected assets use hashed names so they can be cached forever.
-if os.environ.get('USE_MANIFEST_STATIC', '').lower() in ('1', 'true', 'yes'):
-    STORAGES = {
-        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
-        'staticfiles': {
-            'BACKEND': 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-        },
-    }
+USE_MANIFEST_STATIC = os.environ.get(
+    'USE_MANIFEST_STATIC', '').lower() in ('1', 'true', 'yes')
+if USE_MANIFEST_STATIC:
+    _static_backend = (
+        'whitenoise.storage.CompressedManifestStaticFilesStorage'
+        if _WHITENOISE_ENABLED
+        else 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+    )
+elif _WHITENOISE_ENABLED:
+    _static_backend = 'whitenoise.storage.CompressedStaticFilesStorage'
+else:
+    _static_backend = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': _static_backend},
+}
 
 # ---------------------------------------------------------------------------
 # Cache: LocMemCache by default, Redis when REDIS_URL is provided.
@@ -219,6 +246,19 @@ BACKGROUND_JOBS_EAGER = os.environ.get(
     'BACKGROUND_JOBS_EAGER', '').lower() in ('1', 'true', 'yes')
 BACKGROUND_JOBS_POLL_INTERVAL = float(
     os.environ.get('BACKGROUND_JOBS_POLL_INTERVAL', '2'))
+# Retry policy: each failure waits RETRY_BASE * 2^(attempt-1) seconds, capped
+# at five minutes, until MAX_ATTEMPTS runs have been used.
+BACKGROUND_JOBS_MAX_ATTEMPTS = int(
+    os.environ.get('BACKGROUND_JOBS_MAX_ATTEMPTS', '3'))
+BACKGROUND_JOBS_RETRY_BASE = float(
+    os.environ.get('BACKGROUND_JOBS_RETRY_BASE', '2'))
+# A job still "running" after this many seconds is assumed orphaned by a
+# crashed worker and is queued again (or failed once attempts are exhausted).
+BACKGROUND_JOBS_STALE_AFTER = int(
+    os.environ.get('BACKGROUND_JOBS_STALE_AFTER', '900'))
+# Finished jobs older than this are removed by `manage.py prune_jobs`.
+BACKGROUND_JOBS_RETENTION_DAYS = int(
+    os.environ.get('BACKGROUND_JOBS_RETENTION_DAYS', '30'))
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

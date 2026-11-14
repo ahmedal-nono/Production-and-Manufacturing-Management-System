@@ -67,6 +67,58 @@
         </div>
       </div>
     </div>
+    <div class="flex flex-row gap-6 py-2">
+      <div class="flex w-fit flex-col rounded-lg bg-gray-100 p-3">
+        <div class="flex items-center gap-4">
+          <p class="font-bold">
+            Web Vitals (last {{ rumSummary.window_days }} days)
+          </p>
+          <button
+            class="rounded-xl bg-blue-500 px-1.5 text-sm text-white hover:text-blue-800"
+            :disabled="rumLoading"
+            @click="fetchRumSummary"
+          >
+            {{ rumLoading ? 'Refreshing...' : 'Refresh' }}
+          </button>
+        </div>
+        <p v-if="!rumSummary.sample_count" class="pt-2 text-[13px]">
+          No browser samples yet.
+        </p>
+        <div v-else class="flex flex-row gap-8 pt-2 text-[13px]">
+          <div v-for="metric in rumCards" :key="metric.name">
+            <p class="font-bold">{{ metric.name }}</p>
+            <p :class="metric.color">{{ metric.value }}</p>
+          </div>
+          <div>
+            <p class="font-bold">Samples</p>
+            <p>{{ rumSummary.sample_count }}</p>
+          </div>
+        </div>
+        <details v-if="rumSummary.pages.length" class="pt-2 text-[12px]">
+          <summary class="cursor-pointer font-bold">Top pages (p75)</summary>
+          <table class="mt-1 text-left">
+            <thead>
+              <tr class="text-gray-600">
+                <th class="pr-4">Page</th>
+                <th class="pr-4">LCP</th>
+                <th class="pr-4">CLS</th>
+                <th class="pr-4">INP</th>
+                <th>Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="page in rumSummary.pages" :key="page.page_path">
+                <td class="pr-4">{{ page.page_path }}</td>
+                <td class="pr-4">{{ formatVital('LCP', page.lcp_p75) }}</td>
+                <td class="pr-4">{{ formatVital('CLS', page.cls_p75) }}</td>
+                <td class="pr-4">{{ formatVital('INP', page.inp_p75) }}</td>
+                <td>{{ page.count }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </details>
+      </div>
+    </div>
     <div
       class="flex w-fit cursor-pointer flex-col items-center rounded-xl border bg-[#bee8ea] p-6 shadow-md shadow-gray-500"
       @click="showUserMngtPopup = true"
@@ -389,7 +441,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useAxios } from '@vueuse/integrations/useAxios'
 import Popup from '@/components/popup.vue'
 import SkeletonRows from '@/components/SkeletonRows.vue'
@@ -428,6 +480,31 @@ interface Backup {
   status: string
 }
 
+interface RumMetricSummary {
+  name: string
+  count: number
+  median: number
+  p75: number
+  p95: number
+  average: number
+  ratings: { good: number; needs_improvement: number; poor: number }
+}
+
+interface RumPageSummary {
+  page_path: string
+  count: number
+  lcp_p75: number | null
+  cls_p75: number | null
+  inp_p75: number | null
+}
+
+interface RumSummary {
+  window_days: number
+  sample_count: number
+  metrics: RumMetricSummary[]
+  pages: RumPageSummary[]
+}
+
 // Store
 const userStore = useUserStore()
 
@@ -442,6 +519,13 @@ const healthMetrics = ref({
   timestamp: '',
 })
 const healthLoading = ref(false)
+const rumSummary = ref<RumSummary>({
+  window_days: 7,
+  sample_count: 0,
+  metrics: [],
+  pages: [],
+})
+const rumLoading = ref(false)
 const showActivityLogPopup = ref(false)
 const showUserMngtPopup = ref(false)
 const showUserCrtPopup = ref(false)
@@ -766,6 +850,50 @@ const fetchHealthMetrics = async () => {
   }
 }
 // Helper functions
+const RUM_THRESHOLDS: Record<string, [number, number]> = {
+  LCP: [2500, 4000],
+  CLS: [0.1, 0.25],
+  INP: [200, 500],
+  FCP: [1800, 3000],
+  TTFB: [800, 1800],
+}
+const RUM_CARD_METRICS = ['LCP', 'CLS', 'INP']
+
+const formatVital = (name: string, value: number | null | undefined) => {
+  if (value === null || value === undefined) return '—'
+  return name === 'CLS' ? value.toFixed(3) : `${Math.round(value)} ms`
+}
+
+const rumRating = (name: string, value: number) => {
+  const [good, poor] = RUM_THRESHOLDS[name] ?? [0, 0]
+  if (value <= good) return 'text-green-700'
+  if (value <= poor) return 'text-yellow-600'
+  return 'text-red-500'
+}
+
+const rumCards = computed(() =>
+  RUM_CARD_METRICS.map((name) => {
+    const metric = rumSummary.value.metrics.find((item) => item.name === name)
+    return {
+      name,
+      value: metric && metric.count ? formatVital(name, metric.p75) : '—',
+      color:
+        metric && metric.count ? rumRating(name, metric.p75) : 'text-gray-500',
+    }
+  }),
+)
+
+const fetchRumSummary = async () => {
+  try {
+    rumLoading.value = true
+    const { data } = await useAxios(`${baseURL}/rum/summary/?days=7`)
+    if (data.value) rumSummary.value = data.value
+  } catch (err) {
+    console.error('Failed to load RUM summary:', err)
+  } finally {
+    rumLoading.value = false
+  }
+}
 const ROLE_KEY_BY_LABEL: Record<string, string> = {
   Admin: 'admin',
   Supervisor: 'supervisor',
@@ -816,6 +944,7 @@ onMounted(() => {
   // fetchBackups()
   fetchBackups()
   fetchHealthMetrics()
+  fetchRumSummary()
 })
 const logFilter = ref('all')
 const logSearch = ref('')
